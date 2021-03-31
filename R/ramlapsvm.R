@@ -224,7 +224,7 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
                           pred_val = predict.ramlapsvm(msvm_fit, newx = valid_x)
 
                           if (criterion == "0-1") {
-                            acc = sum(valid_y == pred_val$clss) / length(valid_y)
+                            acc = sum(valid_y == pred_val$class) / length(valid_y)
                             err = 1 - acc
                           } else {
                             err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
