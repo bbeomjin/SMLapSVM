@@ -1,0 +1,20 @@
+export(smlapsvm, cstep.smlapsvm, theta_step.smlapsvm, mlapsvm_compact, mlapsvm, 
+	   predict.mlapsvm_compact, predict.mlapsvm, Kfold_mlapsvm, predict.smlapsvm,
+	   sramlapsvm, cstep.sramlapsvm, theta_step.sramlapsvm, 
+	   ramlapsvm, predict.ramlapsvm, Kfold_ramlapsvm)
+
+exportClasses("ramlapsvm_core", "ramlapsvm", "sramlapsvm",
+			  "smlapsvm", "mlapsvm")
+			  
+# Load dynamic libraries (shared object files)
+useDynLib(SMLapSVM)
+
+import("methods")
+import("stats")
+# import("caret")
+import("kernlab")
+import("quadprog")
+import("lpSolve")
+import("parallel")
+# import("igraph")
+	   
