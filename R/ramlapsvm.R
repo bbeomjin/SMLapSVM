@@ -62,7 +62,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   # b = t(b) + b
   # a %*% b == t(b %*% a)
 
-  Q = (n_l * lambda) * (K %*% L_inv)[1:n_l, 1:n_l] + 1
+  Q = (n_l * lambda) * (K %*% inv_LK)[1:n_l, 1:n_l] + 1
 
   #------------------------------------------------------------------#
   # Convert labels to integers.                                      #
