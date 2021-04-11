@@ -409,3 +409,35 @@ find_nonzero = function(Amat)
   return(list(Amat_compact = Amat_compact, Aind = Aind))
 }
 
+code = function(y)
+{
+  n_class = length(unique(y))
+  n = length(y)
+  y_index = cbind(1:n, y)
+  
+  In = diag(n)
+  Lmat = matrix(1, nrow = n, ncol = n_class)
+  Lmat[y_index] = 0
+  Emat = diag(n_class)
+  
+  vmatj = vector("list", length = n_class)
+  umatj = vector("list", length = n_class)
+  for (k in 1:n_class) {
+    lvecj = Lmat[, k]
+    evecj = Emat[k, , drop = FALSE]
+    vmatj[[k]] = diag(lvecj)
+    umatj[[k]] = evecj %x% In
+  }
+  
+  AH = matrix(0, n, n * n_class)
+  for (k in 1:n_class) {
+    AH = AH + (2 * vmatj[[k]] - In) %*% umatj[[k]] / n_class
+  }
+  
+  Hmatj = vector("list", length = n_class)
+  for (k in 1:n_class) {
+    Hmatj[[k]] = (In - 2 * vmatj[[k]]) %*% umatj[[k]] + AH
+  }
+  
+  return(list(In = In, vmatj = vmatj, umatj = umatj, AH = AH, Hmatj = Hmatj, y_index = y_index))
+}

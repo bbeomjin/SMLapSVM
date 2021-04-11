@@ -3,11 +3,11 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H 
 
   # The sample size, the number of classes and dimension of QP problem
   out = list()
-  n_class = max(y)
+  n_class = length(unique(y))
   n_l = length(y)
   n = nrow(K)
   n_u = n - n_l
-  qp_dim = (n_l * n_class)
+  qp_dim = n_l * n_class
 
   # Convert y into msvm class code
   trans_Y = class_code(y, n_class)
@@ -158,7 +158,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H 
 }
 
 
-mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = TRUE, adjacency_k = 6, normalized = FALSE,
+mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = FALSE, adjacency_k = 6, normalized = FALSE,
                    weight = NULL, weightType = "Binary", epsilon = 1e-6, epsilon_H = 1e-6)
 {
   out = list()
@@ -191,7 +191,7 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
 
 
 
-  W = RSSL:::adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
+  W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
   # graph = make_knn_graph_mat(rx, k = adjacency_k)
   graph = W
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)

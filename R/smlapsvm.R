@@ -124,7 +124,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
     K = combine_kernel(anova_kernel = anova_K, theta = theta)
 
-    W = RSSL:::adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
+    W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = make_knn_graph_mat(rx, k = adjacency_k)
     graph = W
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
