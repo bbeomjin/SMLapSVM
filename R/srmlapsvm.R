@@ -3,7 +3,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                     lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
                     adjacency_k = 6, normalized = TRUE, weightType = "Binary",
                     kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
-                    scale = FALSE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, ...)
+                    scale = FALSE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
 {
   out = list()
 
@@ -46,7 +46,12 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
   #                       kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
   if (fun_ind == 2) {opt_cstep_args$gamma = gamma}
   opt_cstep_fit = do.call(cstep_fun, opt_cstep_args)
-
+  
+  if (verbose == 1) {
+    cat("CV-error(cstep):", cstep_fit$opt_valid_err, "\n")
+	cat("CV-error(theta-step):", theta_step_fit$opt_valid_err, "\n")
+	cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
+  }
 
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$opt_model = opt_cstep_fit$opt_model
