@@ -15,7 +15,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
 
   theta_step_fun = switch(fun_ind,
                           theta_step.smlapsvm,
-                          theta_step.srmlapsvm
+                          theta_step.srmlapsvm)
 
 
   cat("Fit c-step \n")
