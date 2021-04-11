@@ -441,3 +441,13 @@ code = function(y)
   
   return(list(In = In, vmatj = vmatj, umatj = umatj, AH = AH, Hmatj = Hmatj, y_index = y_index))
 }
+
+adjacency_knn = function(X, distance = "euclidean", k = 6) 
+{
+    Ds = as.matrix(dist(X, method = distance))
+    neighbours = apply(Ds, 1, function(x) sort(x, index.return = TRUE)$ix[2:(k + 1)])
+	neighbours = as.integer(neighbours)
+    adj = as.matrix(Matrix::sparseMatrix(i = rep(1:nrow(X), each = k), j = neighbours, x = 1, dims = c(nrow(X), nrow(X))))
+    adj = (adj | t(adj)) * 1
+	return(adj)
+}
