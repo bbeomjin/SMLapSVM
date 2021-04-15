@@ -30,9 +30,9 @@ kernelMat = function(x, y, kernel = "radial", kparam = 1.0) {
     y = matrix(1, nrow = nrow(y), ncol = 1)
   }
 
-  if( kernel == "poly" ) {
+  if (kernel == "poly") {
     obj = (x %*% t(y) + 1.0)^kparam
-  } else if(kernel == "radial" | kernel == "radial2") {
+  } else if (kernel == "radial" | kernel == "radial2") {
     normx = drop((x^2) %*% rep(1.0, ncol(x)))
     normy = drop((y^2) %*% rep(1.0, ncol(y)))
     temp = x %*% t(y)
@@ -355,13 +355,21 @@ make_anovaKernel = function(x, u, kernel)
     numK = dimx
     anova_kernel = vector(mode = "list", numK)
     kernelCoord = vector(mode = "list", numK)
+
+    anova_kernel = mclapply(1:dimx, function(d) {main_kernel(as.matrix(x[, d]), as.matrix(u[, d]), kernel)}, mc.cores = 10)
+
     for (d in 1:dimx)
     {
-      A = as.matrix(x[,d])
-      B = as.matrix(u[,d])
-      anova_kernel[[d]] = main_kernel(A, B, kernel)
       kernelCoord[[d]] = paste("x", d, sep = "")
     }
+
+    # for (d in 1:dimx)
+    # {
+    #   A = as.matrix(x[, d])
+    #   B = as.matrix(u[, d])
+    #   anova_kernel[[d]] = main_kernel(A, B, kernel)
+    #   kernelCoord[[d]] = paste("x", d, sep = "")
+    # }
   }
   list(K = anova_kernel, coord = kernelCoord, numK = numK, kernel = kernel)
 }
@@ -414,12 +422,12 @@ code = function(y)
   n_class = length(unique(y))
   n = length(y)
   y_index = cbind(1:n, y)
-  
+
   In = diag(n)
   Lmat = matrix(1, nrow = n, ncol = n_class)
   Lmat[y_index] = 0
   Emat = diag(n_class)
-  
+
   vmatj = vector("list", length = n_class)
   umatj = vector("list", length = n_class)
   for (k in 1:n_class) {
@@ -428,21 +436,21 @@ code = function(y)
     vmatj[[k]] = diag(lvecj)
     umatj[[k]] = evecj %x% In
   }
-  
+
   AH = matrix(0, n, n * n_class)
   for (k in 1:n_class) {
     AH = AH + (2 * vmatj[[k]] - In) %*% umatj[[k]] / n_class
   }
-  
+
   Hmatj = vector("list", length = n_class)
   for (k in 1:n_class) {
     Hmatj[[k]] = (In - 2 * vmatj[[k]]) %*% umatj[[k]] + AH
   }
-  
+
   return(list(In = In, vmatj = vmatj, umatj = umatj, AH = AH, Hmatj = Hmatj, y_index = y_index))
 }
 
-adjacency_knn = function(X, distance = "euclidean", k = 6) 
+adjacency_knn = function(X, distance = "euclidean", k = 6)
 {
     Ds = as.matrix(dist(X, method = distance))
     neighbours = apply(Ds, 1, function(x) sort(x, index.return = TRUE)$ix[2:(k + 1)])
