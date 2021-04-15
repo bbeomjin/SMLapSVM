@@ -8,14 +8,15 @@ main_kernel = function(x, u, kernel)
     K = (1 + x %*% t(u))^kernel$par
   if (kernel$type == "radial" | kernel$type == "radial2")
   {
-    a = as.matrix(rowSums(x^2))
-    b = as.matrix(rowSums(u^2))
-    one.a = matrix(1, ncol = length(b))
-    one.b = matrix(1, ncol = length(a))
-    K1 = one.a %x% a
-    K2 = x %*% t(u)
-    K3 = t(one.b %x% b)
-    K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
+    # a = as.matrix(rowSums(x^2))
+    # b = as.matrix(rowSums(u^2))
+    # one.a = matrix(1, ncol = length(b))
+    # one.b = matrix(1, ncol = length(a))
+    # K1 = one.a %x% a
+    # K2 = x %*% t(u)
+    # K3 = t(one.b %x% b)
+    # K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
+	kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
   }
   return(K)
 }
@@ -356,20 +357,20 @@ make_anovaKernel = function(x, u, kernel)
     anova_kernel = vector(mode = "list", numK)
     kernelCoord = vector(mode = "list", numK)
 
-    anova_kernel = mclapply(1:dimx, function(d) {main_kernel(as.matrix(x[, d]), as.matrix(u[, d]), kernel)}, mc.cores = 10)
-
-    for (d in 1:dimx)
-    {
-      kernelCoord[[d]] = paste("x", d, sep = "")
-    }
+    # anova_kernel = mclapply(1:dimx, function(d) {main_kernel(as.matrix(x[, d]), as.matrix(u[, d]), kernel)}, mc.cores = 10)
 
     # for (d in 1:dimx)
     # {
-    #   A = as.matrix(x[, d])
-    #   B = as.matrix(u[, d])
-    #   anova_kernel[[d]] = main_kernel(A, B, kernel)
     #   kernelCoord[[d]] = paste("x", d, sep = "")
     # }
+
+     for (d in 1:dimx)
+     {
+       A = as.matrix(x[, d])
+       B = as.matrix(u[, d])
+       anova_kernel[[d]] = main_kernel(A, B, kernel)
+       kernelCoord[[d]] = paste("x", d, sep = "")
+     }
   }
   list(K = anova_kernel, coord = kernelCoord, numK = numK, kernel = kernel)
 }
