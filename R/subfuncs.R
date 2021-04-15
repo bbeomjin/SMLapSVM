@@ -16,7 +16,7 @@ main_kernel = function(x, u, kernel)
     # K2 = x %*% t(u)
     # K3 = t(one.b %x% b)
     # K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
-	kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
+	K = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
   }
   return(K)
 }
