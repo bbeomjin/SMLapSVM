@@ -21,6 +21,7 @@ smlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
                     adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                     kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
 
+  out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
@@ -122,7 +123,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
 
     kernel_list = list(type = kernel, par = kparam)
     anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
-    K = combine_kernel(anova_kernel = anova_K, theta = theta)
+    # K = combine_kernel(anova_kernel = anova_K, theta = theta)
 
     W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = make_knn_graph_mat(rx, k = adjacency_k)
@@ -134,7 +135,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          msvm_fit = mlapsvm_compact(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
+                          msvm_fit = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
                                                      ...)
 
                           pred_val = predict.mlapsvm_compact(msvm_fit, newK = valid_K)$class
@@ -161,18 +162,19 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   out$ux = ux
   out$y = y
   out$L = L
+  out$theta = theta
   out$n_class = n_class
   out$valid_x = valid_x
   out$valid_y = valid_y
   out$anova_K = anova_K
-  out$K = K
+  # out$K = K
   out$valid_anova_K = valid_anova_K
   out$valid_K = valid_K
   out$kernel = kernel
   out$scale = scale
   out$criterion = criterion
   if (optModel) {
-    opt_model = mlapsvm_compact(K = K, L = L, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, ...)
+    opt_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, ...)
     out$opt_model = opt_model
   }
   out$call = call
@@ -193,16 +195,17 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   n_class = object$n_class
   # x = object$x
   y = object$y
+  theta = object$theta
   # ux = object$ux
   # rx = rbind(x, ux)
   valid_y = object$valid_y
 
   anova_K = object$anova_K
-  K = object$K
+  # K = object$K
   L = object$L
   valid_anova_K = object$valid_anova_K
   if (is.null(object$opt_model)) {
-    init_model = mlapsvm_compact(K = K, L = L, y = y, lambda = lambda, lambda_I = lambda_I, ...)
+    init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
   } else {
     init_model = object$opt_model
   }
@@ -213,8 +216,8 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                                            n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
 
                         if (isCombined) {
-                          subK = combine_kernel(anova_K, theta)
-                          init_model = mlapsvm_compact(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, ...)
+                          # subK = combine_kernel(anova_K, theta)
+                          init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
                         }
 
                         valid_subK = combine_kernel(valid_anova_K, theta)
@@ -243,8 +246,8 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   out$valid_err = valid_err
 
   if (isCombined) {
-    subK = combine_kernel(anova_K, opt_theta)
-    opt_model = mlapsvm_compact(subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, ...)
+    # subK = combine_kernel(anova_K, opt_theta)
+    opt_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = opt_theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
 
   } else {
     opt_model = init_model
@@ -308,6 +311,181 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   # theta_sol[theta_sol < 1e-6] = 0
   #    print(beta)
   return(theta)
+}
+
+
+smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H = 1e-6)
+{
+
+  # The sample size, the number of classes and dimension of QP problem
+
+  out = list()
+  n_class = length(unique(y))
+  n_l = length(y)
+
+  K = combine_kernel(anova_K, theta = theta)
+
+  n = nrow(K)
+  n_u = n - n_l
+  qp_dim = n_l * n_class
+
+  m_mat = 0
+  for (i in 1:anova_K$numK) {
+    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  }
+
+  inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon_H, n))
+
+  Q = K %*% inv_KLK %*% K
+
+  # Convert y into msvm class code
+  trans_Y = class_code(y, n_class)
+
+  # Optimize alpha by solve.QP:
+  # min (-d^Tb + 1/2 b^TDb)
+  # subject to A^Tb <= b_0
+  # Following steps (1) - (6)
+  # (1) preliminary quantities
+  Jk = matrix(1, nrow = n_class, ncol = n_class)
+  Ik = diag(1, n_class)
+
+  # Vectorize y matrix
+  y_vec = as.vector(trans_Y)
+
+  # Index for non-trivial alphas
+  nonzeroIndex = (y_vec != 1)
+
+  # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  # Q = K %*% inv_LK
+
+  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
+  # Q = K %*% inv_KL
+  Q = J %*% Q %*% t(J)
+  diag(Q) = diag(Q) + epsilon_H
+  # Q = Q[1:n_l, 1:n_l]
+
+  # (2) Compute D <- H
+  H = (Ik - Jk / n_class) %x% Q
+
+  # Subset the columns and rows for non-trivial alpha's
+  Reduced_H = H[nonzeroIndex, nonzeroIndex]
+  diag(Reduced_H) = diag(Reduced_H) + epsilon_H
+
+  # (3) Compute d <- g
+  # g = -y_vec
+  g = -y_vec
+
+  # Subset the components with non-trivial alpha's
+  Reduced_g = g[nonzeroIndex]
+  n_nonzeroIndex = length(Reduced_g)
+
+  # (4) Compute A <- R
+  # Equality constraint matrix
+  R1 = ((Ik - Jk / n_class) %x% matrix(rep(1, n_l), nrow = 1))
+
+  # Eliminate one redundant equality constraint
+  R1 = matrix(R1[1:(n_class - 1), ], nrow = n_class - 1, ncol = ncol(R1))
+
+  # Choose components with non-trivial alpha's
+  Reduced_R1 = matrix(R1[, nonzeroIndex], nrow = nrow(R1), ncol = n_nonzeroIndex)
+
+  # Inequality constraint matrix
+  R2 = diag(rep(1, n_l * (n_class - 1)))
+  R2 = rbind(R2, -R2)
+
+  # R consists of equality and inequality constraints
+  R = t(rbind(Reduced_R1, R2))
+
+  # (5) compute (b_0, b) = r
+  # Right hand side of equality constraints
+  r1 = rep(0, nrow(Reduced_R1))
+
+  # Right hand side of inequality constraints
+  r2 = c(rep(0, nrow(R2) / 2), rep(-1, nrow(R2) / 2))
+
+  # R consists of right hand sides of equality and inequality constraints
+  r = c(r1, r2)
+
+  # (6) Find solution by solve.QP.compact
+  nonzero = find_nonzero(R)
+  Amat = nonzero$Amat_compact
+  Aind = nonzero$Aind
+  dual = solve.QP.compact(Reduced_H, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
+
+  # Place the dual solution into the non-trivial alpha positions
+  alpha = rep(0, qp_dim)
+  alpha[nonzeroIndex] = dual$solution
+
+  # Make alpha zero if they are too small
+  alpha[alpha < 0] = 0
+  alpha[alpha > 1] = 1
+
+  # Reshape alpha into a n by n_class matrix
+  alpha = matrix(alpha, nrow = n_l)
+
+  # Compute cmat = matrix of estimated coefficients
+
+  cmat = -inv_KLK %*% K %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
+  # J = cbind(diag(1, n_l), matrix(0, n_l, n - n_l))
+
+  # Find b vector
+  Kcmat = J %*% K %*% cmat
+  flag = T
+  while (flag) {
+    logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+    # logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+    c0vec = numeric(n_class)
+    if (all(colSums(logic) > 0)) {
+      # Using alphas between 0 and 1, we get c0vec by KKT conditions
+      for (i in 1:n_class) {
+        c0vec[i] = mean((trans_Y[, i] - Kcmat[, i])[logic[, i]])
+      }
+      if (abs(sum(c0vec)) < 0.001) {
+        flag = F
+      } else {
+        epsilon = min(epsilon * 2, 0.5)
+      }
+    } else {
+      flag = F
+      # Otherwise, LP starts to find b vector
+      # reformulate LP w/o equality constraint and redudancy
+      # objective function with (b_j)_+,-(b_j)_, j=1,...,(k-1) and \xi_ij
+
+      a = c(rep(0, 2 * (n_class - 1)), rep(1, n_l * (n_class - 1)))
+      # inequality conditions
+      B1 = -diag(1, n_class - 1) %x% rep(1, n_l)
+      B2 = matrix(1, n_l, n_class - 1)
+      A = cbind(B1, -B1)
+      A = rbind(A, cbind(B2, -B2))
+      A = A[nonzeroIndex, ] # reduced.A
+      A = cbind(A, diag(1, n_l * (n_class - 1)))
+      b = matrix(Kcmat - trans_Y, ncol = 1)
+      b = b[nonzeroIndex] # reduced.b
+      # constraint directions
+      const.dir = matrix(rep(">=", nrow(A)))
+
+      bpos = lp("min", objective.in = a, const.mat = A, const.dir = const.dir,
+                const.rhs = b)$solution[1:(2 * (n_class - 1))]
+      c0vec = cbind(diag(1, n_class - 1), -diag(1, n_class - 1)) %*% matrix(bpos, ncol = 1)
+      c0vec = c(c0vec, -sum(c0vec))
+    }
+  }
+
+  # Compute the fitted values
+  fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
+  fit_class = apply(fit, 1, which.max)
+
+  # Return the output
+  out$alpha = alpha
+  out$cmat = cmat
+  out$c0vec = c0vec
+  out$fit = fit
+  out$fit_class = fit_class
+  out$n_l = n_l
+  out$n_u = n_u
+  out$n_class = n_class
+
+  return(out)
 }
 
 

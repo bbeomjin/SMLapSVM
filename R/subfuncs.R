@@ -8,15 +8,15 @@ main_kernel = function(x, u, kernel)
     K = (1 + x %*% t(u))^kernel$par
   if (kernel$type == "radial" | kernel$type == "radial2")
   {
-    # a = as.matrix(rowSums(x^2))
-    # b = as.matrix(rowSums(u^2))
-    # one.a = matrix(1, ncol = length(b))
-    # one.b = matrix(1, ncol = length(a))
-    # K1 = one.a %x% a
-    # K2 = x %*% t(u)
-    # K3 = t(one.b %x% b)
-    # K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
-	K = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
+    a = as.matrix(rowSums(x^2))
+    b = as.matrix(rowSums(u^2))
+    one.a = matrix(1, ncol = length(b))
+    one.b = matrix(1, ncol = length(a))
+    K1 = one.a %x% a
+    K2 = x %*% t(u)
+    K3 = t(one.b %x% b)
+    K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
+	# K = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
   }
   return(K)
 }
