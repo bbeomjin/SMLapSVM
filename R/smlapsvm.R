@@ -337,6 +337,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon_H, n))
 
   Q = K %*% inv_KLK %*% K
+  diag(Q) = diag(Q) + epsilon_H
 
   # Convert y into msvm class code
   trans_Y = class_code(y, n_class)
