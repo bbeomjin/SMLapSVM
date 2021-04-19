@@ -123,7 +123,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
 
     kernel_list = list(type = kernel, par = kparam)
     anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
-    K = combine_kernel(anova_kernel = anova_K, theta = theta)
+    # K = combine_kernel(anova_kernel = anova_K, theta = theta)
 
     W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = make_knn_graph_mat(rx, k = adjacency_k)
@@ -142,7 +142,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
 
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          msvm_fit = ramlapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma, ...)
+                          msvm_fit = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma, ...)
                           # msvm_fit = angle_lapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma)
 
                           pred_val = predict.ramlapsvm_core(msvm_fit, newK = valid_K)$class
@@ -169,19 +169,20 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
   out$ux = ux
   out$y = y
   out$L = L
+  out$theta = theta
   out$gamma = gamma
   out$n_class = n_class
   out$valid_x = valid_x
   out$valid_y = valid_y
   out$anova_K = anova_K
-  out$K = K
+  # out$K = K
   out$valid_anova_K = valid_anova_K
   out$valid_K = valid_K
   out$kernel = kernel
   out$scale = scale
   out$criterion = criterion
   if (optModel) {
-    opt_model = ramlapsvm_core(K = K, L = L, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, gamma = gamma, ...)
+    opt_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, gamma = gamma, ...)
     # opt_model = angle_lapsvm_core(K = K, L = L, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, gamma = gamma)
     out$opt_model = opt_model
   }
@@ -203,6 +204,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
   gamma = object$gamma
   # x = object$x
   y = object$y
+  theta = object$theta
   # ux = object$ux
   # rx = rbind(x, ux)
   valid_y = object$valid_y
@@ -212,7 +214,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
   L = object$L
   valid_anova_K = object$valid_anova_K
   if (is.null(object$opt_model)) {
-    init_model = ramlapsvm_core(K = K, L = L, y = y, lambda = lambda, lambda_I = lambda_I, ...)
+    init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
   } else {
     init_model = object$opt_model
   }
@@ -224,8 +226,8 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
                                                       lambda_theta = lambda_theta_seq[j])
 
                         if (isCombined) {
-                          subK = combine_kernel(anova_K, theta)
-                          init_model = ramlapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
+                          # subK = combine_kernel(anova_K, theta)
+                          init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
                           # init_model = angle_lapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma)
                         }
 
@@ -255,8 +257,8 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
   out$valid_err = valid_err
 
   if (isCombined) {
-    subK = combine_kernel(anova_K, opt_theta)
-    opt_model = ramlapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
+    # subK = combine_kernel(anova_K, opt_theta)
+    opt_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = opt_theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
 
   } else {
     opt_model = init_model
@@ -296,7 +298,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
   for(j in 1:anova_kernel$numK) {
     temp_D = 0
     temp_d = 0
-    temp_A = NULL
+    # temp_A = NULL
     for (q in 1:ncol(cmat)) {
       cvec = cmat[, q]
       temp_D = temp_D + n_l * lambda_I / (n_l + n_u)^2 * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
@@ -345,3 +347,97 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
   #    print(beta)
   return(theta)
 }
+
+
+sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, weight = NULL, epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300, epsilon_D = 1e-6)
+{
+
+  out = list()
+  n_class = length(unique(y))
+  n_l = length(y)
+
+  K = combine_kernel(anova_K, theta = theta)
+
+  n = nrow(K)
+  n_u = n - n_l
+
+  m_mat = 0
+  for (i in 1:anova_K$numK) {
+    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  }
+
+  inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon_D, n))
+
+  # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  Q = (n_l * lambda) * (K %*% inv_KLK %*% K)[1:n_l, 1:n_l] + 1
+
+  warm = matrix(data = 0.0, nrow = n_l, ncol = n_class)
+  if (is.null(weight)) {weight = numeric(n_l) + 1.0}
+
+  #------------------------------------------------------------------#
+  # Create k-vertex simplex.                                         #
+  #------------------------------------------------------------------#
+  my = t(XI_gen(k = n_class))
+
+  yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
+
+  alpha_ij = warm
+  alpha_yi = numeric(n_l)
+
+
+  erci = as.double(-rep(1, ncol(Q)) / n_l / lambda)
+
+  aa = .C("alpha_update",
+          as.vector(alpha_ij),
+          as.vector(alpha_yi),
+          as.vector(my),
+          as.vector(yyi),
+          as.vector(Q),
+          as.double(lambda),
+          as.vector(weight),
+          as.integer(n_l),
+          as.double(n_l),
+          as.integer(n_class),
+          as.double(n_class),
+          as.vector(erci),
+          as.double(gamma),
+          as.vector(as.integer(y)),
+          as.double(epsilon),
+          outalpha_ij = as.vector(numeric(n_l * n_class)),
+          maxiter = as.integer(maxiter), PACKAGE = "SMLapSVM")
+
+  warm = matrix(data = aa$outalpha_ij, nrow = n_l, ncol = n_class)
+
+  beta = beta_kernel(y = y,
+                     k = n_class,
+                     my = my,
+                     warm = warm,
+                     lambda = lambda,
+                     inv_LK = inv_KLK %*% K)
+  # drop(crossprod(beta[[1]][, 1], X))
+
+  # tt = beta_linear(x = x, y = y_train, k = k, my = my, warm = warm, lambda = templambda)
+
+  # beta0 = matrix(find_theta2(y, K, gamma = gamma, cmat = beta$beta, lambda = lambda), nrow = 1)
+
+  betaout = beta$beta
+  beta0out = beta$beta0
+  # beta0out[[count]] = beta0
+
+  out$y = y
+  out$n_class = n_class
+  out$gamma = gamma
+  out$weight = weight
+  out$lambda = lambda
+  out$lambda_I = lambda_I
+  out$beta = betaout
+  out$beta0 = beta0out
+  out$epsilon = epsilon
+  out$warm = warm
+  class(out) = "ramlapsvm_core"
+  return(out)
+}
+
+
+
+
