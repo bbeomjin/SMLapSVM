@@ -234,9 +234,9 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   
   
   
-  W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
-  # graph = make_knn_graph_mat(rx, k = adjacency_k)
-  graph = W
+  # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
+  # graph = W
+  graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
   
   solutions = rmlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, 

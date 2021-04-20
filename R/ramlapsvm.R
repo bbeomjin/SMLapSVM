@@ -32,10 +32,11 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   }
   # K = K + diag(1e-8, n)
   # K_temp = kernelMat(x, x, kernel = kernel, kparam = kparam) + 1
-
-  # graph = make_knn_graph_mat(rx, k = adjacency_k)
-  W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
-  graph = W
+	
+  # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
+  # graph = W
+  
+  graph = make_knn_graph_mat(rx, k = adjacency_k)  
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
 
   # W = RSSL:::adjacency_knn(rx, distance = "euclidean", k = adjacency_k)

@@ -329,28 +329,21 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  # m_mat = 0
-  # for (i in 1:anova_K$numK) {
-  #   m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-  # }
-  
-  m_mat = 0
-  for (i in 1:anova_K$numK) {
-    m_mat = m_mat + lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-  }
+   m_mat = 0
+   for (i in 1:anova_K$numK) {
+     m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+   }
   
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
-  # KLK = n_l * lambda * K + m_mat
-  KLK = lambda * K + m_mat
+  KLK = n_l * lambda * K + m_mat
   KLK = fixit(KLK)
   diag(KLK) = diag(KLK) + epsilon_H
   inv_KLK = solve(KLK)
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   diag(Q) = diag(Q) + epsilon_H
-  
-  # Q = Q / n_l
+  Q = Q / n_l
   
   # Q = J %*% Q %*% t(J)
   # diag(Q) = diag(Q) + epsilon_H
@@ -388,7 +381,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # (3) Compute d <- g
   # g = -y_vec
-  g = -y_vec * n_l
+  g = -y_vec / n_l
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]

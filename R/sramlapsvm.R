@@ -125,9 +125,9 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
     anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
     # K = combine_kernel(anova_kernel = anova_K, theta = theta)
 
-    W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
-    # graph = make_knn_graph_mat(rx, k = adjacency_k)
-    graph = W
+    # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
+    # graph = W
+	graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)

@@ -151,7 +151,6 @@ make_knn_graph_mat = function(X, k = 6)
   }
   graph_mat = matrix(0, nrow(X), nrow(X))
   graph_mat[(t(knn_mat) + knn_mat) != 0] = 1
-  diag(graph_mat) = 0
   return(graph_mat)
 }
 
