@@ -334,11 +334,19 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
     m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
-  inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon_H, n))
+  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
-  Q = K %*% inv_KLK %*% K
+  KLK = n_l * lambda * K + m_mat
+  KLK = fixit(KLK)
+  diag(KLK) = diag(KLK) + epsilon_H
+  inv_KLK = solve(KLK)
+
+  Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+
   diag(Q) = diag(Q) + epsilon_H
 
+  # Q = J %*% Q %*% t(J)
+  # diag(Q) = diag(Q) + epsilon_H
   # Convert y into msvm class code
   trans_Y = class_code(y, n_class)
 
@@ -359,10 +367,9 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   # Q = K %*% inv_LK
 
-  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
+
   # Q = K %*% inv_KL
-  Q = J %*% Q %*% t(J)
-  diag(Q) = diag(Q) + epsilon_H
+
   # Q = Q[1:n_l, 1:n_l]
 
   # (2) Compute D <- H
@@ -432,45 +439,68 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # Find b vector
   Kcmat = J %*% K %*% cmat
   flag = T
-  while (flag) {
-    logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
-    # logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
-    c0vec = numeric(n_class)
-    if (all(colSums(logic) > 0)) {
-      # Using alphas between 0 and 1, we get c0vec by KKT conditions
-      for (i in 1:n_class) {
-        c0vec[i] = mean((trans_Y[, i] - Kcmat[, i])[logic[, i]])
-      }
-      if (abs(sum(c0vec)) < 0.001) {
-        flag = F
-      } else {
-        epsilon = min(epsilon * 2, 0.5)
-      }
-    } else {
-      flag = F
-      # Otherwise, LP starts to find b vector
-      # reformulate LP w/o equality constraint and redudancy
-      # objective function with (b_j)_+,-(b_j)_, j=1,...,(k-1) and \xi_ij
+  # while (flag) {
+  #   logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+  #   # logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+  #   c0vec = numeric(n_class)
+  #   if (all(colSums(logic) > 0)) {
+  #     # Using alphas between 0 and 1, we get c0vec by KKT conditions
+  #     for (i in 1:n_class) {
+  #       c0vec[i] = mean((trans_Y[, i] - Kcmat[, i])[logic[, i]])
+  #     }
+  #     if (abs(sum(c0vec)) < 0.001) {
+  #       flag = F
+  #     } else {
+  #       epsilon = min(epsilon * 2, 0.5)
+  #     }
+  #   } else {
+  #     flag = F
+  #     # Otherwise, LP starts to find b vector
+  #     # reformulate LP w/o equality constraint and redudancy
+  #     # objective function with (b_j)_+,-(b_j)_, j=1,...,(k-1) and \xi_ij
+  #
+  #     a = c(rep(0, 2 * (n_class - 1)), rep(1, n_l * (n_class - 1)))
+  #     # inequality conditions
+  #     B1 = -diag(1, n_class - 1) %x% rep(1, n_l)
+  #     B2 = matrix(1, n_l, n_class - 1)
+  #     A = cbind(B1, -B1)
+  #     A = rbind(A, cbind(B2, -B2))
+  #     A = A[nonzeroIndex, ] # reduced.A
+  #     A = cbind(A, diag(1, n_l * (n_class - 1)))
+  #     b = matrix(Kcmat - trans_Y, ncol = 1)
+  #     b = b[nonzeroIndex] # reduced.b
+  #     # constraint directions
+  #     const.dir = matrix(rep(">=", nrow(A)))
+  #
+  #     bpos = lp("min", objective.in = a, const.mat = A, const.dir = const.dir,
+  #               const.rhs = b)$solution[1:(2 * (n_class - 1))]
+  #     c0vec = cbind(diag(1, n_class - 1), -diag(1, n_class - 1)) %*% matrix(bpos, ncol = 1)
+  #     c0vec = c(c0vec, -sum(c0vec))
+  #   }
+  # }
 
-      a = c(rep(0, 2 * (n_class - 1)), rep(1, n_l * (n_class - 1)))
-      # inequality conditions
-      B1 = -diag(1, n_class - 1) %x% rep(1, n_l)
-      B2 = matrix(1, n_l, n_class - 1)
-      A = cbind(B1, -B1)
-      A = rbind(A, cbind(B2, -B2))
-      A = A[nonzeroIndex, ] # reduced.A
-      A = cbind(A, diag(1, n_l * (n_class - 1)))
-      b = matrix(Kcmat - trans_Y, ncol = 1)
-      b = b[nonzeroIndex] # reduced.b
-      # constraint directions
-      const.dir = matrix(rep(">=", nrow(A)))
+  flag = F
+  # Otherwise, LP starts to find b vector
+  # reformulate LP w/o equality constraint and redudancy
+  # objective function with (b_j)_+,-(b_j)_, j=1,...,(k-1) and \xi_ij
 
-      bpos = lp("min", objective.in = a, const.mat = A, const.dir = const.dir,
-                const.rhs = b)$solution[1:(2 * (n_class - 1))]
-      c0vec = cbind(diag(1, n_class - 1), -diag(1, n_class - 1)) %*% matrix(bpos, ncol = 1)
-      c0vec = c(c0vec, -sum(c0vec))
-    }
-  }
+  a = c(rep(0, 2 * (n_class - 1)), rep(1, n_l * (n_class - 1)))
+  # inequality conditions
+  B1 = -diag(1, n_class - 1) %x% rep(1, n_l)
+  B2 = matrix(1, n_l, n_class - 1)
+  A = cbind(B1, -B1)
+  A = rbind(A, cbind(B2, -B2))
+  A = A[nonzeroIndex, ] # reduced.A
+  A = cbind(A, diag(1, n_l * (n_class - 1)))
+  b = matrix(Kcmat - trans_Y, ncol = 1)
+  b = b[nonzeroIndex] # reduced.b
+  # constraint directions
+  const.dir = matrix(rep(">=", nrow(A)))
+
+  bpos = lp("min", objective.in = a, const.mat = A, const.dir = const.dir,
+            const.rhs = b)$solution[1:(2 * (n_class - 1))]
+  c0vec = cbind(diag(1, n_class - 1), -diag(1, n_class - 1)) %*% matrix(bpos, ncol = 1)
+  c0vec = c(c0vec, -sum(c0vec))
 
   # Compute the fitted values
   fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)

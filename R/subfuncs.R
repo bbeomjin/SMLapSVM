@@ -460,3 +460,10 @@ adjacency_knn = function(X, distance = "euclidean", k = 6)
     adj = (adj | t(adj)) * 1
 	return(adj)
 }
+
+fixit = function(A)
+{
+  eig <- eigen(A, symmetric = TRUE)
+  eig$values <- pmax(0, eig$values)
+  return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
+}
