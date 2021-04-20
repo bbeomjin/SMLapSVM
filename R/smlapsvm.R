@@ -127,7 +127,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
 
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = W
-	graph = make_knn_graph_mat(rx, k = adjacency_k)
+	  graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
@@ -333,7 +333,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
    for (i in 1:anova_K$numK) {
      m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
    }
-  
+
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
   KLK = n_l * lambda * K + m_mat
@@ -344,7 +344,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   diag(Q) = diag(Q) + epsilon_H
   Q = Q / n_l
-  
+
   # Q = J %*% Q %*% t(J)
   # diag(Q) = diag(Q) + epsilon_H
   # Convert y into msvm class code
