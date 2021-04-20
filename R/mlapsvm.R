@@ -191,9 +191,9 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
 
 
 
-  W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
-  # graph = make_knn_graph_mat(rx, k = adjacency_k)
-  graph = W
+  # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
+  # graph = W
+  graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
 
