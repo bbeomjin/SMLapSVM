@@ -198,11 +198,11 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   kernel = object$kernel
   kparam = object$opt_param$kparam
   n_class = object$n_class
-  # x = object$x
+  x = object$x
   y = object$y
   theta = object$theta
-  # ux = object$ux
-  # rx = rbind(x, ux)
+  ux = object$ux
+  rx = rbind(x, ux)
   valid_y = object$valid_y
 
   anova_K = object$anova_K
