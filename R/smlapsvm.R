@@ -127,11 +127,13 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
 
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = W
-	  graph = make_knn_graph_mat(rx, k = adjacency_k)
+	graph = make_knn_graph_mat(rx, k = adjacency_k)
     # L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 	if (any(theta > 0)) {
+	  graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
 	  L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 	} else {
+	  graph = make_knn_graph_mat(rx, k = adjacency_k)
 	  L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 	}
 	
@@ -222,8 +224,10 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 
                         if (isCombined) {
 						  if (any(theta > 0)) {
+							graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
 							L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 						  } else {
+							graph = make_knn_graph_mat(rx, k = adjacency_k)
 						    L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 						  }
                           # subK = combine_kernel(anova_K, theta)
