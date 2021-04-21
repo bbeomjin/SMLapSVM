@@ -128,8 +128,13 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = W
 	  graph = make_knn_graph_mat(rx, k = adjacency_k)
-    L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-
+    # L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+	if (any(theta > 0)) {
+	  L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+	} else {
+	  L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+	}
+	
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
     valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
     #  Parallel computation on the combination of hyper-parameters
@@ -216,6 +221,11 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                                            n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
 
                         if (isCombined) {
+						  if (any(theta > 0)) {
+							L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+						  } else {
+						    L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+						  }
                           # subK = combine_kernel(anova_K, theta)
                           init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
                         }
@@ -314,7 +324,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 }
 
 
-smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H = 1e-6)
+smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D = 1e-6)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -329,24 +339,30 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-   m_mat = 0
-   for (i in 1:anova_K$numK) {
-     m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-   }
+  m_mat = 0
+  for (i in 1:anova_K$numK) {
+    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  }
+
+  # m_mat = 0
+  # for (i in 1:anova_K$numK) {
+  #   m_mat = m_mat + lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  # }
 
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
   KLK = n_l * lambda * K + m_mat
+  # KLK = lambda * K + m_mat
   KLK = fixit(KLK)
-  diag(KLK) = diag(KLK) + epsilon_H
+  diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  diag(Q) = diag(Q) + epsilon_H
-  Q = Q / n_l
+  diag(Q) = diag(Q) + epsilon_D
+
 
   # Q = J %*% Q %*% t(J)
-  # diag(Q) = diag(Q) + epsilon_H
+  # diag(Q) = diag(Q) + epsilon_D
   # Convert y into msvm class code
   trans_Y = class_code(y, n_class)
 
@@ -373,15 +389,14 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # Q = Q[1:n_l, 1:n_l]
 
   # (2) Compute D <- H
-  H = (Ik - Jk / n_class) %x% Q
+  D = (Ik - Jk / n_class) %x% Q
 
   # Subset the columns and rows for non-trivial alpha's
-  Reduced_H = H[nonzeroIndex, nonzeroIndex]
-  diag(Reduced_H) = diag(Reduced_H) + epsilon_H
+  Reduced_D = D[nonzeroIndex, nonzeroIndex]
+  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  # g = -y_vec
-  g = -y_vec / n_l
+  g = -y_vec
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
@@ -410,6 +425,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Right hand side of inequality constraints
   r2 = c(rep(0, nrow(R2) / 2), rep(-1, nrow(R2) / 2))
+  # r2 = c(rep(0, nrow(R2) / 2), rep(-1 / n_l, nrow(R2) / 2))
 
   # R consists of right hand sides of equality and inequality constraints
   r = c(r1, r2)
@@ -418,7 +434,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   nonzero = find_nonzero(R)
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
-  dual = solve.QP.compact(Reduced_H, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
+  dual = solve.QP.compact(Reduced_D, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
 
   # Place the dual solution into the non-trivial alpha positions
   alpha = rep(0, qp_dim)

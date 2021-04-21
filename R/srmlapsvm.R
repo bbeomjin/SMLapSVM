@@ -53,6 +53,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
 	cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
   }
 
+  out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
@@ -158,7 +159,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
 
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = W
-	
+
 	graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
@@ -358,7 +359,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 
-srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-5, epsilon_C = 1e-5)
+srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon_D = 1e-6, epsilon = 1e-6)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -387,13 +388,13 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   KLK = n_l * lambda * K + m_mat
   KLK = fixit(KLK)
-  diag(KLK) = diag(KLK) + epsilon
+  diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  diag(Q) = diag(Q) + epsilon
+  diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
   D = matrix(0, qp_dim, qp_dim)
@@ -431,7 +432,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   bvec_temp = matrix(gamma - 1, nrow = n_l, ncol = n_class)
   bvec_temp[y_index] = -gamma
   if (gamma == 0 | gamma == 1) {
-    bvec_temp = bvec_temp - epsilon_C
+    bvec_temp = bvec_temp - epsilon
   }
   bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
 
