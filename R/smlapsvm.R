@@ -171,6 +171,9 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   out$L = L
   out$theta = theta
   out$n_class = n_class
+  out$adjacency_k = adjacency_k
+  out$normalized = normalized
+  out$weightType = weightType
   out$valid_x = valid_x
   out$valid_y = valid_y
   out$anova_K = anova_K
@@ -203,8 +206,13 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   x = object$x
   y = object$y
   theta = object$theta
+  
   ux = object$ux
   rx = rbind(x, ux)
+  adjacency_k = object$adjacency_k
+  normalized = object$normalized
+  weightType = object$weightType
+  
   valid_y = object$valid_y
 
   anova_K = object$anova_K
