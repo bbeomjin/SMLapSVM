@@ -127,16 +127,17 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
 
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = W
-	graph = make_knn_graph_mat(rx, k = adjacency_k)
-    # L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-	if (any(theta > 0)) {
-	  graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
-	  L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-	} else {
-	  graph = make_knn_graph_mat(rx, k = adjacency_k)
-	  L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-	}
-	
+  	graph = make_knn_graph_mat(rx, k = adjacency_k)
+    L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+
+#     if (any(theta > 0)) {
+# 	   graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
+# 	   L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+# 	  } else {
+# 	   graph = make_knn_graph_mat(rx, k = adjacency_k)
+# 	   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+# 	  }
+
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
     valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
     #  Parallel computation on the combination of hyper-parameters
@@ -206,13 +207,13 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   x = object$x
   y = object$y
   theta = object$theta
-  
+
   ux = object$ux
   rx = rbind(x, ux)
   adjacency_k = object$adjacency_k
   normalized = object$normalized
   weightType = object$weightType
-  
+
   valid_y = object$valid_y
 
   anova_K = object$anova_K
@@ -231,13 +232,13 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                                            n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
 
                         if (isCombined) {
-						  if (any(theta > 0)) {
-							graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
-							L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-						  } else {
-							graph = make_knn_graph_mat(rx, k = adjacency_k)
-						    L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-						  }
+            						#   if (any(theta > 0)) {
+            						# 	graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
+            						# 	L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+            						#   } else {
+            						# 	graph = make_knn_graph_mat(rx, k = adjacency_k)
+            						#     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+            						#   }
                           # subK = combine_kernel(anova_K, theta)
                           init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
                         }
