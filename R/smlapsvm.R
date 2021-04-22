@@ -312,9 +312,10 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   }
 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
-  max_D = max(abs(Dmat))
+  # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = Dmat / max_D
+  Dmat = fixit(Dmat, epsilon = epsilon_D)
+  # Dmat = Dmat / max_D
 
   dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = 0
@@ -322,10 +323,10 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   # dvec_temp[dvec_temp == 1] = 0
   # dvec_temp[dvec_temp < 0] = 1
   dvec = c(dvec, as.vector(dvec_temp))
-  dvec = dvec / max_D
+  dvec = dvec
+  # dvec = dvec / max_D
 
   # solve QP
-  Dmat = fixit(Dmat, epsilon = epsilon_D)
   # diag(Dmat) = diag(Dmat) + epsilon_D
 
   A_mat = cbind(-A_mat, diag(1, n_l * n_class))
@@ -419,13 +420,14 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  max_D = max(abs(Reduced_D))
-  Reduced_D = Reduced_D / max_D
+  # max_D = max(abs(Reduced_D))
+  # Reduced_D = Reduced_D / max_D
   Reduced_D = fixit(Reduced_D, epsilon = epsilon_D)
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  g = -y_vec / max_D
+  g = -y_vec
+  # g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
