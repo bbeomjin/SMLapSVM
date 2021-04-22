@@ -367,11 +367,11 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = n_l * lambda * K + m_mat
   # KLK = lambda * K + m_mat
   KLK = fixit(KLK)
-  diag(KLK) = diag(KLK) + epsilon_D
+  diag(KLK) = diag(KLK) #+ epsilon_D
   inv_KLK = solve(KLK)
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  diag(Q) = diag(Q) + epsilon_D
+  # diag(Q) = diag(Q) + epsilon_D
 
 
   # Q = J %*% Q %*% t(J)
@@ -403,7 +403,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # (2) Compute D <- H
   D = (Ik - Jk / n_class) %x% Q
-
+  
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   diag(Reduced_D) = diag(Reduced_D) + epsilon_D

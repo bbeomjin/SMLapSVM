@@ -404,6 +404,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     D = D + t(Hmatj[[k]]) %*% Q %*% Hmatj[[k]]
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
+  D = fixit(D)
   diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
