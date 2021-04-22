@@ -348,6 +348,10 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   K = combine_kernel(anova_K, theta = theta)
 
+  if (sum(K) == 0) {
+    diag(K) = 1
+  }
+
   n = nrow(K)
   n_u = n - n_l
   qp_dim = n_l * n_class

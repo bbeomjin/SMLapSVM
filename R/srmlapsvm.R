@@ -367,6 +367,10 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   K = combine_kernel(anova_K, theta = theta)
 
+  if (sum(K) == 0) {
+    diag(K) = 1
+  }
+
   n = nrow(K)
   n_l = length(y)
   n_u = n - n_l
