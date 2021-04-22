@@ -336,7 +336,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
-  # Dmat = diag(Dmat) + epsilon_D
+  Dmat = diag(Dmat)
   Dmat = fixit(Dmat, epsilon = epsilon_D)
   # Dmat = Dmat / max_D
 
