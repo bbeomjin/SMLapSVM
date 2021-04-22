@@ -387,7 +387,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
 
   KLK = n_l * lambda * K + m_mat
-  # KLK = fixit(KLK)
+  KLK = fixit(KLK)
   diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
 
