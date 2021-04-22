@@ -403,13 +403,16 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # (2) Compute D <- H
   D = (Ik - Jk / n_class) %x% Q
-  
+
+
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
+  max_D = max(Reduced_D)
+  Reduced_D = Reduced_D / max_D
   diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  g = -y_vec
+  g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
