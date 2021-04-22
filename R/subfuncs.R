@@ -460,9 +460,9 @@ code = function(y)
 # 	return(adj)
 # }
 
-fixit = function(A)
+fixit = function(A, epsilon)
 {
-  eig <- eigen(A, symmetric = TRUE)
-  eig$values <- pmax(0, eig$values)
+  eig = eigen(A, symmetric = TRUE)
+  eig$values = pmax(epsilon, eig$values)
   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 }

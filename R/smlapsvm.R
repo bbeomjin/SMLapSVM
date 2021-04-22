@@ -377,8 +377,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   KLK = n_l * lambda * K + m_mat
   # KLK = lambda * K + m_mat
-  # KLK = fixit(KLK)
-  diag(KLK) = diag(KLK) + epsilon_D
+  KLK = fixit(KLK, epsilon = epsilon_D)
+  # diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
@@ -420,7 +420,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
+  Reduced_D = fixit(Reduced_D, epsilon = epsilon_D)
+  # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
   g = -y_vec / max_D

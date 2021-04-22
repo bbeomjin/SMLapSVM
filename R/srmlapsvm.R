@@ -408,8 +408,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
 
   KLK = n_l * lambda * K + m_mat
-  # KLK = fixit(KLK)
-  diag(KLK) = diag(KLK) + epsilon_D
+  KLK = fixit(KLK, epsilon = epsilon_D)
+  # diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
@@ -428,7 +428,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # D = fixit(D)
   max_D = max(abs(D))
   D = D / max_D
-  diag(D) = diag(D) + epsilon_D
+  D = fixit(D, epsilon = epsilon_D)
+  # diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = -n_class + 1
