@@ -258,7 +258,8 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
                         if (isCombined) {
                           # subK = combine_kernel(anova_K, theta)
-                          init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, ...)
+                          init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
+                                                         lambda = lambda, lambda_I = lambda_I, ...)
                         }
 
                         valid_subK = combine_kernel(valid_anova_K, theta)
@@ -298,7 +299,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, epsilon_D = 1e-6)
+find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -329,6 +330,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
 
+
   # dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   # dvec_temp[cbind(1:n_l, y)] = 0
 
@@ -341,7 +343,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   dvec = c(dvec, as.vector(dvec_temp))
 
   # solve QP
-  diag(Dmat) = diag(Dmat) + epsilon_D
+  # diag(Dmat) = diag(Dmat) + epsilon_D
 
   m_index = matrix(1:(n_l * n_class), ncol = n_class)[cbind(1:n_l, y)]
   A_mat[m_index, ] = -A_mat[m_index, ]

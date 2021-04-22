@@ -286,7 +286,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   return(out)
 }
 
-find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, epsilon_D = 1e-6)
+find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -324,7 +324,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   dvec = c(dvec, as.vector(dvec_temp))
 
   # solve QP
-  diag(Dmat) = diag(Dmat) + epsilon_D
+  # diag(Dmat) = diag(Dmat) + epsilon_D
 
   A_mat = cbind(-A_mat, diag(1, n_l * n_class))
   A_mat = rbind(A_mat, diag(1, ncol(A_mat)))
