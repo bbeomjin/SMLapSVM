@@ -388,13 +388,13 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   KLK = n_l * lambda * K + m_mat
   KLK = fixit(KLK)
-  diag(KLK) = diag(KLK) + epsilon_D
+  diag(KLK) = diag(KLK) #+ epsilon_D
   inv_KLK = solve(KLK)
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  diag(Q) = diag(Q) + epsilon_D
+  # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
   D = matrix(0, qp_dim, qp_dim)
@@ -404,7 +404,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     D = D + t(Hmatj[[k]]) %*% Q %*% Hmatj[[k]]
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
-  diag(D) = diag(D) + epsilon
+  diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = -n_class + 1
