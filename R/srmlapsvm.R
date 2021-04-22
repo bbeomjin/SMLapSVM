@@ -335,9 +335,10 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   }
 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
-  max_D = max(abs(Dmat))
+  # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = Dmat / max_D
+  Dmat = fixit(Dmat, epsilon = epsilon_D)
+  # Dmat = Dmat / max_D
 
   # dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   # dvec_temp[cbind(1:n_l, y)] = 0
@@ -349,10 +350,11 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   # dvec_temp[dvec_temp == 1] = 0
   # dvec_temp[dvec_temp < 0] = 1
   dvec = c(dvec, as.vector(dvec_temp))
-  dvec = dvec / max_D
+  dvec = dvec
+  # dvec = dvec / max_D
 
   # solve QP
-  Dmat = fixit(Dmat, epsilon = epsilon_D)
+
   # diag(Dmat) = diag(Dmat) + epsilon_D
 
   m_index = matrix(1:(n_l * n_class), ncol = n_class)[cbind(1:n_l, y)]
