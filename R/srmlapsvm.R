@@ -299,7 +299,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1)
+find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, epsilon_D = 1e-6)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -328,8 +328,9 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   }
 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
+  max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-
+  Dmat = Dmat / max_D
 
   # dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   # dvec_temp[cbind(1:n_l, y)] = 0
@@ -341,9 +342,10 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   # dvec_temp[dvec_temp == 1] = 0
   # dvec_temp[dvec_temp < 0] = 1
   dvec = c(dvec, as.vector(dvec_temp))
+  dvec = dvec / max_D
 
   # solve QP
-  # diag(Dmat) = diag(Dmat) + epsilon_D
+  diag(Dmat) = diag(Dmat) + epsilon_D
 
   m_index = matrix(1:(n_l * n_class), ncol = n_class)[cbind(1:n_l, y)]
   A_mat[m_index, ] = -A_mat[m_index, ]
