@@ -438,6 +438,233 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   return(out)
 }
 
+sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, weight = NULL,
+                            epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300, epsilon_D = 1e-6)
+{
 
+  out = list()
+  # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
+  n_class = length(unique(y))
+
+  K = combine_kernel(anova_K, theta = theta)
+
+  if (sum(K) == 0) {
+    diag(K) = 1
+  }
+
+  n = nrow(K)
+  n_l = length(y)
+  n_u = n - n_l
+  qp_dim = n_l * n_class
+
+  code_mat = code(y)
+  In = code_mat$In
+  vmatj = code_mat$vmatj
+  umatj = code_mat$umatj
+  Hmatj = code_mat$Hmatj
+  y_index = code_mat$y_index
+
+  J = cbind(diag(n_l), matrix(0, n_l, n_u))
+
+  m_mat = 0
+  for (i in 1:anova_K$numK) {
+    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  }
+
+  KLK = n_l * lambda * K + m_mat
+  KLK = fixit(KLK, epsilon = epsilon_D)
+  # diag(KLK) = diag(KLK) + epsilon_D
+  inv_KLK = solve(KLK)
+
+  # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
+
+  Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  # diag(Q) = diag(Q) + epsilon_D
+
+  # Compute Q = K x inv_LK
+  D = matrix(0, qp_dim, qp_dim)
+  Amat = matrix(0, (2 * qp_dim + n_class), qp_dim)
+
+  for (k in 1:n_class) {
+    D = D + t(Hmatj[[k]]) %*% Q %*% Hmatj[[k]]
+    Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
+  }
+  # D = fixit(D)
+  max_D = max(abs(D))
+  D = D / max_D
+  D = fixit(D, epsilon = epsilon_D)
+  # diag(D) = diag(D) + epsilon_D
+
+  g_temp = matrix(-1, n_l, n_class)
+  g_temp[y_index] = -n_class + 1
+  g = as.vector(g_temp)
+
+  # g = rep(-1, qp_dim)
+  # for(j in 1:n_class) {
+  #   for(i in 1:n_l) {
+  #     if (y[i] == j) {
+  #       g[(j - 1) * n_l + i] = -(n_class - 1)
+  #     }
+  #   }
+  # }
+
+  dvec = -g / max_D
+
+  diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
+  diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
+
+  # (3) compute Ama
+
+  # (4) compute bvec
+  # bvec = rep(0, (2 * qp_dim + n_class))
+
+  bvec_temp = matrix(gamma - 1, nrow = n_l, ncol = n_class)
+  bvec_temp[y_index] = -gamma
+  if (gamma == 0 | gamma == 1) {
+    bvec_temp = bvec_temp - epsilon
+  }
+  bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
+
+  # for (j in 1:n_class) {
+  #   for (i in 1:n_l) {
+  #     flag = 0
+  #     if (y[i] == j) {
+  #       flag = 1
+  #     }
+  #     bvec[n_class + qp_dim + (j - 1) * n_l + i] = -(gamma * flag + (1 - gamma) * (1 - flag))
+  #     # correction to avoid redundant constraints when gamma = 0 or 1
+  #     if ((flag == 1 & gamma == 0) | (flag == 0 & gamma == 1)) {
+  #       bvec[n_class + qp_dim + (j - 1) * n_l + i] = bvec[n_class + qp_dim + (j - 1) * n_l + i] - epsilon
+  #     }
+  #   }
+  # }
+
+  # remove one redudant constraint
+  Amat1 = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
+  bvec1 = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
+
+  # (5) find solution by solve.QP
+
+  dual = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
+  alpha = dual$solution
+  alpha[alpha < 0] = 0
+
+  alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
+  alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
+
+  for (j in 1:n_class) {
+    alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
+  }
+
+  # for (j in 1:n_class) {
+  #   for (i in 1:n_l) {
+  #     if (y[i] == j & (alpha[(j - 1) * n_l + i] > gamma)) {
+  #       alpha[(j - 1) * n_l + i] = gamma
+  #     }
+  #     if (y[i] != j & (alpha[(j - 1) * n_l + i] > (1 - gamma))) {
+  #       alpha[(j - 1) * n_l + i] = (1 - gamma)
+  #     }
+  #   }
+  # }
+
+  cmat_temp = matrix(0, n_l, n_class)
+  for (k in 1:n_class) {
+    cmat_temp[, k] = Hmatj[[k]] %*% alpha
+  }
+  cmat = inv_KLK %*% K %*% t(J) %*% cmat_temp
+
+  # find b vector using LP
+  Kcmat = J %*% K %*% cmat
+
+  alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
+  alp_temp[y_index] = gamma
+
+  alp = c(as.vector(alp_temp), rep(0, 2 * n_class))
+
+  # alp = rep((1 - gamma), (qp_dim + 2 * n_class))
+  # for (j in 1:n_class) {
+  #   for (i in 1:n_l) {
+  #     if (y[i] == j) {
+  #       alp[n_l * (j - 1) + i] = gamma
+  #     }
+  #   }
+  # }
+  # alp[(qp_dim + 1):(qp_dim + 2 * n_class)] = 0
+
+  # constraint matrix and vector
+
+  ######################### 수정필요 ########################################
+  Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class))
+  Alp2 = diag(qp_dim)
+
+  Alp3 = NULL
+  for (j in rep(c(-1, 1), n_class)) {
+    Alp3_temp = matrix(j, nrow = n_l, ncol = n_class)
+    Alp3_temp[y_index] = -j
+    Alp3 = cbind(Alp3, as.vector(Alp3_temp))
+  }
+
+  Alp = rbind(Alp1, cbind(Alp2, Alp3))
+
+  blp_temp = Kcmat + 1
+  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp = c(0, as.vector(blp_temp))
+
+  # print(dim(Alp))
+  # print(length(blp))
+
+
+  Alp = matrix(0, nrow = qp_dim + 1, ncol = (qp_dim + 2 * n_class))
+  blp = rep(0, qp_dim + 1)
+
+  for (j in 1:n_class) {
+    Alp[1, (qp_dim + 2 * j - 1)] = 1
+    Alp[1, (qp_dim + 2 * j)] = -1
+  }
+
+  for(j in 1:n_class) {
+    for(i in 1:n_l) {
+      Alp[(1 + n_l * (j - 1) + i), n_l * (j - 1) + i] = 1
+      if (y[i] == j) {
+        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = 1
+        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = -1
+        blp[(1 + n_l * (j - 1) + i)] = (k - 1) - Kcmat[i, j]
+      }
+      if (y[i] != j) {
+        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = -1
+        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = 1
+        blp[(1 + n_l * (j - 1) + i)] = 1 + Kcmat[i, j]
+      }
+    }
+  }
+  # print(dim(Alp))
+  # print(length(blp))
+
+  ############################################################################
+
+  # constraint directions
+  const_dir = rep(">=", (qp_dim + 1))
+  const_dir[1] = "="
+  cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * n_class)]
+  c0vec = rep(0, n_class)
+  for(j in 1:n_class) {
+    c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+  }
+
+  # compute the fitted values
+  fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
+  fit_class = apply(fit, 1, which.max)
+
+  # Return the output
+  out$alpha = alpha_mat
+  out$cmat = cmat
+  out$c0vec = c0vec
+  out$fit = fit
+  out$fit_class = fit_class
+  out$n_l = n_l
+  out$n_u = n_u
+  out$n_class = n_class
+  return(out)
+}
 
 
