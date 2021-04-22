@@ -411,7 +411,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  max_D = max(Reduced_D)
+  max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
   diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 

@@ -409,7 +409,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
   # D = fixit(D)
-  max_D = max(D)
+  max_D = max(abs(D))
   D = D / max_D
   diag(D) = diag(D) + epsilon_D
 
