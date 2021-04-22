@@ -143,10 +143,10 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          error = try((
+                          error = try({
                             msvm_fit = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y,
                                                         lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
-                          ))
+                          })
 
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.mlapsvm_compact(msvm_fit, newK = valid_K)$class
@@ -234,13 +234,13 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 
   fold_err = mclapply(1:length(lambda_theta_seq),
                       function(j) {
-                        error = try((
+                        error = try({
                           theta = find_theta.smlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$cmat, c0vec = init_model$c0vec,
                                                       n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
                           if (isCombined) {
                             init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
                           }
-                        ))
+                        })
 
                         if (!inherits(error, "try-error")) {
                           valid_subK = combine_kernel(valid_anova_K, theta)
