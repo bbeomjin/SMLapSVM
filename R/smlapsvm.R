@@ -418,7 +418,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  g = -y_vec / max_D
+  g = (-y_vec - min_D) / (max_D - min_D)
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
