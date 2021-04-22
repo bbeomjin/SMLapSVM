@@ -178,9 +178,9 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   out$L = L
   out$theta = theta
   out$n_class = n_class
-  out$adjacency_k = adjacency_k
-  out$normalized = normalized
-  out$weightType = weightType
+  # out$adjacency_k = adjacency_k
+  # out$normalized = normalized
+  # out$weightType = weightType
   out$valid_x = valid_x
   out$valid_y = valid_y
   out$anova_K = anova_K
@@ -210,15 +210,15 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   kernel = object$kernel
   kparam = object$opt_param$kparam
   n_class = object$n_class
-  x = object$x
+  # x = object$x
   y = object$y
   theta = object$theta
 
-  ux = object$ux
-  rx = rbind(x, ux)
-  adjacency_k = object$adjacency_k
-  normalized = object$normalized
-  weightType = object$weightType
+  # ux = object$ux
+  # rx = rbind(x, ux)
+  # adjacency_k = object$adjacency_k
+  # normalized = object$normalized
+  # weightType = object$weightType
 
   valid_y = object$valid_y
 
@@ -234,29 +234,28 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 
   fold_err = mclapply(1:length(lambda_theta_seq),
                       function(j) {
-                        theta = find_theta.smlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$cmat, c0vec = init_model$c0vec,
-                                           n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
+                        error = try((
+                          theta = find_theta.smlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$cmat, c0vec = init_model$c0vec,
+                                                      n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
 
-                        if (isCombined) {
-            						#   if (any(theta > 0)) {
-            						# 	graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
-            						# 	L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-            						#   } else {
-            						# 	graph = make_knn_graph_mat(rx, k = adjacency_k)
-            						#     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-            						#   }
-                          # subK = combine_kernel(anova_K, theta)
-                          init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
-                        }
+                          if (isCombined) {
+                            init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
+                          }
+                        ))
 
-                        valid_subK = combine_kernel(valid_anova_K, theta)
-                        pred_val = predict.mlapsvm_compact(init_model, newK = valid_subK)$class
+                        if (!inherits(error, "try-error")) {
+                          valid_subK = combine_kernel(valid_anova_K, theta)
+                          pred_val = predict.mlapsvm_compact(init_model, newK = valid_subK)$class
 
-                        if (criterion == "0-1") {
-                          acc = sum(valid_y == pred_val) / length(valid_y)
-                          err = 1 - acc
+                          if (criterion == "0-1") {
+                            acc = sum(valid_y == pred_val) / length(valid_y)
+                            err = 1 - acc
+                          } else {
+                            # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                          }
                         } else {
-                          # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                          err = 1
+                          theta = rep(1, anova_K$numK)
                         }
                         return(list(error = err, theta = theta))
                       }, mc.cores = nCores)
