@@ -168,16 +168,22 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          msvm_fit = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
-                                                      lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
+                          error = try((
+                            msvm_fit = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
+                                                         lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
+                          ))
 
-                          pred_val = predict.rmlapsvm_compact(msvm_fit, newK = valid_K)$class
-
-                          if (criterion == "0-1") {
-                            acc = sum(valid_y == pred_val) / length(valid_y)
-                            err = 1 - acc
+                          if (!inherits(error, "try-error")) {
+                            pred_val = predict.rmlapsvm_compact(msvm_fit, newK = valid_K)$class
+                            if (criterion == "0-1") {
+                              acc = sum(valid_y == pred_val) / length(valid_y)
+                              err = 1 - acc
+                            } else {
+                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            }
                           } else {
-                            # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            msvm_fit = NULL
+                            err = 1
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
@@ -292,7 +298,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, epsilon = 1e-6)
+find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, epsilon_D = 1e-6)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -335,7 +341,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   dvec = c(dvec, as.vector(dvec_temp))
 
   # solve QP
-  diag(Dmat) = diag(Dmat) + epsilon
+  diag(Dmat) = diag(Dmat) + epsilon_D
 
   m_index = matrix(1:(n_l * n_class), ncol = n_class)[cbind(1:n_l, y)]
   A_mat[m_index, ] = -A_mat[m_index, ]

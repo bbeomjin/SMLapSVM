@@ -143,16 +143,22 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          msvm_fit = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
-                                                     ...)
+                          error = try((
+                            msvm_fit = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y,
+                                                        lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
+                          ))
 
-                          pred_val = predict.mlapsvm_compact(msvm_fit, newK = valid_K)$class
-
-                          if (criterion == "0-1") {
-                            acc = sum(valid_y == pred_val) / length(valid_y)
-                            err = 1 - acc
+                          if (!inherits(error, "try-error")) {
+                            pred_val = predict.mlapsvm_compact(msvm_fit, newK = valid_K)$class
+                            if (criterion == "0-1") {
+                              acc = sum(valid_y == pred_val) / length(valid_y)
+                              err = 1 - acc
+                            } else {
+                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            }
                           } else {
-                            # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            msvm_fit = NULL
+                            err = 1
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
@@ -280,7 +286,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   return(out)
 }
 
-find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, epsilon = 1e-6)
+find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, epsilon_D = 1e-6)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -318,7 +324,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   dvec = c(dvec, as.vector(dvec_temp))
 
   # solve QP
-  diag(Dmat) = diag(Dmat) + epsilon
+  diag(Dmat) = diag(Dmat) + epsilon_D
 
   A_mat = cbind(-A_mat, diag(1, n_l * n_class))
   A_mat = rbind(A_mat, diag(1, ncol(A_mat)))
@@ -411,14 +417,12 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  max_D = max(Reduced_D)
-  min_D = min(Reduced_D)
-
-  Reduced_D = (Reduced_D - min_D) / (max_D - min_D)
+  max_D = max(abs(Reduced_D))
+  Reduced_D = Reduced_D / max_D
   diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  g = (-y_vec - min_D) / (max_D - min_D)
+  g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
