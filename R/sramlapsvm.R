@@ -439,7 +439,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 }
 
 sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, weight = NULL,
-                            epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300, epsilon_D = 1e-6)
+                            epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300, epsilon_D = 1e-12)
 {
 
   out = list()
@@ -457,12 +457,25 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  code_mat = code(y)
-  In = code_mat$In
-  vmatj = code_mat$vmatj
-  umatj = code_mat$umatj
-  Hmatj = code_mat$Hmatj
-  y_index = code_mat$y_index
+  yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
+  W = XI_gen(n_class)
+
+
+  y_index = cbind(1:n_l, y)
+  index_mat = matrix(-1, nrow = n_l, ncol = n_class)
+  index_mat[y_index] = 1
+
+  Hmatj = list()
+  for (j in 1:(n_class - 1)) {
+    Hmatj_temp = NULL
+    for (i in 1:n_class) {
+      temp = diag(n_l) %x% W[1, i]
+      diag(temp) = diag(temp) * index_mat[, i]
+      Hmatj_temp = rbind(Hmatj_temp, temp)
+    }
+    Hmatj[[j]] = Hmatj_temp
+  }
+
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
 
@@ -485,9 +498,9 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   D = matrix(0, qp_dim, qp_dim)
   Amat = matrix(0, (2 * qp_dim + n_class), qp_dim)
 
-  for (k in 1:n_class) {
-    D = D + t(Hmatj[[k]]) %*% Q %*% Hmatj[[k]]
-    Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
+  for (k in 1:(n_class - 1)) {
+    D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
+    # Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
   # D = fixit(D)
   max_D = max(abs(D))
