@@ -1,4 +1,4 @@
-mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H = 1e-6)
+mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D = 1e-5)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -34,15 +34,17 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H 
   # Q = Q[1:n_l, 1:n_l]
 
   # (2) Compute D <- H
-  H = (Ik - Jk / n_class) %x% Q
+  D = (Ik - Jk / n_class) %x% Q
 
   # Subset the columns and rows for non-trivial alpha's
-  Reduced_H = H[nonzeroIndex, nonzeroIndex]
-  diag(Reduced_H) = diag(Reduced_H) + epsilon_H
+  Reduced_D = D[nonzeroIndex, nonzeroIndex]
+  max_D = max(abs(Reduced_D))
+  Reduced_D = Reduced_D / max_D
+  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
   # g = -y_vec
-  g = -y_vec
+  g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
@@ -79,7 +81,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H 
   nonzero = find_nonzero(R)
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
-  dual = solve.QP.compact(Reduced_H, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
+  dual = solve.QP.compact(Reduced_D, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
 
   # Place the dual solution into the non-trivial alpha positions
   alpha = rep(0, qp_dim)
@@ -159,7 +161,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_H 
 
 
 mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = FALSE, adjacency_k = 6, normalized = FALSE,
-                   weight = NULL, weightType = "Binary", epsilon = 1e-6, epsilon_H = 1e-6)
+                   weight = NULL, weightType = "Binary", epsilon = 1e-6, epsilon_D = 1e-5)
 {
   out = list()
   n_l = NROW(x)
@@ -197,7 +199,7 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
 
-  solutions = mlapsvm_compact(K = K, L = L, y = y, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon, epsilon_H = epsilon_H)
+  solutions = mlapsvm_compact(K = K, L = L, y = y, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon, epsilon_D = epsilon_D)
 
   out$x = x
   out$ux = ux
@@ -211,7 +213,7 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   out$c0vec = solutions$c0vec
   out$alpha = solutions$alpha
   out$epsilon = epsilon
-  out$epsilon_H = epsilon_H
+  out$epsilon_D = epsilon_D
   out$kernel = kernel
   out$scale = scale
   out$center = center
