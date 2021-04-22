@@ -127,7 +127,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
 
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = W
-	graph = make_knn_graph_mat(rx, k = adjacency_k)
+	  graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
@@ -142,16 +142,23 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
 
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          msvm_fit = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma, ...)
-                          # msvm_fit = angle_lapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma)
+                          error = try({
+                            msvm_fit = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma, ...)
+                            # msvm_fit = angle_lapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma)
+                          })
 
-                          pred_val = predict.ramlapsvm_core(msvm_fit, newK = valid_K)$class
+                          if (!inherits(error, "try-error")) {
+                            pred_val = predict.ramlapsvm_core(msvm_fit, newK = valid_K)$class
 
-                          if (criterion == "0-1") {
-                            acc = sum(valid_y == pred_val) / length(valid_y)
-                            err = 1 - acc
+                            if (criterion == "0-1") {
+                              acc = sum(valid_y == pred_val) / length(valid_y)
+                              err = 1 - acc
+                            } else {
+                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            }
                           } else {
-                            # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            msvm_fit = NULL
+                            err = 1
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
@@ -349,7 +356,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 }
 
 
-sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, weight = NULL, epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300, epsilon_D = 1e-6)
+sramlapsvm_core_old = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, weight = NULL, epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300, epsilon_D = 1e-6)
 {
 
   out = list()
@@ -438,8 +445,8 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   return(out)
 }
 
-sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, weight = NULL,
-                            epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300, epsilon_D = 1e-12)
+sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
+                            epsilon = 1e-6, epsilon_D = 1e-8)
 {
 
   out = list()
@@ -466,14 +473,18 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   index_mat[y_index] = 1
 
   Hmatj = list()
+  Lmatj = list()
   for (j in 1:(n_class - 1)) {
     Hmatj_temp = NULL
+    Lmatj_temp = NULL
     for (i in 1:n_class) {
-      temp = diag(n_l) %x% W[1, i]
+      temp = diag(n_l) %x% W[j, i]
       diag(temp) = diag(temp) * index_mat[, i]
       Hmatj_temp = rbind(Hmatj_temp, temp)
+      Lmatj_temp = c(Lmatj_temp, diag(temp))
     }
     Hmatj[[j]] = Hmatj_temp
+    Lmatj[[j]] = Lmatj_temp
   }
 
 
@@ -491,22 +502,23 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
+
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
-  D = matrix(0, qp_dim, qp_dim)
-  Amat = matrix(0, (2 * qp_dim + n_class), qp_dim)
-
+  D = 0
+  Amat = matrix(0, n_l * n_class, n_class - 1)
   for (k in 1:(n_class - 1)) {
     D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
-    # Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
+    Amat[, k] = Lmatj[[k]]
   }
   # D = fixit(D)
-  max_D = max(abs(D))
-  D = D / max_D
+  # max_D = max(abs(D))
+  # D = D / max_D
   D = fixit(D, epsilon = epsilon_D)
   # diag(D) = diag(D) + epsilon_D
+
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = -n_class + 1
@@ -521,10 +533,11 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   #   }
   # }
 
-  dvec = -g / max_D
+  dvec = -g
 
-  diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
-  diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
+  # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
+  # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
+  Amat = cbind(Amat, diag(-1, n_l * n_class), diag(1, n_l * n_class))
 
   # (3) compute Ama
 
@@ -536,7 +549,8 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   if (gamma == 0 | gamma == 1) {
     bvec_temp = bvec_temp - epsilon
   }
-  bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
+  # bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
+  bvec = c(rep(0, n_class - 1), as.vector(bvec_temp), rep(0, n_l * n_class))
 
   # for (j in 1:n_class) {
   #   for (i in 1:n_l) {
@@ -553,21 +567,21 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   # }
 
   # remove one redudant constraint
-  Amat1 = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
-  bvec1 = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
+  # Amat1 = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
+  # bvec1 = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
 
   # (5) find solution by solve.QP
 
-  dual = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
+  dual = solve.QP(D, dvec, Amat, bvec, meq = 2)
   alpha = dual$solution
   alpha[alpha < 0] = 0
 
   alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
-  alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
+  # alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
 
-  for (j in 1:n_class) {
-    alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
-  }
+  # for (j in 1:n_class) {
+  #   alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
+  # }
 
   # for (j in 1:n_class) {
   #   for (i in 1:n_l) {
@@ -580,19 +594,24 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   #   }
   # }
 
-  cmat_temp = matrix(0, n_l, n_class)
-  for (k in 1:n_class) {
-    cmat_temp[, k] = Hmatj[[k]] %*% alpha
+  alpha_vec = as.vector(alpha_mat)
+
+  cmat_temp = matrix(0, n, n_class - 1)
+  for (k in 1:(n_class - 1)) {
+    cmat_temp[, k] = K %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
   }
-  cmat = inv_KLK %*% K %*% t(J) %*% cmat_temp
+  cmat = inv_KLK %*% cmat_temp
 
   # find b vector using LP
-  Kcmat = J %*% K %*% cmat
+  Kcmat = (J %*% K %*% cmat) %*% W
+
+  # table(y, apply(Kcmat, 1, which.max))
+
 
   alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   alp_temp[y_index] = gamma
 
-  alp = c(as.vector(alp_temp), rep(0, 2 * n_class))
+  alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
 
   # alp = rep((1 - gamma), (qp_dim + 2 * n_class))
   # for (j in 1:n_class) {
@@ -607,71 +626,56 @@ sramlapsvm_core2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
   # constraint matrix and vector
 
   ######################### 수정필요 ########################################
-  Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class))
+  # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
   Alp2 = diag(qp_dim)
 
   Alp3 = NULL
-  for (j in rep(c(-1, 1), n_class)) {
+  for (j in rep(c(-1, 1), n_class - 1)) {
     Alp3_temp = matrix(j, nrow = n_l, ncol = n_class)
     Alp3_temp[y_index] = -j
     Alp3 = cbind(Alp3, as.vector(Alp3_temp))
   }
 
-  Alp = rbind(Alp1, cbind(Alp2, Alp3))
+  # yyindex = cbind(rep(1:n_l, n_class))
+  Wlp = NULL
+  for (j in 1:(n_class - 1)) {
+    Wlp = cbind(Wlp, cbind(yyi[cbind(rep(1:n_l, n_class), j)], yyi[cbind(rep(1:n_l, n_class), j)]))
+  }
+
+  Alp3 = Wlp * Alp3
+
+  # Alp = rbind(Alp1, cbind(Alp2, Alp3))
+  Alp = cbind(Alp2, Alp3)
 
   blp_temp = Kcmat + 1
   blp_temp[y_index] = (k - 1) - Kcmat[y_index]
-  blp = c(0, as.vector(blp_temp))
-
-  # print(dim(Alp))
-  # print(length(blp))
+  blp = as.vector(blp_temp)
 
 
-  Alp = matrix(0, nrow = qp_dim + 1, ncol = (qp_dim + 2 * n_class))
-  blp = rep(0, qp_dim + 1)
-
-  for (j in 1:n_class) {
-    Alp[1, (qp_dim + 2 * j - 1)] = 1
-    Alp[1, (qp_dim + 2 * j)] = -1
-  }
-
-  for(j in 1:n_class) {
-    for(i in 1:n_l) {
-      Alp[(1 + n_l * (j - 1) + i), n_l * (j - 1) + i] = 1
-      if (y[i] == j) {
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = 1
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = -1
-        blp[(1 + n_l * (j - 1) + i)] = (k - 1) - Kcmat[i, j]
-      }
-      if (y[i] != j) {
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = -1
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = 1
-        blp[(1 + n_l * (j - 1) + i)] = 1 + Kcmat[i, j]
-      }
-    }
-  }
   # print(dim(Alp))
   # print(length(blp))
 
   ############################################################################
 
   # constraint directions
-  const_dir = rep(">=", (qp_dim + 1))
-  const_dir[1] = "="
-  cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * n_class)]
-  c0vec = rep(0, n_class)
-  for(j in 1:n_class) {
-    c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+  const_dir = rep(">=", qp_dim)
+  # const_dir[1] = "="
+  cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * (n_class - 1))]
+  c0vec_temp = rep(0, n_class - 1)
+  for(j in 1:(n_class - 1)) {
+    c0vec_temp[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
   }
 
+  c0vec = drop(t(c0vec_temp) %*% W)
   # compute the fitted values
-  fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
+  fit = (matrix(c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
   fit_class = apply(fit, 1, which.max)
+  # table(y, fit_class)
 
   # Return the output
   out$alpha = alpha_mat
-  out$cmat = cmat
-  out$c0vec = c0vec
+  out$beta = cmat
+  out$beta0 = c0vec
   out$fit = fit
   out$fit_class = fit_class
   out$n_l = n_l
