@@ -1,4 +1,4 @@
-mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D = 1e-5)
+mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D = 1e-10)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -40,7 +40,8 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D 
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
+  Reduced_D = fixit(Reduced_D, epsilon = epsilon_D)
+  # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
   # g = -y_vec
