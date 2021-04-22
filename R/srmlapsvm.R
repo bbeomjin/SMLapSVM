@@ -256,7 +256,6 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                           theta = find_theta.srmlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
                                                        cmat = init_model$cmat, c0vec = init_model$c0vec, n_class = n_class,
                                                        lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
-
                           if (isCombined) {
                             # subK = combine_kernel(anova_K, theta)
                             init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,

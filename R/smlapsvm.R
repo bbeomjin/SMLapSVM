@@ -237,7 +237,6 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                         error = try((
                           theta = find_theta.smlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$cmat, c0vec = init_model$c0vec,
                                                       n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
-
                           if (isCombined) {
                             init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
                           }
