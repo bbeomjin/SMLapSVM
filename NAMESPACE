@@ -19,5 +19,6 @@ import("quadprog")
 import("lpSolve")
 import("parallel")
 import("RSSL")
+import("Matrix")
 # import("igraph")
 	   
