@@ -3,7 +3,7 @@ sramlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
                     lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
                     gamma = 0.5, adjacency_k = 6, normalized = FALSE, weightType = "Binary",
                     kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
-                    scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, ...)
+                    scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
 {
   out = list()
   cat("Fit c-step \n")
@@ -21,11 +21,19 @@ sramlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
                         gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                         kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
 
+  if (verbose == 1) {
+    cat("CV-error(cstep):", cstep_fit$opt_valid_err, "\n")
+    cat("CV-error(theta-step):", theta_step_fit$opt_valid_err, "\n")
+    cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
+  }
+
+  out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
   out$kparam = opt_cstep_fit$opt_param$kparam
-  out$theta = theta_step_fit$opt_theta
+  out$opt_theta = theta_step_fit$opt_theta
+  out$theta = theta_step_fit$theta
   out$x = x
   out$y = y
   out$ux = ux
