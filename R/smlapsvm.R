@@ -50,7 +50,7 @@ predict.smlapsvm = function(object, newx = NULL, newK = NULL)
 
   if (is.null(newK)) {
     new_anova_K = make_anovaKernel(newx, rbind(object$x, object$ux), kernel = list(type = object$kernel, par = object$kparam))
-    newK = combine_kernel(new_anova_K, theta = object$theta)
+    newK = combine_kernel(new_anova_K, theta = object$opt_theta)
     # newK = kernelMat(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
