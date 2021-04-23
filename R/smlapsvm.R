@@ -423,15 +423,15 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  max_D = max(abs(Reduced_D))
-  Reduced_D = Reduced_D / max_D
+  # max_D = max(abs(Reduced_D))
+  # Reduced_D = Reduced_D / max_D
   Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  # g = -y_vec
-  g = -y_vec / max_D
+  g = -y_vec
+  # g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]

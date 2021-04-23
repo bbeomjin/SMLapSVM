@@ -234,7 +234,8 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 
                         if (isCombined) {
                           # subK = combine_kernel(anova_K, theta)
-                          init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
+                          init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I,
+                                                       gamma = gamma, ...)
                           # init_model = angle_lapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma)
                         }
 
