@@ -284,7 +284,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   return(out)
 }
 
-find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-12, rel_eig_tol = 1e-10)
+find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-12, rel_eig_tol = 1e-5)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -348,7 +348,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 }
 
 
-smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, rel_eig_tol = 1e-8, eig_tol = 1e-12)
+smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, rel_eig_tol = 1e-5, eig_tol = 1e-12)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -381,8 +381,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   KLK = n_l * lambda * K + m_mat
   # KLK = lambda * K + m_mat
-  # KLK = fixit(KLK, epsilon = epsilon_D)
-  KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
+  KLK = fixit(KLK, epsilon = eig_tol)
+  # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
 
@@ -425,8 +425,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   # max_D = max(abs(Reduced_D))
   # Reduced_D = Reduced_D / max_D
-  # Reduced_D = fixit(Reduced_D, epsilon = epsilon_D)
-  Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
+  Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
+  # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
