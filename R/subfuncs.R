@@ -463,7 +463,7 @@ code = function(y)
 fixit = function(A, epsilon)
 {
   eig = eigen(A, symmetric = TRUE)
-  eig$values = pmax(0, eig$values) + epsilon
+  eig$values = pmax(epsilon, eig$values)
   # eig$values[eig$values <= epsilon] = eig$values[eig$values <= epsilon] + epsilon
   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 }
