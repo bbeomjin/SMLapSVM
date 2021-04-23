@@ -9,7 +9,7 @@ exportClasses("ramlapsvm_core", "ramlapsvm", "sramlapsvm",
 			  "smlapsvm", "mlapsvm", "rmlapsvm_core", "rmlapsvm", "srmlapsvm")
 			  
 # Load dynamic libraries (shared object files)
-useDynLib(SMLapSVM)
+# useDynLib(SMLapSVM)
 
 import("methods")
 import("stats")
