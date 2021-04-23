@@ -260,7 +260,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   out$c0vec = solutions$c0vec
   out$alpha = solutions$alpha
   out$epsilon = epsilon
-  out$epsilon_D = epsilon_D
+  out$eig_tol = eig_tol
   out$kernel = kernel
   out$scale = scale
   out$center = center

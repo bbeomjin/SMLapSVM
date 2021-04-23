@@ -214,7 +214,7 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   out$c0vec = solutions$c0vec
   out$alpha = solutions$alpha
   out$epsilon = epsilon
-  out$epsilon_D = epsilon_D
+  out$eig_tol = eig_tol
   out$kernel = kernel
   out$scale = scale
   out$center = center
