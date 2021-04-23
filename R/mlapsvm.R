@@ -1,4 +1,4 @@
-mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D = 1e-12)
+mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-10, rel_eig_tol = 1e-5)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -38,14 +38,14 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D 
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  # max_D = max(abs(Reduced_D))
-  # Reduced_D = Reduced_D / max_D
-  Reduced_D = fixit(Reduced_D, epsilon = epsilon_D)
+  max_D = max(abs(Reduced_D))
+  Reduced_D = Reduced_D / max_D
+  Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  g = -y_vec
-  # g = -y_vec / max_D
+  # g = -y_vec
+  g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
@@ -162,7 +162,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, epsilon_D 
 
 
 mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = FALSE, adjacency_k = 6, normalized = FALSE,
-                   weight = NULL, weightType = "Binary", epsilon = 1e-6, epsilon_D = 1e-12)
+                   weight = NULL, weightType = "Binary", epsilon = 1e-6, eig_tol = 1e-10)
 {
   out = list()
   n_l = NROW(x)
@@ -200,7 +200,7 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
 
-  solutions = mlapsvm_compact(K = K, L = L, y = y, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon, epsilon_D = epsilon_D)
+  solutions = mlapsvm_compact(K = K, L = L, y = y, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon, eig_tol = eig_tol)
 
   out$x = x
   out$ux = ux

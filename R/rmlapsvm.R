@@ -1,4 +1,4 @@
-rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, epsilon_D = 1e-12)
+rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-10, rel_eig_tol = 1e-5)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -28,9 +28,9 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
 
-  # max_D = max(abs(D))
-  # D = D / max_D
-  D = fixit(D, epsilon = epsilon_D)
+  max_D = max(abs(D))
+  D = D / max_D
+  D = fixit(D, epsilon = eig_tol)
   # diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
@@ -46,8 +46,8 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   #   }
   # }
 
-  dvec = -g
-  # dvec = -g / max_D
+  # dvec = -g
+  dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -208,7 +208,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
-                    adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6, epsilon_D = 1e-12)
+                    adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6, eig_tol = 1e-10)
 {
   out = list()
   n_l = NROW(x)
@@ -246,7 +246,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
   solutions = rmlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I,
-                               epsilon = epsilon, epsilon_D = epsilon_D)
+                               epsilon = epsilon, eig_tol = eig_tol)
 
   out$x = x
   out$ux = ux

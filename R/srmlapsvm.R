@@ -160,7 +160,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
     # graph = W
 
-	graph = make_knn_graph_mat(rx, k = adjacency_k)
+	  graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
@@ -306,7 +306,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-12, rel_eig_tol = 1e-5)
+find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-10, rel_eig_tol = 1e-5)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -380,7 +380,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 
-srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, rel_eig_tol = 1e-5, eig_tol = 1e-12)
+srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, rel_eig_tol = 1e-5, eig_tol = 1e-10)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -431,8 +431,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
   # D = fixit(D)
-  # max_D = max(abs(D))
-  # D = D / max_D
+  max_D = max(abs(D))
+  D = D / max_D
   D = fixit(D, epsilon = eig_tol)
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D
@@ -450,8 +450,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   #   }
   # }
 
-  dvec = -g
-  # dvec = -g / max_D
+  # dvec = -g
+  dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -537,49 +537,52 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # constraint matrix and vector
 
   ######################### 수정필요 ########################################
-  # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class))
-  # Alp2 = diag(qp_dim)
-  #
-  # Alp3 = NULL
-  # for (j in rep(c(-1, 1), n_class)) {
-  #   Alp3_temp = matrix(j, nrow = n_l, ncol = n_class)
-  #   Alp3_temp[y_index] = -j
-  #   Alp3 = cbind(Alp3, as.vector(Alp3_temp))
-  # }
-  #
-  # Alp = rbind(Alp1, cbind(Alp2, Alp3))
-  #
-  # blp_temp = Kcmat + 1
-  # blp_temp[y_index] = (k - 1) - Kcmat[y_index]
-  # blp = c(0, as.vector(blp_temp))
+  Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class))
+  Alp2 = diag(qp_dim)
+
+  Alp3 = matrix(0, nrow = qp_dim, ncol = 2 * n_class)
+
+  Alp3_temp = matrix(-1, nrow = n_l, ncol = n_class)
+  Alp3_temp[y_index] = 1
+
+  for (i in 1:n_class) {
+    Alp3[(n_l * (i - 1) + 1):(n_l * i), (2 * i - 1)] = Alp3_temp[, i]
+    Alp3[(n_l * (i - 1) + 1):(n_l * i), (2 * i)] = -Alp3_temp[, i]
+  }
+
+  Alp = rbind(Alp1, cbind(Alp2, Alp3))
+
+  blp_temp = Kcmat + 1
+  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp = c(0, as.vector(blp_temp))
 
   # print(dim(Alp))
   # print(length(blp))
 
 
-  Alp = matrix(0, nrow = qp_dim + 1, ncol = (qp_dim + 2 * n_class))
-  blp = rep(0, qp_dim + 1)
-
-  for (j in 1:n_class) {
-    Alp[1, (qp_dim + 2 * j - 1)] = 1
-    Alp[1, (qp_dim + 2 * j)] = -1
-  }
-
-  for(j in 1:n_class) {
-    for(i in 1:n_l) {
-      Alp[(1 + n_l * (j - 1) + i), n_l * (j - 1) + i] = 1
-      if (y[i] == j) {
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = 1
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = -1
-        blp[(1 + n_l * (j - 1) + i)] = (k - 1) - Kcmat[i, j]
-      }
-      if (y[i] != j) {
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = -1
-        Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = 1
-        blp[(1 + n_l * (j - 1) + i)] = 1 + Kcmat[i, j]
-      }
-    }
-  }
+  # Alp = matrix(0, nrow = qp_dim + 1, ncol = (qp_dim + 2 * n_class))
+  # blp = rep(0, qp_dim + 1)
+  #
+  # for (j in 1:n_class) {
+  #   Alp[1, (qp_dim + 2 * j - 1)] = 1
+  #   Alp[1, (qp_dim + 2 * j)] = -1
+  # }
+  #
+  # for(j in 1:n_class) {
+  #   for(i in 1:n_l) {
+  #     Alp[(1 + n_l * (j - 1) + i), n_l * (j - 1) + i] = 1
+  #     if (y[i] == j) {
+  #       Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = 1
+  #       Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = -1
+  #       blp[(1 + n_l * (j - 1) + i)] = (k - 1) - Kcmat[i, j]
+  #     }
+  #     if (y[i] != j) {
+  #       Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 1)] = -1
+  #       Alp[(1 + n_l * (j - 1) + i), (qp_dim + 2 * (j - 1) + 2)] = 1
+  #       blp[(1 + n_l * (j - 1) + i)] = 1 + Kcmat[i, j]
+  #     }
+  #   }
+  # }
   # print(dim(Alp))
   # print(length(blp))
 

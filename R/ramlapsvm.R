@@ -1,8 +1,218 @@
 # dyn.load("../src/alpha_update.dll")
+sramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-10, rel_eig_tol = 1e-5)
+{
+
+  out = list()
+  # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
+  n_class = length(unique(y))
+
+  if (sum(K) == 0) {
+    diag(K) = 1
+  }
+
+  n = nrow(K)
+  n_l = length(y)
+  n_u = n - n_l
+  qp_dim = n_l * n_class
+
+  yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
+  W = XI_gen(n_class)
+
+  y_index = cbind(1:n_l, y)
+  index_mat = matrix(-1, nrow = n_l, ncol = n_class)
+  index_mat[y_index] = 1
+
+  Hmatj = list()
+  Lmatj = list()
+  for (j in 1:(n_class - 1)) {
+    Hmatj_temp = NULL
+    Lmatj_temp = NULL
+    for (i in 1:n_class) {
+      temp = diag(n_l) %x% W[j, i]
+      diag(temp) = diag(temp) * index_mat[, i]
+      Hmatj_temp = rbind(Hmatj_temp, temp)
+      Lmatj_temp = c(Lmatj_temp, diag(temp))
+    }
+    Hmatj[[j]] = Hmatj_temp
+    Lmatj[[j]] = Lmatj_temp
+  }
+
+  J = cbind(diag(n_l), matrix(0, n_l, n_u))
+  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+
+  Q = J %*% K %*% inv_LK %*% t(J)
+
+  # Compute Q = K x inv_LK
+  D = 0
+  Amat = matrix(0, n_l * n_class, n_class - 1)
+  for (k in 1:(n_class - 1)) {
+    D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
+    Amat[, k] = Lmatj[[k]]
+  }
+  # D = fixit(D)
+  max_D = max(abs(D))
+  D = D / max_D
+  D = fixit(D, epsilon = eig_tol)
+  # diag(D) = diag(D) + epsilon_D
+
+
+  g_temp = matrix(-1, n_l, n_class)
+  g_temp[y_index] = -n_class + 1
+  g = as.vector(g_temp)
+
+  # g = rep(-1, qp_dim)
+  # for(j in 1:n_class) {
+  #   for(i in 1:n_l) {
+  #     if (y[i] == j) {
+  #       g[(j - 1) * n_l + i] = -(n_class - 1)
+  #     }
+  #   }
+  # }
+
+  # dvec = -g
+  dvec = -g / max_D
+
+  # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
+  # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
+  Amat = cbind(Amat, diag(-1, n_l * n_class), diag(1, n_l * n_class))
+
+  # (3) compute Ama
+
+  # (4) compute bvec
+  # bvec = rep(0, (2 * qp_dim + n_class))
+
+  bvec_temp = matrix(gamma - 1, nrow = n_l, ncol = n_class)
+  bvec_temp[y_index] = -gamma
+  if (gamma == 0 | gamma == 1) {
+    bvec_temp = bvec_temp - epsilon
+  }
+  # bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
+  bvec = c(rep(0, n_class - 1), as.vector(bvec_temp), rep(0, n_l * n_class))
+
+  # for (j in 1:n_class) {
+  #   for (i in 1:n_l) {
+  #     flag = 0
+  #     if (y[i] == j) {
+  #       flag = 1
+  #     }
+  #     bvec[n_class + qp_dim + (j - 1) * n_l + i] = -(gamma * flag + (1 - gamma) * (1 - flag))
+  #     # correction to avoid redundant constraints when gamma = 0 or 1
+  #     if ((flag == 1 & gamma == 0) | (flag == 0 & gamma == 1)) {
+  #       bvec[n_class + qp_dim + (j - 1) * n_l + i] = bvec[n_class + qp_dim + (j - 1) * n_l + i] - epsilon
+  #     }
+  #   }
+  # }
+
+  # remove one redudant constraint
+  # Amat1 = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
+  # bvec1 = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
+
+  # (5) find solution by solve.QP
+
+  dual = solve.QP(D, dvec, Amat, bvec, meq = 2)
+  alpha = dual$solution
+  alpha[alpha < 0] = 0
+
+  alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
+  # alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
+
+  # for (j in 1:n_class) {
+  #   alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
+  # }
+
+  # for (j in 1:n_class) {
+  #   for (i in 1:n_l) {
+  #     if (y[i] == j & (alpha[(j - 1) * n_l + i] > gamma)) {
+  #       alpha[(j - 1) * n_l + i] = gamma
+  #     }
+  #     if (y[i] != j & (alpha[(j - 1) * n_l + i] > (1 - gamma))) {
+  #       alpha[(j - 1) * n_l + i] = (1 - gamma)
+  #     }
+  #   }
+  # }
+
+  alpha_vec = as.vector(alpha_mat)
+
+  cmat = matrix(0, n, n_class - 1)
+  for (k in 1:(n_class - 1)) {
+    cmat[, k] = inv_LK %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
+  }
+
+  # find b vector using LP
+  Kcmat = (J %*% K %*% cmat) %*% W
+
+  # table(y, apply(Kcmat, 1, which.max))
+
+
+  alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
+  alp_temp[y_index] = gamma
+
+  alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
+
+  # alp = rep((1 - gamma), (qp_dim + 2 * n_class))
+  # for (j in 1:n_class) {
+  #   for (i in 1:n_l) {
+  #     if (y[i] == j) {
+  #       alp[n_l * (j - 1) + i] = gamma
+  #     }
+  #   }
+  # }
+  # alp[(qp_dim + 1):(qp_dim + 2 * n_class)] = 0
+
+  # constraint matrix and vector
+  # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
+  Alp1 = diag(qp_dim)
+  Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
+
+
+  for (i in 1:(n_class - 1)) {
+    Alp2[, (2 * i - 1)] = Lmatj[[i]]
+    Alp2[, (2 * i)] = -Lmatj[[i]]
+  }
+
+  Alp = cbind(Alp1, Alp2)
+
+  blp_temp = Kcmat + 1
+  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp = as.vector(blp_temp)
+
+
+  # print(dim(Alp))
+  # print(length(blp))
+
+  ############################################################################
+
+  # constraint directions
+  const_dir = rep(">=", qp_dim)
+  # const_dir[1] = "="
+  cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * (n_class - 1))]
+  c0vec = rep(0, n_class - 1)
+  for(j in 1:(n_class - 1)) {
+    c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+  }
+
+  W_c0vec = drop(t(c0vec) %*% W)
+  # compute the fitted values
+  fit = (matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
+  fit_class = apply(fit, 1, which.max)
+  # table(y, fit_class)
+
+  # Return the output
+  out$alpha = alpha_mat
+  out$beta = cmat
+  out$beta0 = c0vec
+  out$fit = fit
+  out$fit_class = fit_class
+  out$n_l = n_l
+  out$n_u = n_u
+  out$n_class = n_class
+  return(out)
+}
+
+
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
-                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6,
-                  epsilon = 1e-4 * length(y) * length(unique(y)), warm = NULL,
-                  maxiter = 300) {
+                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, eig_tol = 1e-10)
+{
 
   n_l = NROW(x)
   n_u = NROW(ux)
@@ -32,101 +242,14 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   }
   # K = K + diag(1e-8, n)
   # K_temp = kernelMat(x, x, kernel = kernel, kparam = kparam) + 1
-	
+
   # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
   # graph = W
-  
-  graph = make_knn_graph_mat(rx, k = adjacency_k)  
+
+  graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
 
-  # W = RSSL:::adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
-  # d = rowSums(W)
-  # L = diag(d) - W
-  # if (normalized) {
-  #   L = diag(1 / sqrt(d)) %*% L %*% diag(1 / sqrt(d))
-  # }
-
-  #------------------------------------------------------------------#
-  # Make Q matrix.                                                   #
-  #------------------------------------------------------------------#
-  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
-
-  # as.vector(((temp_L %*% solve(K + diag(1e-10, n))) %*% K[, 1]))
-  # temp_L[1, ]
-  # temp_L[, 1]
-
-  # a = matrix(0, nrow = 100, ncol = 100)
-  # a[upper.tri(a)] = rnorm(n = length(a[upper.tri(a)]))
-  # a = t(a) + a
-  # b = matrix(0, nrow = 100, ncol = 100)
-  # b[upper.tri(b)] = rnorm(n = length(b[upper.tri(b)]))
-  # b = t(b) + b
-  # a %*% b == t(b %*% a)
-
-  Q = (n_l * lambda) * (K %*% inv_LK)[1:n_l, 1:n_l] + 1
-
-  #------------------------------------------------------------------#
-  # Convert labels to integers.                                      #
-  #------------------------------------------------------------------#
-
-  #------------------------------------------------------------------#
-  # Calculate kernel                                                 #
-  #------------------------------------------------------------------#
-
-  warm = matrix(data = 0.0, nrow = n_l, ncol = n_class)
-  if (is.null(weight)) {weight = numeric(n_l) + 1.0}
-
-  #------------------------------------------------------------------#
-  # Create k-vertex simplex.                                         #
-  #------------------------------------------------------------------#
-  my = t(XI_gen(k = n_class))
-
-  yyi = Y_matrix_gen(k = n_class,
-                     nobs = n_l,
-                     y = y)
-
-  alpha_ij = warm
-  alpha_yi = numeric(n_l)
-
-  # erci = -diag(Q) / 2 / nobsdouble / templambda
-  erci = -as.double(rep(1, ncol(Q)) / n_l / lambda)
-
-  aa = .C("alpha_update",
-          as.vector(alpha_ij),
-          as.vector(alpha_yi),
-          as.vector(my),
-          as.vector(yyi),
-          as.vector(Q),
-          as.double(lambda),
-          as.vector(weight),
-          as.integer(n_l),
-          as.double(n_l),
-          as.integer(n_class),
-          as.double(n_class),
-          as.vector(erci),
-          as.double(gamma),
-          as.vector(as.integer(y)),
-          as.double(epsilon),
-          outalpha_ij = as.vector(numeric(n_l * n_class)),
-          maxiter = as.integer(maxiter), PACKAGE = "SMLapSVM")
-
-  warm = matrix(data = aa$outalpha_ij, nrow = n_l, ncol = n_class)
-
-  beta = beta_kernel(y = y,
-                     k = n_class,
-                     my = my,
-                     warm = warm,
-                     lambda = lambda,
-                     inv_LK = inv_LK)
-  # drop(crossprod(beta[[1]][, 1], X))
-
-  # tt = beta_linear(x = x, y = y_train, k = k, my = my, warm = warm, lambda = templambda)
-
-  # beta0 = matrix(find_theta2(y, K, gamma = gamma, cmat = beta$beta, lambda = lambda), nrow = 1)
-
-  betaout = beta$beta
-  beta0out = beta$beta0
-  # beta0out[[count]] = beta0
+  solutions = sramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, eig_tol = eig_tol)
 
   out = list()
   out$x = x
@@ -134,14 +257,12 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   out$y = y
   out$n_class = n_class
   out$gamma = gamma
-  out$weight = weight
   out$lambda = lambda
   out$lambda_I = lambda_I
   out$kparam = kparam
-  out$beta = betaout
-  out$beta0 = beta0out
-  out$epsilon = epsilon
-  out$warm = warm
+  out$beta = solutions$beta
+  out$beta0 = solutions$beta0
+  out$eig_tol = eig_tol
   out$kernel = kernel
   out$scale = scale
   out$center = center
@@ -160,16 +281,15 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
 
   beta = object$beta
   beta0 = object$beta0
+  n_class = object$n_class
+  W = XI_gen(n_class)
 
-  temp_pred_y = predict_kernel(K_test = newK,
-                               beta = beta,
-                               beta0 = beta0,
-                               k = object$n_class)
-  inner_prod = temp_pred_y$inner_prod
-  temp_pred_y = temp_pred_y$class
-  pred_y = temp_pred_y
+  W_beta0 = drop(t(beta0) %*% W)
 
-  return(list(class = pred_y, inner_prod = inner_prod))
+  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_y = apply(fit, 1, which.max)
+
+  return(list(class = pred_y, pred_value = fit))
 }
 
 
@@ -305,100 +425,117 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 }
 
 # dyn.load("../src/alpha_update.dll")
-ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, weight = NULL, epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300)
-{
+# ramlapsvm_core_old = function(K, L, y, gamma = 0.5, lambda, lambda_I, weight = NULL, epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300)
+# {
+#
+#   out = list()
+#   n_class = length(unique(y))
+#   n_l = length(y)
+#   n = nrow(K)
+#   n_u = n - n_l
+#
+#   inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+#   Q = (n_l * lambda) * (K %*% inv_LK)[1:n_l, 1:n_l] + 1
+#
+#   warm = matrix(data = 0.0, nrow = n_l, ncol = n_class)
+#   if (is.null(weight)) {weight = numeric(n_l) + 1.0}
+#
+#   #------------------------------------------------------------------#
+#   # Create k-vertex simplex.                                         #
+#   #------------------------------------------------------------------#
+#   my = t(XI_gen(k = n_class))
+#
+#   yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
+#
+#   alpha_ij = warm
+#   alpha_yi = numeric(n_l)
+#
+#
+#   erci = as.double(-rep(1, ncol(Q)) / n_l / lambda)
+#
+#   aa = .C("alpha_update",
+#             as.vector(alpha_ij),
+#             as.vector(alpha_yi),
+#             as.vector(my),
+#             as.vector(yyi),
+#             as.vector(Q),
+#             as.double(lambda),
+#             as.vector(weight),
+#             as.integer(n_l),
+#             as.double(n_l),
+#             as.integer(n_class),
+#             as.double(n_class),
+#             as.vector(erci),
+#             as.double(gamma),
+#             as.vector(as.integer(y)),
+#             as.double(epsilon),
+#             outalpha_ij = as.vector(numeric(n_l * n_class)),
+#             maxiter = as.integer(maxiter), PACKAGE = "SMLapSVM")
+#
+#   warm = matrix(data = aa$outalpha_ij, nrow = n_l, ncol = n_class)
+#
+#   beta = beta_kernel(y = y,
+#                      k = n_class,
+#                      my = my,
+#                      warm = warm,
+#                      lambda = lambda,
+#                      inv_LK = inv_LK)
+#   # drop(crossprod(beta[[1]][, 1], X))
+#
+#   # tt = beta_linear(x = x, y = y_train, k = k, my = my, warm = warm, lambda = templambda)
+#
+#   # beta0 = matrix(find_theta2(y, K, gamma = gamma, cmat = beta$beta, lambda = lambda), nrow = 1)
+#
+#   betaout = beta$beta
+#   beta0out = beta$beta0
+#   # beta0out[[count]] = beta0
+#
+#   out$y = y
+#   out$n_class = n_class
+#   out$gamma = gamma
+#   out$weight = weight
+#   out$lambda = lambda
+#   out$lambda_I = lambda_I
+#   out$beta = betaout
+#   out$beta0 = beta0out
+#   out$epsilon = epsilon
+#   out$warm = warm
+#   class(out) = "ramlapsvm_core"
+#   return(out)
+# }
 
-  out = list()
-  n_class = length(unique(y))
-  n_l = length(y)
-  n = nrow(K)
-  n_u = n - n_l
+# predict.ramlapsvm_core = function(object, newK = NULL) {
+#
+#   beta = object$beta
+#   beta0 = object$beta0
+#
+#   temp_pred_y = predict_kernel(K_test = newK,
+#                                beta = beta,
+#                                beta0 = beta0,
+#                                k = object$n_class)
+#   inner_prod = temp_pred_y$inner_prod
+#   temp_pred_y = temp_pred_y$class
+#   pred_y = temp_pred_y
+#
+#   return(list(class = pred_y, inner_prod = inner_prod))
+# }
 
-  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
-  Q = (n_l * lambda) * (K %*% inv_LK)[1:n_l, 1:n_l] + 1
-
-  warm = matrix(data = 0.0, nrow = n_l, ncol = n_class)
-  if (is.null(weight)) {weight = numeric(n_l) + 1.0}
-
-  #------------------------------------------------------------------#
-  # Create k-vertex simplex.                                         #
-  #------------------------------------------------------------------#
-  my = t(XI_gen(k = n_class))
-
-  yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
-
-  alpha_ij = warm
-  alpha_yi = numeric(n_l)
-
-
-  erci = as.double(-rep(1, ncol(Q)) / n_l / lambda)
-
-  aa = .C("alpha_update",
-            as.vector(alpha_ij),
-            as.vector(alpha_yi),
-            as.vector(my),
-            as.vector(yyi),
-            as.vector(Q),
-            as.double(lambda),
-            as.vector(weight),
-            as.integer(n_l),
-            as.double(n_l),
-            as.integer(n_class),
-            as.double(n_class),
-            as.vector(erci),
-            as.double(gamma),
-            as.vector(as.integer(y)),
-            as.double(epsilon),
-            outalpha_ij = as.vector(numeric(n_l * n_class)),
-            maxiter = as.integer(maxiter), PACKAGE = "SMLapSVM")
-
-  warm = matrix(data = aa$outalpha_ij, nrow = n_l, ncol = n_class)
-
-  beta = beta_kernel(y = y,
-                     k = n_class,
-                     my = my,
-                     warm = warm,
-                     lambda = lambda,
-                     inv_LK = inv_LK)
-  # drop(crossprod(beta[[1]][, 1], X))
-
-  # tt = beta_linear(x = x, y = y_train, k = k, my = my, warm = warm, lambda = templambda)
-
-  # beta0 = matrix(find_theta2(y, K, gamma = gamma, cmat = beta$beta, lambda = lambda), nrow = 1)
-
-  betaout = beta$beta
-  beta0out = beta$beta0
-  # beta0out[[count]] = beta0
-
-  out$y = y
-  out$n_class = n_class
-  out$gamma = gamma
-  out$weight = weight
-  out$lambda = lambda
-  out$lambda_I = lambda_I
-  out$beta = betaout
-  out$beta0 = beta0out
-  out$epsilon = epsilon
-  out$warm = warm
-  class(out) = "ramlapsvm_core"
-  return(out)
-}
 
 predict.ramlapsvm_core = function(object, newK = NULL) {
 
   beta = object$beta
   beta0 = object$beta0
+  n_class = object$n_class
+  W = XI_gen(n_class)
 
-  temp_pred_y = predict_kernel(K_test = newK,
-                               beta = beta,
-                               beta0 = beta0,
-                               k = object$n_class)
-  inner_prod = temp_pred_y$inner_prod
-  temp_pred_y = temp_pred_y$class
-  pred_y = temp_pred_y
+  W_beta0 = drop(t(beta0) %*% W)
 
-  return(list(class = pred_y, inner_prod = inner_prod))
+  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+
+  pred_y = apply(fit, 1, which.max)
+
+  # return(list(class = pred_y, inner_prod = inner_prod))
+  return(list(class = pred_y, pred_value = fit))
 }
-
 
 
