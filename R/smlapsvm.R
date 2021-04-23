@@ -314,7 +314,9 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = epsilon_D)
+  # Dmat = fixit(Dmat, epsilon = epsilon_D)
+  Dmat = nearPD(Dmat)
+
   # Dmat = Dmat / max_D
 
   dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
@@ -379,7 +381,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   KLK = n_l * lambda * K + m_mat
   # KLK = lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = epsilon_D)
+  # KLK = fixit(KLK, epsilon = epsilon_D)
+  KLK = nearPD(KLK)
   # diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
 
@@ -422,7 +425,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   # max_D = max(abs(Reduced_D))
   # Reduced_D = Reduced_D / max_D
-  Reduced_D = fixit(Reduced_D, epsilon = epsilon_D)
+  # Reduced_D = fixit(Reduced_D, epsilon = epsilon_D)
+  Reduced_D = nearPD(Reduced_D)
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
