@@ -229,7 +229,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
   L = object$L
   valid_anova_K = object$valid_anova_K
   if (is.null(object$opt_model)) {
-    init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
+    init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
   } else {
     init_model = object$opt_model
   }
@@ -314,7 +314,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
     temp_D = 0
     temp_d = 0
     # temp_A = NULL
-    for (q in 1:ncol(cmat)) {
+    for (q in 1:(n_class - 1)) {
       cvec = cmat[, q]
       temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
       temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
@@ -357,7 +357,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 
   bb = rowSums(sapply(1:(n_class - 1), function(x) trans_Y[, x] * c0vec[x]))
   bb_yi = (n_class - 1) - bb
-  bb_j = 1 + matrix(rowSums(Y_code * matrix(c0vec, nrow = nrow(Y_code), ncol = ncol(Y_code), byrow = TRUE)), nrow = n_l, ncol = n_class, byrow = TRUE)
+  bb_j = 1 + matrix(rowSums(t(Y_code) * matrix(c0vec, nrow = ncol(Y_code), ncol = nrow(Y_code), byrow = TRUE)), nrow = n_l, ncol = n_class, byrow = TRUE)
   bb_j[cbind(1:n_l, y)] = bb_yi
   bvec = c(as.vector(bb_j), rep(0, anova_kernel$numK + n_l * n_class), rep(-1, anova_kernel$numK))
 
@@ -482,10 +482,10 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
   W = XI_gen(n_class)
 
-
   y_index = cbind(1:n_l, y)
   index_mat = matrix(-1, nrow = n_l, ncol = n_class)
   index_mat[y_index] = 1
+
 
   Hmatj = list()
   Lmatj = list()
@@ -493,7 +493,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
     Hmatj_temp = NULL
     Lmatj_temp = NULL
     for (i in 1:n_class) {
-      temp = diag(n_l) %x% W[j, i]
+      temp = diag(n_l) * W[j, i]
       diag(temp) = diag(temp) * index_mat[, i]
       Hmatj_temp = rbind(Hmatj_temp, temp)
       Lmatj_temp = c(Lmatj_temp, diag(temp))
@@ -501,7 +501,6 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
     Hmatj[[j]] = Hmatj_temp
     Lmatj[[j]] = Lmatj_temp
   }
-
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
 
@@ -526,8 +525,19 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   Amat = matrix(0, n_l * n_class, n_class - 1)
   for (k in 1:(n_class - 1)) {
     D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
-    Amat[, k] = Lmatj[[k]]
+    Amat[, k] = -Lmatj[[k]]
   }
+
+  #################################### for test #######################################
+  # alpha_mat = matrix(rnorm(n_l * n_class), n_l, n_class)
+  # temp_vec = 0
+  # for (i in 1:n_l) {
+  #   y_temp = y[i]
+  #   temp_vec = temp_vec + (W[1, y_temp] * alpha_mat[i, y_temp] * K[, i] - rowSums(matrix(W[1, -y_temp] * alpha_mat[i, -y_temp], nrow = n, ncol = n_class - 1, byrow = TRUE) * matrix(K[, i], nrow = n, ncol = n_class - 1)))
+  # }
+  # temp = as.vector(alpha_mat) %*% Hmatj[[1]] %*% J %*% K
+  #################################### for test #######################################
+
   # D = fixit(D)
   # max_D = max(abs(D))
   # D = D / max_D
@@ -536,7 +546,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
 
   g_temp = matrix(-1, n_l, n_class)
-  g_temp[y_index] = -n_class + 1
+  g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
 
   # g = rep(-1, qp_dim)
@@ -588,7 +598,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
   # (5) find solution by solve.QP
 
-  dual = solve.QP(D, dvec, Amat, bvec, meq = 2)
+  dual = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
   alpha = dual$solution
   alpha[alpha < 0] = 0
 
@@ -644,7 +654,6 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   Alp1 = diag(qp_dim)
   Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
 
-
   for (i in 1:(n_class - 1)) {
     Alp2[, (2 * i - 1)] = Lmatj[[i]]
     Alp2[, (2 * i)] = -Lmatj[[i]]
@@ -653,7 +662,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   Alp = cbind(Alp1, Alp2)
 
   blp_temp = Kcmat + 1
-  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
   blp = as.vector(blp_temp)
 
 
