@@ -236,26 +236,34 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 
   fold_err = mclapply(1:length(lambda_theta_seq),
                       function(j) {
-                        theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$beta, c0vec = init_model$beta0,
-                                                      gamma = gamma, n_class = n_class, lambda = lambda, lambda_I = lambda_I,
-                                                      lambda_theta = lambda_theta_seq[j], ...)
+                        error = try({
+                          theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$beta, c0vec = init_model$beta0,
+                                                        gamma = gamma, n_class = n_class, lambda = lambda, lambda_I = lambda_I,
+                                                        lambda_theta = lambda_theta_seq[j], ...)
 
-                        if (isCombined) {
-                          # subK = combine_kernel(anova_K, theta)
-                          init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I,
-                                                       gamma = gamma, ...)
-                          # init_model = angle_lapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma)
-                        }
+                          if (isCombined) {
+                            # subK = combine_kernel(anova_K, theta)
+                            init_model = sramlapsvm_core(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I,
+                                                         gamma = gamma, ...)
+                            # init_model = angle_lapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma)
+                          }
+                        })
 
-                        valid_subK = combine_kernel(valid_anova_K, theta)
-                        pred_val = predict.ramlapsvm_core(init_model, newK = valid_subK)$class
+                        if (!inherits(error, "try-error")) {
+                          valid_subK = combine_kernel(valid_anova_K, theta)
+                          pred_val = predict.ramlapsvm_core(init_model, newK = valid_subK)$class
 
-                        if (criterion == "0-1") {
-                          acc = sum(valid_y == pred_val) / length(valid_y)
-                          err = 1 - acc
+                          if (criterion == "0-1") {
+                            acc = sum(valid_y == pred_val) / length(valid_y)
+                            err = 1 - acc
+                          } else {
+                            # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                          }
                         } else {
-                          # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                          err = 1
+                          theta = rep(1, anova_K$numK)
                         }
+
                         return(list(error = err, theta = theta))
                       }, mc.cores = nCores)
   valid_err = sapply(fold_err, "[[", "error")
