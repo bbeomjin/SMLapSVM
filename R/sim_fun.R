@@ -106,10 +106,10 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     prob3 = 1 / const
     probs = cbind(prob1, prob2, prob3)
 
-    # y = apply(probs, 1, function(prob) {
-    #   sample(1:3, 1, TRUE, prob)})
+    y = apply(probs, 1, function(prob) {
+      sample(1:3, 1, TRUE, prob)})
 
-    y = apply(probs, 1, which.max)
+    # y = apply(probs, 1, which.max)
 
     out = list()
     out$x = X
