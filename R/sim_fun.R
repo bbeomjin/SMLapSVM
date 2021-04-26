@@ -35,13 +35,13 @@ generateMultiMoon = function(each_n = 100, sigma = 1, noise_p = 4, seed = NULL)
 {
   set.seed(seed)
   x = runif(each_n, 0, pi)
-  c1 = cbind(5 * cos(x) - 3.5 + rnorm(each_n) * sigma, 10 * sin(x) - 
+  c1 = cbind(5 * cos(x) - 3.5 + rnorm(each_n) * sigma, 10 * sin(x) -
                2.5 + rnorm(each_n) * sigma)
   x = runif(each_n, pi, 2 * pi)
-  c2 = cbind(5 * cos(x) + 3.5 + rnorm(each_n) * sigma, 10 * sin(x) + 
+  c2 = cbind(5 * cos(x) + 3.5 + rnorm(each_n) * sigma, 10 * sin(x) +
                2.5 + rnorm(each_n) * sigma)
   x = runif(each_n, 0, pi)
-  c3 = cbind(5 * cos(x) + 10.5 + rnorm(each_n) * sigma, 10 * sin(x) - 
+  c3 = cbind(5 * cos(x) + 10.5 + rnorm(each_n) * sigma, 10 * sin(x) -
                2.5 + rnorm(each_n) * sigma)
   X = rbind(c1, c2, c3)
   noise_X = matrix(runif(3 * each_n * noise_p, 0, pi), nrow = 3 * each_n, ncol = noise_p)
@@ -55,19 +55,19 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
 {
   call = match.call()
   type = match.arg(type)
-  
+
   if (!is.null(seed)) {
     set.seed(seed)
   }
-  
+
   if (type == "cosso") {
     X = matrix(runif(n * p), n, p)
-    
+
     g1 = function(x) {x}
     g2 = function(x) {(2 * x - 1)^2}
     g3 = function(x) {sin(2 * pi * x) / (2 - sin(2 * pi * x))}
     g4 = function(x) {0.1 * sin(2 * pi * x) + 0.2 * cos(2 * pi * x) + 0.3 * sin(2 * pi * x)^2 + 0.4 * cos(2 * pi * x)^3 + 0.5 * sin(2 * pi * x)^3}
-    
+
     lr1 = 3 * g1(X[, 1]) - 2.5 * g2(X[, 2]) + 1 * g3(X[, 3]) - 6 * g4(X[, 4])
     lr2 = 1 * g1(X[, 1]) + 3 * g2(X[, 2]) - 3.5 * g3(X[, 3]) - 4.5 * g4(X[, 4])
     # lr3 = 3 * g1(X[, 1]) + 2 * g2(X[, 2]) + 1 * g3(X[, 3]) + 4 * g4(X[, 4])
@@ -78,41 +78,45 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     prob2 = exp(lr2) / const
     prob3 = 1 / const
     probs = cbind(prob1, prob2, prob3)
-    
-    y = apply(probs, 1, function(prob) {
-      sample(1:3, 1, TRUE, prob)})
-    
+
+    # y = apply(probs, 1, function(prob) {
+    #   sample(1:3, 1, TRUE, prob)})
+
+    y = apply(probs, 1, which.max)
+
     out = list()
     out$x = X
     out$y = y
     out$true = rep(c(1, 0), c(4, p - 4))
   }
-  
+
   if (type == "cosso2") {
     X = matrix(rnorm(n * p), n, p)
-    
+
     g1 = function(x) {x}
     g2 = function(x) {(2 * x - 1)^2}
-    
-    
+
+
     lr1 = 1.1 * g1(X[, 1]) + 1.6 * g2(X[, 2]) - 2.2 #+ 1 * g3(X[, 3]) - 6 * g4(X[, 4])
     lr2 = 3.3 * g1(X[, 1]) + 1.5 * g2(X[, 2]) - 2.0 #- 3.5 * g3(X[, 3]) - 4.5 * g4(X[, 4])
-    
+
     const = (1 + exp(lr1) + exp(lr2))
     prob1 = exp(lr1) / const
     prob2 = exp(lr2) / const
     prob3 = 1 / const
     probs = cbind(prob1, prob2, prob3)
-    
-    y = apply(probs, 1, function(prob) {
-      sample(1:3, 1, TRUE, prob)})
-    
+
+    # y = apply(probs, 1, function(prob) {
+    #   sample(1:3, 1, TRUE, prob)})
+
+    y = apply(probs, 1, which.max)
+
     out = list()
     out$x = X
     out$y = y
     out$true = rep(c(1, 0), c(2, p - 2))
   }
-  
+
   if (type == "bayes") {
     dat = mlbench.2dnormals(n = n, cl = class, sd = 1)
     X_true = dat$x
@@ -125,20 +129,20 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     out$y = y
     out$true = rep(c(1, 0), c(r, p - r))
   }
-  
+
   if (type == "poly") {
     r = 2
     X_tmp = matrix(rnorm(n * r, 0, 0.8), n, r)
     x1 = X_tmp[, 1]; x2 = X_tmp[, 2]
     c = 1
-    X_kern = data.matrix(data.frame(x1^3, x2^3, sqrt(3) * x1^2 * x2, sqrt(3) * x1 * x2^2, 
-                                    sqrt(3 * c) * x1^2, sqrt(3 * c) * x2^2, sqrt(6 * c) * x1 * x2, 
+    X_kern = data.matrix(data.frame(x1^3, x2^3, sqrt(3) * x1^2 * x2, sqrt(3) * x1 * x2^2,
+                                    sqrt(3 * c) * x1^2, sqrt(3 * c) * x2^2, sqrt(6 * c) * x1 * x2,
                                     sqrt(3) * c * x1, sqrt(3) * c * x2, sqrt(c^3)))
     beta1 = c(3, -2, 3.5, -3.5, 5.5, -4.5, 3, 0, -2, 0)
     beta2 = c(3, -3, 2.5, -2.5, 1, -1, 0, -2, -2, 0)
     beta3 = beta1 - beta2
     lr = X_kern %*% cbind(beta1, beta2, beta3)
-    
+
     probs = exp(lr - as.vector(HTLR:::log_sum_exp(lr)))
     y = apply(probs, 1, function(prob) {
       sample(1:3, 1, TRUE, prob)})
@@ -149,25 +153,25 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     out$y = y
     out$true = rep(c(1, 0), c(r, p -r))
   }
-  
+
   if (type == "neuralnet") {
     r = 3
     X_tmp = matrix(rnorm(n * r, 0, 1.5), n, r)
-    
+
     sigmoid = function(x) {
       return(1 / (1 + exp(-x)))
     }
-    
+
     LeLU = function(x) {
       return(pmax(0, x))
     }
-    
+
     node = c(3, 3, 2)
     beta_mat1 = matrix(c(3.5, 0.5, -3, 1.3, 3.2, -4.2, -1.5, 5.5, -3), r)
-    
+
     node1_mat = drop(X_tmp %*% beta_mat1) + 1
     layer1 = matrix(sigmoid(node1_mat), nrow = n, ncol = node[1])
-    
+
     beta_mat2 = matrix(c(3.5, 1.2, -2.7, -2.5, 2, 1, 1.5, -3, 2), node[1], node[2])
     node2_mat = drop(layer1 %*% beta_mat2) - 1
     layer2 = matrix(sigmoid(node2_mat), nrow = n, ncol = node[2])
@@ -175,14 +179,14 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     output_beta1 = c(5.5, -2.5, 1)
     output_beta2 = c(-1, 6, 2)
     output_beta3 = c(2.5, -1, 5.4)
-    
+
     prob1 = sigmoid(drop(layer2 %*% output_beta1))
     prob2 = sigmoid(drop(layer2 %*% output_beta2))
     prob3 = sigmoid(drop(layer2 %*% output_beta3))
     probs = cbind(prob1, prob2, prob3)
-    
+
     y = apply(probs, 1, which.max)
-    
+
     noise = matrix(rnorm(n * (p - r), 0, 1), n, (p - r))
     X = cbind(X_tmp, noise)
     true_vec = c(rep(1, r), rep(0, p - r))
@@ -191,8 +195,8 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     out$y = y
     out$true = true_vec
   }
-  
-  
+
+
   if (type == "neuralnet2") {
     r = 2
     X_tmp = matrix(rnorm(n * r, 0, 2.0), n, r)
@@ -200,21 +204,21 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     sigmoid = function(x) {
       return(1 / (1 + exp(-x)))
     }
-    
+
     LeLU = function(x) {
       return(pmax(0, x))
     }
-    
+
     node = c(4, 3, 2)
-    
+
     beta_mat1 = matrix(c(3.5, 1.3, -1.5, 2.3,
                          0.5, 3.2, 5.5, -3.0,
                          -3.0, -4.2, -3.0, -1.0),
                        nrow = 3, byrow = TRUE)
-    
+
     node1_mat = drop(X_tmp %*% beta_mat1) + 1
     layer1 = matrix(sigmoid(node1_mat), nrow = n, ncol = node[1])
-    
+
     beta_mat2 = matrix(c(2.8, -2.5, -1.5,
                          1.2, -2.0, -3.0,
                          -2.7, 1.0, 2.0,
@@ -222,18 +226,18 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
                        nrow = node[1], ncol = node[2], byrow = TRUE)
     node2_mat = drop(layer1 %*% beta_mat2) - 1
     layer2 = matrix(sigmoid(node2_mat), nrow = n, ncol = node[2])
-    
+
     output_beta1 = c(3.1, -2.9, 0.5)
     output_beta2 = c(-1.7, 4.1, 1.6)
     output_beta3 = c(2.5, -2, 4.1)
-    
+
     prob1 = sigmoid(drop(layer2 %*% output_beta1))
     prob2 = sigmoid(drop(layer2 %*% output_beta2))
     prob3 = sigmoid(drop(layer2 %*% output_beta3))
     probs = cbind(prob1, prob2, prob3)
-    
+
     y = apply(probs, 1, which.max)
-    
+
     noise = matrix(rnorm(n * (p - r), 0, 2.0), n, (p - r))
     X = cbind(X_tmp[, -3], noise)
     true_vec = c(rep(1, r), rep(0, p - r))
@@ -243,7 +247,7 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
     out$true = true_vec
     out$probs = probs
   }
-  
+
   return(out)
 }
 
