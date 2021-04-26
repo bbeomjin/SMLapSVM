@@ -50,14 +50,14 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
     Amat[, k] = Lmatj[[k]]
   }
   # D = fixit(D)
-  max_D = max(abs(D))
-  D = D / max_D
+  # max_D = max(abs(D))
+  # D = D / max_D
   D = fixit(D, epsilon = eig_tol)
   # diag(D) = diag(D) + epsilon_D
 
 
   g_temp = matrix(-1, n_l, n_class)
-  g_temp[y_index] = -n_class + 1
+  g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
 
   # g = rep(-1, qp_dim)
@@ -69,8 +69,8 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   #   }
   # }
 
-  # dvec = -g
-  dvec = -g / max_D
+  dvec = -g
+  # dvec = -g / max_D
 
   # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -173,7 +173,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   Alp = cbind(Alp1, Alp2)
 
   blp_temp = Kcmat + 1
-  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
   blp = as.vector(blp_temp)
 
 
