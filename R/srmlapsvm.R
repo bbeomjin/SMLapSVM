@@ -215,7 +215,8 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
   out$scale = scale
   out$criterion = criterion
   if (optModel) {
-    opt_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, ...)
+    opt_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
+                                  lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, ...)
     out$opt_model = opt_model
   }
   out$call = call

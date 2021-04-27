@@ -147,10 +147,11 @@ make_knn_graph_mat = function(X, k = 6)
   knn_mat = matrix(0, nrow(X), nrow(X))
   order_mat = apply(distance, 2, order)
   for(i in 1:ncol(knn_mat)) {
-    knn_mat[order_mat[1:k, i], i] = 1
+    knn_mat[order_mat[1:(k + 1), i], i] = 1
   }
   graph_mat = matrix(0, nrow(X), nrow(X))
   graph_mat[(t(knn_mat) + knn_mat) != 0] = 1
+  diag(graph_mat) = 0
   return(graph_mat)
 }
 
