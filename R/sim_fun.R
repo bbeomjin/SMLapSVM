@@ -51,7 +51,7 @@ generateMultiMoon = function(each_n = 100, sigma = 1, noise_p = 4, seed = NULL)
 }
 
 require(mlbench)
-sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "cosso", "cosso2", "neuralnet", "neuralnet2"))
+sim_gen = function(n, p, sd = 2, class = 3, seed = NULL, type = c("bayes", "poly", "cosso", "cosso2", "neuralnet", "neuralnet2"))
 {
   call = match.call()
   type = match.arg(type)
@@ -91,7 +91,7 @@ sim_gen = function(n, p, class = 3, seed = NULL, type = c("bayes", "poly", "coss
   }
 
   if (type == "cosso2") {
-    X = matrix(rnorm(n * p), n, p)
+    X = matrix(rnorm(n * p, 0, sd = sd), n, p)
 
     g1 = function(x) {x}
     g2 = function(x) {(2 * x - 1)^2}
