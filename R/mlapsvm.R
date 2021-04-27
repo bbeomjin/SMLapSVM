@@ -298,16 +298,25 @@ Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          msvm_fit = mlapsvm(x = x, y = y, ux = ux, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
-                                             kernel = kernel, kparam = params$kparam[j], scale = scale, normalized = normalized, ...)
-                          pred_val = predict.mlapsvm(msvm_fit, newx = valid_x)$class
+                          error = try({
+                            msvm_fit = mlapsvm(x = x, y = y, ux = ux, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
+                                               kernel = kernel, kparam = params$kparam[j], scale = scale, normalized = normalized, ...)
+                          })
 
-                          if (criterion == "0-1") {
-                            acc = sum(valid_y == pred_val) / length(valid_y)
-                            err = 1 - acc
+                          if (!inherits(error, "try-error")) {
+                            pred_val = predict.mlapsvm(msvm_fit, newx = valid_x)$class
+
+                            if (criterion == "0-1") {
+                              acc = sum(valid_y == pred_val) / length(valid_y)
+                              err = 1 - acc
+                            } else {
+                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            }
                           } else {
-                            # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            msvm_fit = NULL
+                            err = 1
                           }
+
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     valid_err = sapply(fold_err, "[[", "error")

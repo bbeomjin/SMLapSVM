@@ -343,16 +343,25 @@ Kfold_rmlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          rmsvm_fit = rmlapsvm(x = x, y = y, ux = ux, gamma = gamma, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
-                                             kernel = kernel, kparam = params$kparam[j], scale = scale, normalized = normalized, ...)
-                          pred_val = predict.rmlapsvm(rmsvm_fit, newx = valid_x)$class
+                          error = try({
+                            rmsvm_fit = rmlapsvm(x = x, y = y, ux = ux, gamma = gamma, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
+                                                 kernel = kernel, kparam = params$kparam[j], scale = scale, normalized = normalized, ...)
+                          })
 
-                          if (criterion == "0-1") {
-                            acc = sum(valid_y == pred_val) / length(valid_y)
-                            err = 1 - acc
+                          if (!inherits(error, "try-error")){
+                            pred_val = predict.rmlapsvm(rmsvm_fit, newx = valid_x)$class
+
+                            if (criterion == "0-1") {
+                              acc = sum(valid_y == pred_val) / length(valid_y)
+                              err = 1 - acc
+                            } else {
+                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            }
                           } else {
-                            # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            rmsvm_fit = NULL
+                            err = 1
                           }
+
                           return(list(error = err, fit_model = rmsvm_fit))
                         }, mc.cores = nCores)
     valid_err = sapply(fold_err, "[[", "error")

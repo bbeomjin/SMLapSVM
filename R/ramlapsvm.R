@@ -339,17 +339,26 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
-                          msvm_fit = ramlapsvm(x = x, y = y, ux = ux, gamma = gamma, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
-                                             kernel = kernel, kparam = params$kparam[j], scale = scale, adjacency_k = adjacency_k,
-                                             weightType = weightType, normalized = normalized, ...)
-                          pred_val = predict.ramlapsvm(msvm_fit, newx = valid_x)
+                          error = try({
+                            msvm_fit = ramlapsvm(x = x, y = y, ux = ux, gamma = gamma, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
+                                                 kernel = kernel, kparam = params$kparam[j], scale = scale, adjacency_k = adjacency_k,
+                                                 weightType = weightType, normalized = normalized, ...)
+                          })
 
-                          if (criterion == "0-1") {
-                            acc = sum(valid_y == pred_val$class) / length(valid_y)
-                            err = 1 - acc
+                          if (!inherits(error, "try-error")) {
+                            pred_val = predict.ramlapsvm(msvm_fit, newx = valid_x)
+
+                            if (criterion == "0-1") {
+                              acc = sum(valid_y == pred_val$class) / length(valid_y)
+                              err = 1 - acc
+                            } else {
+                              err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            }
                           } else {
-                            err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                            msvm_fit = NULL
+                            err = 1
                           }
+
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     valid_err = sapply(fold_err, "[[", "error")
