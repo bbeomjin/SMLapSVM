@@ -18,6 +18,7 @@ main_kernel = function(x, u, kernel)
     K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
 	# K = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
   }
+  K = (K + t(K)) / 2
   return(K)
 }
 
@@ -70,8 +71,8 @@ kernelMat = function(x, y, kernel = "radial", kparam = 1.0) {
     K = 0
     for (d in 1:NCOL(x))
     {
-      A = as.matrix(x[,d])
-      B = as.matrix(y[,d])
+      A = as.matrix(x[, d])
+      B = as.matrix(y[, d])
       K_temp = main_kernel(A, B, kernel = list(type = "radial", par = kparam))
       K = K + K_temp
     }
@@ -79,6 +80,7 @@ kernelMat = function(x, y, kernel = "radial", kparam = 1.0) {
   } else {
     obj = NULL
   }
+  obj = (obj + t(obj)) / 2
   return(obj)
 }
 
