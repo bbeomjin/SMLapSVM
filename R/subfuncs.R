@@ -1,4 +1,4 @@
-main_kernel = function(x, u, kernel, sym = FALSE)
+main_kernel = function(x, u, kernel)
 {
   x = as.matrix(x)
   u = as.matrix(u)
@@ -18,13 +18,13 @@ main_kernel = function(x, u, kernel, sym = FALSE)
     K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
 	# K = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
   }
-  if (sym) {
-    K = (K + t(K)) / 2
-  }
+  # if (sym) {
+  #   K = (K + t(K)) / 2
+  # }
   return(K)
 }
 
-kernelMat = function(x, y, kernel = "radial", kparam = 1.0, sym = FALSE) {
+kernelMat = function(x, y, kernel = "radial", kparam = 1.0) {
 
   if (NCOL(x) == 0) {
     x = matrix(1, nrow = nrow(x), ncol = 1)
@@ -75,16 +75,16 @@ kernelMat = function(x, y, kernel = "radial", kparam = 1.0, sym = FALSE) {
     {
       A = as.matrix(x[, d])
       B = as.matrix(y[, d])
-      K_temp = main_kernel(A, B, kernel = list(type = "radial", par = kparam), sym = sym)
+      K_temp = main_kernel(A, B, kernel = list(type = "radial", par = kparam))
       K = K + K_temp
     }
     obj = K
   } else {
     obj = NULL
   }
-  if (sym) {
-    obj = (obj + t(obj)) / 2
-  }
+  # if (sym) {
+  #   obj = (obj + t(obj)) / 2
+  # }
   return(obj)
 }
 
@@ -217,7 +217,7 @@ pred = function(f) {
 }
 
 
-make_anovaKernel = function(x, u, kernel, sym = FALSE)
+make_anovaKernel = function(x, u, kernel)
 {
   if (!is.matrix(x))  # degenerate case: x is a row vector
   { x = t(as.matrix(x))}
@@ -344,7 +344,7 @@ make_anovaKernel = function(x, u, kernel, sym = FALSE)
       index = index + 1
       A = as.matrix(x[,d])
       B = as.matrix(u[,d])
-      anova_kernel[[index]] = main_kernel(A, B, kernel, sym = sym)
+      anova_kernel[[index]] = main_kernel(A, B, kernel)
       kernelCoord[[index]] = paste("x", d, sep="")
     }
     for (i in 1:(dimx - 1))
@@ -374,7 +374,7 @@ make_anovaKernel = function(x, u, kernel, sym = FALSE)
      {
        A = as.matrix(x[, d])
        B = as.matrix(u[, d])
-       anova_kernel[[d]] = main_kernel(A, B, kernel, sym = sym)
+       anova_kernel[[d]] = main_kernel(A, B, kernel)
        kernelCoord[[d]] = paste("x", d, sep = "")
      }
   }

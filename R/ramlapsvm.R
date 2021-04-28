@@ -234,7 +234,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   }
 
 
-  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam, sym = TRUE)
+  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
 
   # K = K + diag(1e-8, n)
   # K_temp = kernelMat(x, x, kernel = kernel, kparam = kparam) + 1
