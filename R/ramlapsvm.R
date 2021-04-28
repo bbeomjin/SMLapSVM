@@ -233,13 +233,9 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
     ux = (ux - matrix(center, nrow = n_u, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_u, ncol = p, byrow = TRUE)
   }
 
-  K = NULL
-  if (is.null(K)) {
-    K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
-    # K = kernelMatrix(rbfdot(sigma = kparam), x, x) + 1
-  } else {
-    K = K
-  }
+
+  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam, sym = TRUE)
+
   # K = K + diag(1e-8, n)
   # K_temp = kernelMat(x, x, kernel = kernel, kparam = kparam) + 1
 

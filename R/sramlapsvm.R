@@ -130,7 +130,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
     }
 
     kernel_list = list(type = kernel, par = kparam)
-    anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
+    anova_K = make_anovaKernel(rx, rx, kernel = kernel_list, sym = TRUE)
     # K = combine_kernel(anova_kernel = anova_K, theta = theta)
 
     # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)

@@ -230,7 +230,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   n = n_l + n_u
   n_class = max(y)
 
-  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
+  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam, sym = TRUE)
 
   # W = RSSL:::adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
   # d = rowSums(W)
