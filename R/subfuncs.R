@@ -75,7 +75,7 @@ kernelMat = function(x, y, kernel = "radial", kparam = 1.0, sym = FALSE) {
     {
       A = as.matrix(x[, d])
       B = as.matrix(y[, d])
-      K_temp = main_kernel(A, B, kernel = list(type = "radial", par = kparam))
+      K_temp = main_kernel(A, B, kernel = list(type = "radial", par = kparam), sym = sym)
       K = K + K_temp
     }
     obj = K
