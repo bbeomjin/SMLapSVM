@@ -26,7 +26,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D 
   # Index for non-trivial alphas
   nonzeroIndex = (y_vec != 1)
 
-  inv_LK = Matrix::solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   Q = K %*% inv_LK
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
   # Q = K %*% inv_KL

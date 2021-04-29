@@ -16,7 +16,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   y_index = code_mat$y_index
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
-  inv_LK = Matrix::solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   Q = J %*% K %*% inv_LK %*% t(J)
   # Q = J %*% t(inv_LK) %*% K %*% t(J)
 
