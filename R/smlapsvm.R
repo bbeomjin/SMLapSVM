@@ -285,7 +285,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   return(out)
 }
 
-find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-12)
+find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-13)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -349,7 +349,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 }
 
 
-smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-12)
+smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -359,7 +359,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   n_l = length(y)
 
   K = combine_kernel(anova_K, theta = theta)
-  K = (K + t(K)) / 2
+  # K = (K + t(K)) / 2
 
   if (sum(K) == 0) {
     diag(K) = 1
@@ -382,12 +382,12 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
   KLK = n_l * lambda * K + m_mat
-  KLK = (KLK + t(KLK)) / 2
+  # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
   KLK = fixit(KLK, epsilon = eig_tol)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
-  inv_KLK = solve(KLK)
+  inv_KLK = Matrix::solve(KLK)
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
@@ -426,9 +426,10 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
+
+  Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
-  Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 

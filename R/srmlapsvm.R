@@ -308,7 +308,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-12)
+find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-13)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -382,14 +382,14 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 
-srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-12)
+srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
   n_class = length(unique(y))
 
   K = combine_kernel(anova_K, theta = theta)
-  K = (K + t(K)) / 2
+  # K = (K + t(K)) / 2
 
   if (sum(K) == 0) {
     diag(K) = 1
@@ -415,11 +415,11 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
 
   KLK = n_l * lambda * K + m_mat
-  KLK = (KLK + t(KLK)) / 2
+  # KLK = (KLK + t(KLK)) / 2
   KLK = fixit(KLK, epsilon = eig_tol)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
-  inv_KLK = solve(KLK)
+  inv_KLK = Matrix::solve(KLK)
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
@@ -435,9 +435,10 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
   # D = fixit(D)
+  D = fixit(D, epsilon = eig_tol)
   max_D = max(abs(D))
   D = D / max_D
-  D = fixit(D, epsilon = eig_tol)
+
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D
 
