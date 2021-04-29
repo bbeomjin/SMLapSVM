@@ -344,7 +344,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
   Dmat = fixit(Dmat, epsilon = eig_tol_D)
-  diag(Dmat) = diag(Dmat) + 1e-8
+  # diag(Dmat) = diag(Dmat) + 1e-8
 
   dvec_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = gamma
@@ -480,9 +480,9 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   K = combine_kernel(anova_K, theta = theta)
   # K = (K + t(K)) / 2
 
-  if (sum(K) == 0) {
-    diag(K) = 1
-  }
+  # if (sum(K) == 0) {
+  #   diag(K) = 1
+  # }
 
   n = nrow(K)
   n_l = length(y)
@@ -520,11 +520,10 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   }
 
   KLK = n_l * lambda * K + m_mat
-  # KLK = (KLK + t(KLK)) / 2
+  KLK = (KLK + t(KLK)) / 2
 
   KLK = fixit(KLK, epsilon = eig_tol_I)
-  diag(KLK) = diag(KLK) + 1e-6
-  # diag(KLK) = diag(KLK) + epsilon_D
+  # diag(KLK) = diag(KLK) + 1e-6
   inv_KLK = solve(KLK)
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
@@ -555,8 +554,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   max_D = max(abs(D))
   D = D / max_D
   D = fixit(D, epsilon = eig_tol_D)
-  diag(D) = diag(D) + 1e-8
-  # diag(D) = diag(D) + epsilon_D
+  # diag(D) = diag(D) + 1e-8
 
 
   g_temp = matrix(-1, n_l, n_class)

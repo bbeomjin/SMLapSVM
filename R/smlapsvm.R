@@ -387,7 +387,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
-  inv_KLK = Matrix::solve(KLK)
+  # inv_KLK = solve(KLK)
+  inv_KLK = Matrix::chol2inv(chol(KLK))
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
