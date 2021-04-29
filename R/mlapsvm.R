@@ -1,4 +1,4 @@
-mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-13)
+mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-14)
 {
 
   # The sample size, the number of classes and dimension of QP problem

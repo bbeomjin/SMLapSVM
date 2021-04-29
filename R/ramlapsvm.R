@@ -1,5 +1,5 @@
 # dyn.load("../src/alpha_update.dll")
-ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-13)
+ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-14)
 {
 
   out = list()
