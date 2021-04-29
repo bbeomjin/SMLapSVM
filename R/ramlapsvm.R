@@ -1,5 +1,5 @@
 # dyn.load("../src/alpha_update.dll")
-ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
+ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-13)
 {
 
   out = list()
@@ -50,11 +50,10 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
     Amat[, k] = Lmatj[[k]]
   }
 
-  D = fixit(D, epsilon = eig_tol)
   max_D = max(abs(D))
   D = D / max_D
+  D = fixit(D, epsilon = eig_tol_D)
   # diag(D) = diag(D) + epsilon_D
-
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = 1 - n_class
@@ -211,7 +210,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
-                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, eig_tol = 1e-12)
+                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, eig_tol_D = 1e-13)
 {
 
   n_l = NROW(x)
@@ -245,7 +244,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
 
-  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, eig_tol = eig_tol)
+  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, eig_tol_D = eig_tol_D)
 
   out = list()
   out$x = x
@@ -258,7 +257,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   out$kparam = kparam
   out$beta = solutions$beta
   out$beta0 = solutions$beta0
-  out$eig_tol = eig_tol
+  out$eig_tol_D = eig_tol_D
   out$kernel = kernel
   out$scale = scale
   out$center = center

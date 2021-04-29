@@ -293,7 +293,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 }
 
 
-find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-13)
+find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol_D = 1e-13, eig_tol_I = 1e-8)
 {
 
   if (anova_kernel$numK == 1)
@@ -343,7 +343,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = eig_tol)
+  Dmat = fixit(Dmat, epsilon = eig_tol_D)
 
   dvec_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = gamma
@@ -469,7 +469,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 #   return(out)
 # }
 
-sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
+sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-13, eig_tol_I = 1e-8)
 {
 
   out = list()
@@ -521,7 +521,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   KLK = n_l * lambda * K + m_mat
   # KLK = (KLK + t(KLK)) / 2
 
-  KLK = fixit(KLK, epsilon = eig_tol)
+  KLK = fixit(KLK, epsilon = eig_tol_I)
   # diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = Matrix::solve(KLK)
 
@@ -550,9 +550,9 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   #################################### for test #######################################
 
   # D = fixit(D)
-  D = fixit(D, epsilon = eig_tol)
   max_D = max(abs(D))
   D = D / max_D
+  D = fixit(D, epsilon = eig_tol_D)
   # diag(D) = diag(D) + epsilon_D
 
 
