@@ -1,4 +1,4 @@
-mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-12)
+mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -26,7 +26,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 
   # Index for non-trivial alphas
   nonzeroIndex = (y_vec != 1)
 
-  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  inv_LK = Matrix::solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   Q = K %*% inv_LK
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
   # Q = K %*% inv_KL
@@ -38,9 +38,9 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
+  Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
-  Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g

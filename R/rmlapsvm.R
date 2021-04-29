@@ -1,4 +1,4 @@
-rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-12)
+rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -16,7 +16,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   y_index = code_mat$y_index
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
-  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  inv_LK = Matrix::solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   Q = J %*% K %*% inv_LK %*% t(J)
   # Q = J %*% t(inv_LK) %*% K %*% t(J)
 
@@ -29,9 +29,9 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
 
+  D = fixit(D, epsilon = eig_tol)
   max_D = max(abs(D))
   D = D / max_D
-  D = fixit(D, epsilon = eig_tol)
   # diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)

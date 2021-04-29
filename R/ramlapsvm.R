@@ -1,5 +1,5 @@
 # dyn.load("../src/alpha_update.dll")
-ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-12)
+ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
 {
 
   out = list()
@@ -38,7 +38,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   }
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
-  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  inv_LK = Matrix::solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
 
   Q = J %*% K %*% inv_LK %*% t(J)
 
@@ -49,10 +49,10 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
     D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
     Amat[, k] = Lmatj[[k]]
   }
-  # D = fixit(D)
+
+  D = fixit(D, epsilon = eig_tol)
   max_D = max(abs(D))
   D = D / max_D
-  D = fixit(D, epsilon = eig_tol)
   # diag(D) = diag(D) + epsilon_D
 
 
