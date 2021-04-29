@@ -359,6 +359,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   n_l = length(y)
 
   K = combine_kernel(anova_K, theta = theta)
+  K = (K + t(K)) / 2
 
   if (sum(K) == 0) {
     diag(K) = 1
