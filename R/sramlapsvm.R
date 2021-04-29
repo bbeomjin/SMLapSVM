@@ -519,6 +519,8 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   }
 
   KLK = n_l * lambda * K + m_mat
+  KLK = (KLK + t(KLK)) / 2
+
   KLK = fixit(KLK, epsilon = eig_tol)
   # diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = solve(KLK)
