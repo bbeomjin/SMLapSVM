@@ -1,4 +1,4 @@
-mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-14)
+mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-15)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -163,7 +163,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D 
 
 
 mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = FALSE, adjacency_k = 6, normalized = FALSE,
-                   weight = NULL, weightType = "Binary", epsilon = 1e-6, eig_tol_D = 1e-13)
+                   weight = NULL, weightType = "Binary", epsilon = 1e-6, eig_tol_D = 1e-15)
 {
   out = list()
   n_l = NROW(x)

@@ -257,7 +257,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                         error = try({
                           theta = find_theta.srmlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
                                                        cmat = init_model$cmat, c0vec = init_model$c0vec, n_class = n_class,
-                                                       lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j])
+                                                       lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
                           if (isCombined) {
                             # subK = combine_kernel(anova_K, theta)
                             init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
@@ -308,7 +308,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol_D = 1e-14, eig_tol_I = 1e-14)
+find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol_D = 1e-15, eig_tol_I = 1e-15)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -382,7 +382,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 
-srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-14, eig_tol_I = 1e-14)
+srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-15, eig_tol_I = 1e-15)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
