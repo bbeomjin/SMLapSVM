@@ -384,7 +384,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = n_l * lambda * K + m_mat
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol_I)
+  # KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
   # inv_KLK = solve(KLK)
