@@ -285,7 +285,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   return(out)
 }
 
-find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol = 1e-13)
+find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1, eig_tol_D = 1e-13)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -315,7 +315,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = eig_tol)
+  Dmat = fixit(Dmat, epsilon = eig_tol_D)
   # Dmat = nearPD(Dmat)$mat
 
   # Dmat = Dmat / max_D
@@ -349,7 +349,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 }
 
 
-smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, eig_tol = 1e-13)
+smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-13, eig_tol_I = 1e-8)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -384,7 +384,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = n_l * lambda * K + m_mat
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol)
+  KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
   inv_KLK = Matrix::solve(KLK)
@@ -426,7 +426,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  Reduced_D = fixit(Reduced_D, epsilon = eig_tol)
+  Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
