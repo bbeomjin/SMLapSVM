@@ -369,39 +369,29 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
-  # m_mat = 0
-  # for (i in 1:anova_K$numK) {
-  #   m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-  # }
-
-  # m_mat = 0
-  # for (i in 1:anova_K$numK) {
-  #   m_mat = m_mat + n_l * lambda_I / n^2 * theta[i] * L %*% anova_K$K[[i]]
-  # }
-
+  m_mat = 0
+  for (i in 1:anova_K$numK) {
+    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  }
 
   # m_mat = 0
   # for (i in 1:anova_K$numK) {
   #   m_mat = m_mat + lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   # }
 
-  m_mat = n_l * lambda_I / n^2 * L %*% K
+  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
-  # KLK = n_l * lambda * K + m_mat
+  KLK = n_l * lambda * K + m_mat
 
-  LK = n_l * lambda * diag(n) + m_mat
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
-  # KLK = fixit(KLK, epsilon = eig_tol_I)
+  KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
-  # inv_KLK = solve(KLK)
-  inv_LK = solve(LK)
+  inv_KLK = solve(KLK)
   # inv_KLK = Matrix::chol2inv(chol(KLK))
 
-  # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  Q = J %*% K %*% inv_LK %*% t(J)
+  Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
 
 
@@ -499,8 +489,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Compute cmat = matrix of estimated coefficients
 
-  # cmat = -inv_KLK %*% K %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
-  cmat = -inv_LK %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
+  cmat = -inv_KLK %*% K %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
   # J = cbind(diag(1, n_l), matrix(0, n_l, n - n_l))
 
   # Find b vector
