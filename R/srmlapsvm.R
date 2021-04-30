@@ -409,22 +409,26 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
 
-  m_mat = 0
-  for (i in 1:anova_K$numK) {
-    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-  }
+  # m_mat = 0
+  # for (i in 1:anova_K$numK) {
+  #   m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  # }
+  m_mat = n_l * lambda_I / n^2 * L %*% K
+  LK = n_l * lambda * diag(n) + m_mat
 
-  KLK = n_l * lambda * K + m_mat
+  # KLK = n_l * lambda * K + m_mat
   # KLK = (KLK + t(KLK)) / 2
-  KLK = fixit(KLK, epsilon = eig_tol_I)
+  # KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
-  inv_KLK = solve(KLK)
+  # inv_KLK = solve(KLK)
+  inv_LK = solve(LK)
   # inv_KLK = Matrix::chol2inv(chol(KLK))
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
-  Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  Q = J %*% K %*% inv_LK %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
@@ -520,7 +524,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   for (k in 1:n_class) {
     cmat_temp[, k] = Hmatj[[k]] %*% alpha
   }
-  cmat = inv_KLK %*% K %*% t(J) %*% cmat_temp
+  # cmat = inv_KLK %*% K %*% t(J) %*% cmat_temp
+  cmat = inv_LK %*% t(J) %*% cmat_temp
 
   # find b vector using LP
   Kcmat = J %*% K %*% cmat
