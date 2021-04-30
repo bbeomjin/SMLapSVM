@@ -6,9 +6,9 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
   n_class = length(unique(y))
 
-  if (sum(K) == 0) {
-    diag(K) = 1
-  }
+  # if (sum(K) == 0) {
+  #   diag(K) = 1
+  # }
 
   n = nrow(K)
   n_l = length(y)
@@ -108,7 +108,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
   # (5) find solution by solve.QP
 
-  dual = solve.QP(D, dvec, Amat, bvec, meq = 2)
+  dual = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
   alpha = dual$solution
   alpha[alpha < 0] = 0
 
