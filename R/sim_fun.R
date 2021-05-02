@@ -97,8 +97,8 @@ sim_gen = function(n, p, sd = 2, class = 3, seed = NULL, type = c("bayes", "poly
     g2 = function(x) {(2 * x - 1)^2}
 
 
-    lr1 = 1.1 * g1(X[, 1]) + 1.6 * g2(X[, 2]) - 2.2 #+ 1 * g3(X[, 3]) - 6 * g4(X[, 4])
-    lr2 = 3.3 * g1(X[, 1]) + 1.5 * g2(X[, 2]) - 2.0 #- 3.5 * g3(X[, 3]) - 4.5 * g4(X[, 4])
+    lr1 = 1.1 * g1(X[, 1]) + 1.6 * g2(X[, 2]) - 8.2 #+ 1 * g3(X[, 3]) - 6 * g4(X[, 4])
+    lr2 = 3.3 * g1(X[, 1]) + 1.5 * g2(X[, 2]) - 7.0 #- 3.5 * g3(X[, 3]) - 4.5 * g4(X[, 4])
 
     const = (1 + exp(lr1) + exp(lr2))
     prob1 = exp(lr1) / const
