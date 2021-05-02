@@ -474,9 +474,9 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   nonzero = find_nonzero(R)
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
-  # dual = solve.QP.compact(Reduced_D, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
 
-  dual = solve.QP(Reduced_D, Reduced_g, R, r, meq = nrow(Reduced_R1))
+  dual = solve.QP.compact(Reduced_D, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
+  # dual_temp = solve.QP(Reduced_D, Reduced_g, R, r, meq = nrow(Reduced_R1))
 
   # Place the dual solution into the non-trivial alpha positions
   alpha = rep(0, qp_dim)

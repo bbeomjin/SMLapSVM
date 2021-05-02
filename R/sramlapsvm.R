@@ -611,7 +611,13 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
   # (5) find solution by solve.QP
 
-  dual = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
+  nonzero = find_nonzero(Amat)
+  Amat = nonzero$Amat_compact
+  Aind = nonzero$Aind
+
+  dual = solve.QP.compact(D, dvec, Amat, Aind, bvec1, meq = (n_class - 1))
+  # dual_temp = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
+
   alpha = dual$solution
   alpha[alpha < 0] = 0
 
