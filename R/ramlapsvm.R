@@ -38,7 +38,8 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   }
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
-  inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
+  inv_LK = chol2inv(chol(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)))
 
   Q = J %*% K %*% inv_LK %*% t(J)
 
