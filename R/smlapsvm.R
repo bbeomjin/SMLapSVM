@@ -303,7 +303,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
     temp_A = NULL
     for (q in 1:ncol(cmat)) {
       cvec = cmat[, q]
-      temp_D = temp_D + n_l * lambda_I / (n_l + n_u)^2 * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
+      temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
       temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
       temp_A = rbind(temp_A, (anova_kernel$K[[j]][1:n_l, ] %*% cvec))
     }
