@@ -419,8 +419,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
-  inv_KLK = solve(KLK)
-  # inv_KLK = Matrix::chol2inv(chol(KLK))
+  # inv_KLK = solve(KLK)
+  inv_KLK = Matrix::chol2inv(chol(KLK))
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
