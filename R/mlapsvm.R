@@ -92,7 +92,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D 
 
   # Make alpha zero if they are too small
   alpha[alpha < 0] = 0
-  alpha[alpha > 1] = 1
+  # alpha[alpha > 1] = 1
 
   # Reshape alpha into a n by n_class matrix
   alpha = matrix(alpha, nrow = n_l)
@@ -105,21 +105,21 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D 
   # Find b vector
   Kcmat = J %*% K %*% cmat
   flag = T
-  while (flag) {
-    logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
-    # logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
-    c0vec = numeric(n_class)
-    if (all(colSums(logic) > 0)) {
-      # Using alphas between 0 and 1, we get c0vec by KKT conditions
-      for (i in 1:n_class) {
-        c0vec[i] = mean((trans_Y[, i] - Kcmat[, i])[logic[, i]])
-      }
-      if (abs(sum(c0vec)) < 0.001) {
-        flag = F
-      } else {
-        epsilon = min(epsilon * 2, 0.5)
-      }
-    } else {
+  # while (flag) {
+  #   logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+  #   # logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+  #   c0vec = numeric(n_class)
+  #   if (all(colSums(logic) > 0)) {
+  #     # Using alphas between 0 and 1, we get c0vec by KKT conditions
+  #     for (i in 1:n_class) {
+  #       c0vec[i] = mean((trans_Y[, i] - Kcmat[, i])[logic[, i]])
+  #     }
+  #     if (abs(sum(c0vec)) < 0.001) {
+  #       flag = F
+  #     } else {
+  #       epsilon = min(epsilon * 2, 0.5)
+  #     }
+  #   } else {
       flag = F
       # Otherwise, LP starts to find b vector
       # reformulate LP w/o equality constraint and redudancy
@@ -127,7 +127,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D 
 
       a = c(rep(0, 2 * (n_class - 1)), rep(1, n_l * (n_class - 1)))
       # inequality conditions
-      B1 = -diag(1, n_class - 1) %x% rep(1, n_l)
+      B1 = diag(-1, n_class - 1) %x% rep(1, n_l)
       B2 = matrix(1, n_l, n_class - 1)
       A = cbind(B1, -B1)
       A = rbind(A, cbind(B2, -B2))
@@ -140,10 +140,10 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D 
 
       bpos = lp("min", objective.in = a, const.mat = A, const.dir = const.dir,
                  const.rhs = b)$solution[1:(2 * (n_class - 1))]
-      c0vec = cbind(diag(1, n_class - 1), -diag(1, n_class - 1)) %*% matrix(bpos, ncol = 1)
+      c0vec = cbind(diag(1, n_class - 1), diag(-1, n_class - 1)) %*% matrix(bpos, ncol = 1)
       c0vec = c(c0vec, -sum(c0vec))
-    }
-  }
+    # }
+  # }
 
   # Compute the fitted values
   fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)

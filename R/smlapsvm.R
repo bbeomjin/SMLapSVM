@@ -519,7 +519,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
       a = c(rep(0, 2 * (n_class - 1)), rep(1, n_l * (n_class - 1)))
       # inequality conditions
-      B1 = -diag(1, n_class - 1) %x% rep(1, n_l)
+      B1 = diag(-1, n_class - 1) %x% rep(1, n_l)
       B2 = matrix(1, n_l, n_class - 1)
       A = cbind(B1, -B1)
       A = rbind(A, cbind(B2, -B2))
