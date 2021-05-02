@@ -495,21 +495,21 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # Find b vector
   Kcmat = J %*% K %*% cmat
   flag = T
-  while (flag) {
-    logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
-    # logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
-    c0vec = numeric(n_class)
-    if (all(colSums(logic) > 0)) {
-      # Using alphas between 0 and 1, we get c0vec by KKT conditions
-      for (i in 1:n_class) {
-        c0vec[i] = mean((trans_Y[, i] - Kcmat[, i])[logic[, i]])
-      }
-      if (abs(sum(c0vec)) < 0.001) {
-        flag = F
-      } else {
-        epsilon = min(epsilon * 2, 0.5)
-      }
-    } else {
+  # while (flag) {
+  #   logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+  #   # logic = ((alpha > epsilon) & (alpha < (1 - epsilon)))
+  #   c0vec = numeric(n_class)
+  #   if (all(colSums(logic) > 0)) {
+  #     # Using alphas between 0 and 1, we get c0vec by KKT conditions
+  #     for (i in 1:n_class) {
+  #       c0vec[i] = mean((trans_Y[, i] - Kcmat[, i])[logic[, i]])
+  #     }
+  #     if (abs(sum(c0vec)) < 0.001) {
+  #       flag = F
+  #     } else {
+  #       epsilon = min(epsilon * 2, 0.5)
+  #     }
+  #   } else {
       flag = F
       # Otherwise, LP starts to find b vector
       # reformulate LP w/o equality constraint and redudancy
@@ -532,8 +532,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
                 const.rhs = b)$solution[1:(2 * (n_class - 1))]
       c0vec = cbind(diag(1, n_class - 1), -diag(1, n_class - 1)) %*% matrix(bpos, ncol = 1)
       c0vec = c(c0vec, -sum(c0vec))
-    }
-  }
+    # }
+  # }
 
   # Compute the fitted values
   fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
