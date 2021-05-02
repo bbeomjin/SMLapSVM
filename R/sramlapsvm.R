@@ -615,7 +615,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
 
-  dual = solve.QP.compact(D, dvec, Amat, Aind, bvec1, meq = (n_class - 1))
+  dual = solve.QP.compact(D, dvec, Amat, Aind, bvec, meq = (n_class - 1))
   # dual_temp = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
 
   alpha = dual$solution
