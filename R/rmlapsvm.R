@@ -339,7 +339,7 @@ Kfold_rmlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
                             }
                           } else {
                             rmsvm_fit = NULL
-                            err = 1
+                            err = Inf
                           }
 
                           return(list(error = err, fit_model = rmsvm_fit))

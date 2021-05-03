@@ -166,7 +166,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
                             }
                           } else {
                             msvm_fit = NULL
-                            err = 1
+                            err = Inf
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
@@ -260,8 +260,8 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
                             # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
                           }
                         } else {
-                          err = 1
-                          theta = rep(1, anova_K$numK)
+                          err = Inf
+                          theta = rep(0, anova_K$numK)
                         }
 
                         return(list(error = err, theta = theta))

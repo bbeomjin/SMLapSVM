@@ -159,7 +159,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
                             }
                           } else {
                             msvm_fit = NULL
-                            err = 1
+                            err = Inf
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
@@ -254,8 +254,8 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                             # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
                           }
                         } else {
-                          err = 1
-                          theta = rep(1, anova_K$numK)
+                          err = Inf
+                          theta = rep(0, anova_K$numK)
                         }
                         return(list(error = err, theta = theta))
                       }, mc.cores = nCores)
@@ -383,12 +383,13 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   KLK = n_l * lambda * K + m_mat
 
+  # KLK = corpcor::make.positive.definite(KLK)
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
   KLK = fixit(KLK, epsilon = eig_tol_I)
-  # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
+  # KLK = nearPD(KLK)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
-  # inv_KLK = solve(KLK)
+  # inv_KLK = solve(KLK, tol = 1e-40)
   inv_KLK = chol2inv(chol(KLK))
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)

@@ -467,11 +467,39 @@ code = function(y)
 # 	return(adj)
 # }
 
+# fixit = function(A, epsilon)
+# {
+#   eig = eigen(A, symmetric = TRUE)
+#   eps = epsilon * abs(eig$values[1])
+#   eig$values[eig$values < eps] = eps
+#   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
+# }
+
 fixit = function(A, epsilon)
 {
   eig = eigen(A, symmetric = TRUE)
-  eps = epsilon * abs(eig$values[1])
-  eig$values[eig$values < eps] = eps
-  # eig$values[eig$values <= epsilon] = eig$values[eig$values <= epsilon] + epsilon
+  eps = epsilon * eig$values[1]
+  delta = eps - eig$values[length(eig$values)]
+  # eig$values[eig$values < eps] = eps
+  eig$values[eig$values <= eps] = eig$values[eig$values <= eps] + delta
   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 }
+
+
+
+# fixit = function(A, epsilon)
+# {
+#   eig = eigen(A, symmetric = TRUE)
+#   # eps = ncol(A) * epsilon * abs(eig$values[1])
+#   eps = 0
+#   eig$values[eig$values < eps] = eps
+#   # eig$values[eig$values <= epsilon] = eig$values[eig$values <= epsilon] + epsilon
+#   A = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+#   diag(A) = diag(A) + epsilon
+#   return(A)
+# }
+
+# fixit = function(A, epsilon)
+# {
+#   return(nearPD(A)$mat)
+# }
