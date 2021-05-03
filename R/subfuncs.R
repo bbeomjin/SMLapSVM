@@ -467,13 +467,13 @@ code = function(y)
 # 	return(adj)
 # }
 
-# fixit = function(A, epsilon)
-# {
-#   eig = eigen(A, symmetric = TRUE)
-#   eps = epsilon * abs(eig$values[1])
-#   eig$values[eig$values < eps] = eps
-#   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
-# }
+fixit = function(A, epsilon)
+{
+  eig = eigen(A, symmetric = TRUE)
+  eps = epsilon * abs(eig$values[1])
+  eig$values[eig$values < eps] = eps
+  return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
+}
 
 # fixit = function(A, epsilon)
 # {
@@ -490,21 +490,21 @@ code = function(y)
 #   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 # }
 
-fixit = function(A, epsilon)
-{
-  d = dim(A)[1]
-  if (dim(A)[2] != d)
-    stop("Input matrix is not square!")
-  es = eigen(A, symmetric = TRUE)
-  esv = es$values
-  if (missing(epsilon)) {
-    epsilon = d * max(abs(esv)) * .Machine$double.eps
-  }
-  delta = 2 * d * max(abs(esv)) * epsilon
-  tau = pmax(0, delta - esv)
-  dm = es$vectors %*% diag(tau, d) %*% t(es$vectors)
-  return(A + dm)
-}
+# fixit = function(A, epsilon)
+# {
+#   d = dim(A)[1]
+#   if (dim(A)[2] != d)
+#     stop("Input matrix is not square!")
+#   es = eigen(A, symmetric = TRUE)
+#   esv = es$values
+#   if (missing(epsilon)) {
+#     epsilon = d * max(abs(esv)) * .Machine$double.eps
+#   }
+#   delta = 2 * d * max(abs(esv)) * epsilon
+#   tau = pmax(0, delta - esv)
+#   dm = es$vectors %*% diag(tau, d) %*% t(es$vectors)
+#   return(A + dm)
+# }
 
 
 
