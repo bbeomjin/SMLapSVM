@@ -481,7 +481,8 @@ fixit = function(A, epsilon)
   eps = epsilon * eig$values[1]
   delta = eps - eig$values[length(eig$values)]
   # eig$values[eig$values < eps] = eps
-  eig$values[eig$values <= eps] = eig$values[eig$values <= eps] + delta
+  # eig$values[eig$values <= eps] = eig$values[eig$values <= eps] + delta
+  eig$values = eig$values + delta
   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 }
 
