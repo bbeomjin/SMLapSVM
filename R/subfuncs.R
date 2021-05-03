@@ -479,7 +479,11 @@ fixit = function(A, epsilon)
 {
   eig = eigen(A, symmetric = TRUE)
   eps = epsilon * eig$values[1]
-  delta = eps - eig$values[length(eig$values)]
+  if (eig$values[length(eig$values)] < eps) {
+    delta = eps - eig$values[length(eig$values)]
+  } else {
+    delta = 0
+  }
   # eig$values[eig$values < eps] = eps
   # eig$values[eig$values <= eps] = eig$values[eig$values <= eps] + delta
   eig$values = eig$values + delta
