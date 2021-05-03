@@ -1,5 +1,5 @@
 # dyn.load("../src/alpha_update.dll")
-ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-15)
+ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-15, eig_tol_I = 2e-15)
 {
 
   out = list()
@@ -39,7 +39,8 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
-  inv_LK = chol2inv(chol(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)))
+  LK = fixit(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), eig_tol_I)
+  inv_LK = chol2inv(chol(LK))
 
   Q = J %*% K %*% inv_LK %*% t(J)
 
@@ -216,7 +217,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
-                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, eig_tol_D = 1e-15)
+                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, eig_tol_D = 1e-15, eig_tol_I = 2e-15)
 {
 
   n_l = NROW(x)
@@ -250,7 +251,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
 
-  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, eig_tol_D = eig_tol_D)
+  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I)
 
   out = list()
   out$x = x
@@ -264,6 +265,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   out$beta = solutions$beta
   out$beta0 = solutions$beta0
   out$eig_tol_D = eig_tol_D
+  out$eig_tol_I = eig_tol_I
   out$kernel = kernel
   out$scale = scale
   out$center = center
