@@ -500,7 +500,7 @@ fixit = function(A, epsilon)
   if (missing(epsilon)) {
     epsilon = d * max(abs(esv)) * .Machine$double.eps
   }
-  delta = 2 * epsilon
+  delta = 2 * d * max(abs(esv)) * epsilon
   tau = pmax(0, delta - esv)
   dm = es$vectors %*% diag(tau, d) %*% t(es$vectors)
   return(A + dm)
