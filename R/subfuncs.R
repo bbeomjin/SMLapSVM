@@ -482,7 +482,7 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     d = diag(A)
     n = length(d)
     # tol = n * epsilon
-    tol = epsilon
+    tol = 100 * epsilon
     eps = tol * max(d)
     if (any(d < eps)) {
       d = d - min(d) + eps
@@ -492,7 +492,7 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     eig = eigen(A, symmetric = TRUE)
     n = length(eig$values)
     # tol = n * epsilon
-    tol = epsilon
+    tol = 100 * epsilon
     eps = tol * abs(eig$values[1])
     if (any(eig$values < eps)) {
       eig$values = eig$values - eig$values[n] + eps
@@ -508,7 +508,7 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     d = diag(A)
     n = length(d)
     # tol = n * epsilon
-    tol = epsilon
+    tol = 100 * epsilon
     eps = tol * max(d)
     if (any(d < eps)) {
       d = d - min(d) + eps
@@ -518,7 +518,7 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     eig = eigen(A, symmetric = TRUE)
     n = length(eig$values)
     # tol = n * epsilon
-    tol = epsilon
+    tol = 100 * epsilon
     eps = tol * abs(eig$values[1])
     if (any(eig$values < eps)) {
       eig$values = eig$values - eig$values[n] + eps
