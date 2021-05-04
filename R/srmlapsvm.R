@@ -339,7 +339,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = eig_tol_D)
+  Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   # Dmat = nearPD(Dmat)$mat
   # Dmat = Dmat / max_D
 
@@ -416,11 +416,12 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   KLK = n_l * lambda * K + m_mat
   # KLK = (KLK + t(KLK)) / 2
-  KLK = fixit(KLK, epsilon = eig_tol_I)
+  # KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK, eig.tol = rel_eig_tol)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
   # inv_KLK = solve(KLK)
-  inv_KLK = chol2inv(chol(KLK))
+  # inv_KLK = chol2inv(chol(KLK))
+  inv_KLK = inverse(KLK, epsilon = epsilon_I)
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 

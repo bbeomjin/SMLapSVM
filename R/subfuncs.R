@@ -467,13 +467,63 @@ code = function(y)
 # 	return(adj)
 # }
 
-fixit = function(A, epsilon)
+# fixit = function(A, epsilon = .Machine$double.eps)
+# {
+#   eig = eigen(A, symmetric = TRUE)
+#   n = length(eig$values)
+#   eps = epsilon * abs(eig$values[1])
+#   eig$values[eig$values < eps] = eps
+#   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
+# }
+
+fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 {
-  eig = eigen(A, symmetric = TRUE)
-  eps = epsilon * abs(eig$values[1])
-  eig$values[eig$values < eps] = eps
-  return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
+  if (is_diag) {
+    d = diag(A)
+    n = length(d)
+    tol = n * epsilon
+    eps = tol * max(d)
+    if (any(d < eps)) {
+      d = d - min(d) + eps
+    }
+    Q = diag(d)
+  } else {
+    eig = eigen(A, symmetric = TRUE)
+    n = length(eig$values)
+    tol = n * epsilon
+    eps = tol * abs(eig$values[1])
+    if (any(eig$values < eps)) {
+      eig$values = eig$values - eig$values[n] + eps
+    }
+    Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+  }
+  return(Q)
 }
+
+inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+{
+  if (is_diag) {
+    d = diag(A)
+    n = length(d)
+    tol = n * epsilon
+    eps = tol * max(d)
+    if (any(d < eps)) {
+      d = d - min(d) + eps
+    }
+    Q = diag(1 / d)
+  } else {
+    eig = eigen(A, symmetric = TRUE)
+    n = length(eig$values)
+    tol = n * epsilon
+    eps = tol * abs(eig$values[1])
+    if (any(eig$values < eps)) {
+      eig$values = eig$values - eig$values[n] + eps
+    }
+    Q = eig$vectors %*% diag(1 / eig$values) %*% t(eig$vectors)
+  }
+  return(Q)
+}
+
 
 # fixit = function(A, epsilon)
 # {

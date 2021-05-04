@@ -315,7 +315,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = eig_tol_D)
+  Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   # Dmat = nearPD(Dmat)$mat
 
   # Dmat = Dmat / max_D
@@ -386,11 +386,13 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # KLK = corpcor::make.positive.definite(KLK)
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol_I)
+  inv_KLK = inverse(KLK, epsilon = epsilon_I)
+  # KLK = fixit(KLK, epsilon = epsilon_I)
+  # KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
   # inv_KLK = solve(KLK, tol = 1e-40)
-  inv_KLK = chol2inv(chol(KLK))
+  # inv_KLK = chol2inv(chol(KLK))
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
@@ -477,6 +479,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   Aind = nonzero$Aind
 
   dual = solve.QP.compact(Reduced_D, Reduced_g, Amat, Aind, r, meq = nrow(Reduced_R1))
+  # dual = solve.QP(Reduced_D, Reduced_g, Amat, r, meq = nrow(Reduced_R1), factorized = TRUE)
   # dual_temp = solve.QP(Reduced_D, Reduced_g, R, r, meq = nrow(Reduced_R1))
 
   # Place the dual solution into the non-trivial alpha positions
