@@ -476,11 +476,11 @@ code = function(y)
 #   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 # }
 
-fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+fixit = function(A, epsilon = 100 * .Machine$double.eps, is_diag = FALSE)
 {
   if (is_diag) {
     d = diag(A)
-    n = length(d)
+    # n = length(d)
     # tol = n * epsilon
     tol = epsilon
     eps = tol * max(d)
@@ -502,7 +502,7 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   return(Q)
 }
 
-inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+inverse = function(A, epsilon = 100 * .Machine$double.eps, is_diag = FALSE)
 {
   if (is_diag) {
     d = diag(A)
