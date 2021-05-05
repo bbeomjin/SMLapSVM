@@ -91,7 +91,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   }
 
   if (is.null(theta)) {
-    theta = rep(1, p)
+    theta = rep(1, p) / p
   }
 
 
@@ -338,7 +338,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   A_theta = cbind(diag(-1, anova_kernel$numK), matrix(0, anova_kernel$numK, (ncol(A_mat) - anova_kernel$numK)))
   A_mat = rbind(A_mat, A_theta)
   #    print(ncol(A.mat))
-  bvec = c(rep(c0vec, each = n_l) - as.vector(Y), rep(0, anova_kernel$numK + n_l * n_class), rep(-1, anova_kernel$numK))
+  bvec = c(rep(c0vec, each = n_l) - as.vector(Y), rep(0, anova_kernel$numK + n_l * n_class), rep(-1 / anova_kernel$numK, anova_kernel$numK))
   #    print(A.mat)
   #    print(bvec)
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
@@ -361,6 +361,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
   n_l = length(y)
 
   K = combine_kernel(anova_K, theta = theta)
+
   # K = (K + t(K)) / 2
 
   if (sum(K) == 0) {
