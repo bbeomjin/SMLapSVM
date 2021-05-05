@@ -473,7 +473,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 # }
 
 sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                           eig_tol_D = 1e-13, eig_tol_I = 1e-13)
+                           eig_tol_D = 1e-15, eig_tol_I = 1e-15, epsilon_D = 1e-15)
 {
 
   out = list()
@@ -562,7 +562,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   D = D / max_D
-  diag(D) = diag(D) + 1e-12
+  diag(D) = diag(D) + epsilon_D
 
 
   g_temp = matrix(-1, n_l, n_class)

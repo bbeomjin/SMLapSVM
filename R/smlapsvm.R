@@ -351,7 +351,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
-                            epsilon = 1e-6, eig_tol_D = 1e-13, eig_tol_I = 1e-13)
+                            epsilon = 1e-6, eig_tol_D = 1e-15, eig_tol_I = 1e-15, epsilon_D = 1e-15)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -442,7 +442,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
   # Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + 1e-12
+  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
