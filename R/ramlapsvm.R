@@ -1,5 +1,5 @@
 # dyn.load("../src/alpha_update.dll")
-ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-13, eig_tol_I = 1e-13)
+ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-13)
 {
 
   out = list()
@@ -41,10 +41,11 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   # LK = fixit(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), eig_tol_I)
   # inv_LK = chol2inv(chol(LK))
-  K = fixit(K, eig_tol_D)
+  # K = fixit(K, eig_tol_D)
   inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
 
   Q = J %*% K %*% inv_LK %*% t(J)
+  Q = fixit(Q, epsilon = eig_tol_D)
 
   # Compute Q = K x inv_LK
   D = 0
@@ -54,10 +55,10 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
     Amat[, k] = Lmatj[[k]]
   }
 
-  # max_D = max(abs(D))
-  # D = D / max_D
-  D = fixit(D, epsilon = eig_tol_D)
-  # diag(D) = diag(D) + epsilon_D
+  max_D = max(abs(D))
+  D = D / max_D
+  # D = fixit(D, epsilon = eig_tol_D)
+  diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = 1 - n_class
@@ -72,8 +73,8 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   #   }
   # }
 
-  dvec = -g
-  # dvec = -g / max_D
+  # dvec = -g
+  dvec = -g / max_D
 
   # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -220,7 +221,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6,
-                  eig_tol_D = 1e-13, eig_tol_I = 1e-13)
+                  eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-13)
 {
 
   n_l = NROW(x)
@@ -254,7 +255,8 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
 
-  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I)
+  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I,
+                             eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D)
 
   out = list()
   out$x = x

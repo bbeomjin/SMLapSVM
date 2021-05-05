@@ -1,4 +1,4 @@
-rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 1e-13, eig_tol_I = 1e-13)
+rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6, eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-13)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -19,9 +19,10 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   # LK = fixit(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), eig_tol_I)
   # inv_LK = chol2inv(chol(LK))
-  K = fixit(K, eig_tol_D)
+  # K = fixit(K, eig_tol_D)
   inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
   Q = J %*% K %*% inv_LK %*% t(J)
+  Q = fixit(Q, epsilon = eig_tol_D)
   # Q = J %*% t(inv_LK) %*% K %*% t(J)
 
   # Compute Q = K x inv_LK
@@ -33,9 +34,10 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
 
-  # max_D = max(abs(D))
-  # D = D / max_D
-  D = fixit(D, epsilon = eig_tol_D)
+  max_D = max(abs(D))
+  D = D / max_D
+  diag(D) = diag(D) + epsilon_D
+  # D = fixit(D, epsilon = eig_tol_D)
   # diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
@@ -51,8 +53,8 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   #   }
   # }
 
-  dvec = -g
-  # dvec = -g / max_D
+  # dvec = -g
+  dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -190,7 +192,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary",
-                    epsilon = 1e-6, eig_tol_D = 1e-13, eig_tol_I = 1e-13)
+                    epsilon = 1e-6, eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-13)
 {
   out = list()
   n_l = NROW(x)
@@ -228,7 +230,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
   solutions = rmlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I,
-                               epsilon = epsilon, eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I)
+                               epsilon = epsilon, eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D)
 
   out$x = x
   out$ux = ux
