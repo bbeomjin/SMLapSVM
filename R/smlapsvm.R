@@ -402,6 +402,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
 
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
 
@@ -438,7 +439,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
+  # Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat

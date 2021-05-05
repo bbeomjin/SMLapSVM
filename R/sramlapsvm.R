@@ -537,6 +537,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
@@ -558,7 +559,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   #################################### for test #######################################
 
   # D = fixit(D)
-  D = fixit(D, epsilon = eig_tol_D)
+  # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   D = D / max_D
   # diag(D) = diag(D) + 1e-8
