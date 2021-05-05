@@ -562,7 +562,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   D = D / max_D
-  diag(D) = diag(D) + 1e-8
+  diag(D) = diag(D) + 1e-12
 
 
   g_temp = matrix(-1, n_l, n_class)

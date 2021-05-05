@@ -442,6 +442,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
   # Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
+  diag(Reduced_D) = diag(Reduced_D) + 1e-12
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
