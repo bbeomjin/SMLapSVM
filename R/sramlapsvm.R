@@ -522,7 +522,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
     m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
-  # K = fixit(K, eig_tol_D)
+  K = fixit(K, eig_tol_D)
   # m_mat = fixit(m_mat, eig_tol_D)
 
   KLK = n_l * lambda * K + m_mat

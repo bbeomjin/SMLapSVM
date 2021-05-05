@@ -384,7 +384,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
 
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
-  # K = fixit(K, eig_tol_D)
+  K = fixit(K, eig_tol_D)
   # m_mat = fixit(m_mat, eig_tol_D)
 
   KLK = n_l * lambda * K + m_mat
