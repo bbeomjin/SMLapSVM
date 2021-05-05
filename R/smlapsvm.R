@@ -384,18 +384,22 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
 
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
+  K = fixit(K, eig_tol_D)
+  m_mat = fixit(m_mat, eig_tol_D)
+
   KLK = n_l * lambda * K + m_mat
 
   # KLK = corpcor::make.positive.definite(KLK)
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
-  inv_KLK = inverse(KLK, epsilon = eig_tol_I)
+  # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
+  inv_KLK = chol2inv(chol(KLK))
   # KLK = fixit(KLK, epsilon = epsilon_I)
   # KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
   # inv_KLK = solve(KLK, tol = 1e-40)
-  # inv_KLK = chol2inv(chol(KLK))
+
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
@@ -434,7 +438,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
 
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
+  # Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
