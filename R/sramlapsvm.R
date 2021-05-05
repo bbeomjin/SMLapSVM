@@ -554,9 +554,9 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   #################################### for test #######################################
 
   # D = fixit(D)
-  # max_D = max(abs(D))
-  # D = D / max_D
   D = fixit(D, epsilon = eig_tol_D)
+  max_D = max(abs(D))
+  D = D / max_D
   # diag(D) = diag(D) + 1e-8
 
 
@@ -573,8 +573,8 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   #   }
   # }
 
-  dvec = -g
-  # dvec = -g / max_D
+  # dvec = -g
+  dvec = -g / max_D
 
   # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
