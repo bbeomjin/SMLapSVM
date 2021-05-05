@@ -309,7 +309,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 1e-13, eig_tol_I = 1e-13)
+                                eig_tol_D = 1e-15, eig_tol_I = 1e-15, epsilon_D = 1e-15)
 {
   n = NROW(cmat)
   n_l = length(y)
