@@ -1,5 +1,5 @@
 rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-13)
+                            eig_tol_D = .Machine$double.eps, eig_tol_I = 1e-15, epsilon_D = 1e-13)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -194,7 +194,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary",
-                    epsilon = 1e-6, eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-13)
+                    epsilon = 1e-6, eig_tol_D = .Machine$double.eps, eig_tol_I = 1e-15, epsilon_D = 1e-13)
 {
   out = list()
   n_l = NROW(x)
