@@ -45,7 +45,8 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
 
   Q = J %*% K %*% inv_LK %*% t(J)
-  Q = fixit(Q, epsilon = eig_tol_D)
+  Q = fixit(Q, epsilon = 0)
+  # Q = fixit(Q, epsilon = eig_tol_D)
 
   # Compute Q = K x inv_LK
   D = 0

@@ -36,7 +36,8 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6, eig_tol_D 
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
   # Q = K %*% inv_KL
   Q = J %*% Q %*% t(J)
-  Q = fixit(Q, epsilon = eig_tol_D)
+  Q = fixit(Q, epsilon = 0)
+  # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = Q[1:n_l, 1:n_l]
 
   # (2) Compute D <- H

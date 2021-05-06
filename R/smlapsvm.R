@@ -402,7 +402,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
 
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  Q = fixit(Q, epsilon = eig_tol_D)
+  Q = fixit(Q, epsilon = 0)
+  # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
 
