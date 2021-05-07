@@ -393,15 +393,14 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = n_l * lambda * K + m_mat
   KLK = fixit(KLK, epsilon = eig_tol_I)
   max_KLK = max(KLK)
-  inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
+  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
+  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # inv_KLK = chol2inv(chol(KLK))
   # KLK = corpcor::make.positive.definite(KLK)
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
   # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
   # inv_KLK = chol2inv(chol(KLK))
-  # KLK = fixit(KLK, epsilon = epsilon_I)
-  # KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK = nearPD(KLK)$mat
   # diag(KLK) = diag(KLK) + epsilon_D
   # inv_KLK = solve(KLK, tol = 1e-40)
