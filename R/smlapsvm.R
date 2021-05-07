@@ -317,10 +317,10 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
-  max_D = max(Dmat)
-  Dmat = Dmat / max_D
-  diag(Dmat) = diag(Dmat) + epsilon_D
+  Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
+  # max_D = max(Dmat)
+  # Dmat = Dmat / max_D
+  # diag(Dmat) = diag(Dmat) + epsilon_D
   # Dmat = nearPD(Dmat)$mat
 
 
@@ -330,8 +330,8 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   # dvec_temp[dvec_temp == 1] = 0
   # dvec_temp[dvec_temp < 0] = 1
   dvec = c(dvec, as.vector(dvec_temp))
-  # dvec = dvec
-  dvec = dvec / max_D
+  dvec = dvec
+  # dvec = dvec / max_D
 
   # solve QP
   # diag(Dmat) = diag(Dmat) + epsilon_D
