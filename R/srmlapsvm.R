@@ -310,7 +310,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-8, epsilon_I = 1e-12)
+                                eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -341,10 +341,10 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  max_D = max(Dmat)
-  Dmat = Dmat / max_D
-  diag(Dmat) = diag(Dmat) + epsilon_D
-  # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
+  Dmat = fixit(Dmat, epsilon = 2e-15, is_diag = TRUE)
+  # max_D = max(Dmat)
+  # Dmat = Dmat / max_D
+  # diag(Dmat) = diag(Dmat) + epsilon_D
   # Dmat = nearPD(Dmat)$mat
 
   # dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
@@ -358,7 +358,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   # dvec_temp[dvec_temp < 0] = 1
   dvec = c(dvec, as.vector(dvec_temp))
   # dvec = dvec
-  dvec = dvec / max_D
+  # dvec = dvec / max_D
 
   # solve QP
 
@@ -387,7 +387,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-8, epsilon_I = 1e-12)
+                             eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -423,8 +423,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # m_mat = fixit(m_mat, eig_tol_D)
 
   KLK = n_l * lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol_I)
-  max_KLK = max(KLK)
+  KLK = fixit(KLK, epsilon = eig_tol_D)
+  max_KLK = max(abs(KLK))
   inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
   # KLK = (KLK + t(KLK)) / 2
   # KLK = fixit(KLK, epsilon = eig_tol_I)
