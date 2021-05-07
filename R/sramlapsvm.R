@@ -476,7 +476,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 # }
 
 sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                           eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                           eig_tol_D = 0, eig_tol_I = 1e-6, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
 
   out = list()
