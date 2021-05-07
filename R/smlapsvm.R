@@ -23,6 +23,7 @@ smlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
+  out$theta_valid_err = theta_step_fit$valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
   out$kparam = opt_cstep_fit$opt_param$kparam
@@ -388,11 +389,12 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I,
   # m_mat = fixit(m_mat, eig_tol_D)
 
   KLK = n_l * lambda * K + m_mat
-
+  mi = max(KLK)
+  inv_KLK = solve(KLK / mi + diag(1e-8, n)) / mi
   # KLK = corpcor::make.positive.definite(KLK)
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
-  inv_KLK = inverse(KLK, epsilon = eig_tol_I)
+  # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
   # inv_KLK = chol2inv(chol(KLK))
   # KLK = fixit(KLK, epsilon = epsilon_I)
   # KLK = fixit(KLK, epsilon = eig_tol_I)

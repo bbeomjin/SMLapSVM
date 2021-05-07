@@ -55,6 +55,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
 
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
+  out$theta_valid_err = theta_step_fit$valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
   out$kparam = opt_cstep_fit$opt_param$kparam
