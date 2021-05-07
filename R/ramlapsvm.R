@@ -1,6 +1,6 @@
 # dyn.load("../src/alpha_update.dll")
 ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                          eig_tol_D = .Machine$double.eps, eig_tol_I = 2e-15, epsilon_D = 1e-13)
+                          eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
 
   out = list()
@@ -43,10 +43,14 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   # LK = fixit(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), eig_tol_I)
   # inv_LK = chol2inv(chol(LK))
   # K = fixit(K, eig_tol_D)
-  inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
+  LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
+  LK = fixit(LK, epsilon = eig_tol_I)
+  max_LK = max(LK)
+  inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
+  # inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
 
   Q = J %*% K %*% inv_LK %*% t(J)
-  Q = fixit(Q, epsilon = 0)
+  Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
 
   # Compute Q = K x inv_LK
@@ -222,8 +226,8 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
-                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6,
-                  eig_tol_D = .Machine$double.eps, eig_tol_I = 2e-15, epsilon_D = 1e-13)
+                  weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
+                  eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
 
   n_l = NROW(x)
@@ -257,8 +261,8 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
 
-  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I,
-                             eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D)
+  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon,
+                             eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D, epsilon_I = epsilon_I)
 
   out = list()
   out$x = x
@@ -271,8 +275,11 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   out$kparam = kparam
   out$beta = solutions$beta
   out$beta0 = solutions$beta0
+  out$epsilon = epsilon
   out$eig_tol_D = eig_tol_D
   out$eig_tol_I = eig_tol_I
+  out$epsilon_D = epsilon_D
+  out$epsilon_I = epsilon_I
   out$kernel = kernel
   out$scale = scale
   out$center = center
