@@ -354,7 +354,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-8, epsilon_I = 1e-12)
+                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -393,8 +393,10 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = n_l * lambda * K + m_mat
   KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(KLK)
+  KLK = KLK / max_KLK + diag(epsilon_I, n)
+  inv_KLK = solve(KLK) / max_KLK
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
+  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # inv_KLK = chol2inv(chol(KLK))
   # KLK = corpcor::make.positive.definite(KLK)
