@@ -476,7 +476,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 # }
 
 sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                           eig_tol_D = 0, eig_tol_I = 1e-6, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                           eig_tol_D = 0, eig_tol_I = 1e-9, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
 
   out = list()
@@ -532,12 +532,12 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   # KLK = (KLK + t(KLK)) / 2
   KLK = fixit(KLK, epsilon = eig_tol_D)
   # max_KLK = max(abs(KLK))
-  inv_KLK = chol2inv(chol(KLK + diag(epsilon_I, n)))
+  # inv_KLK = chol2inv(chol(KLK + diag(epsilon_I, n)))
   # KLK = fixit(KLK, epsilon = eig_tol_I)
   # diag(KLK) = diag(KLK) + 1e-6
   # inv_KLK = solve(KLK)
   # inv_KLK = chol2inv(chol(KLK))
-  # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
+  inv_KLK = inverse(KLK, epsilon = eig_tol_I)
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
 

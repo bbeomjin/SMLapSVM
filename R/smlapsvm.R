@@ -354,7 +354,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = 1e-8, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                            eig_tol_D = 0, eig_tol_I = 1e-9, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -391,7 +391,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # m_mat = fixit(m_mat, eig_tol_D)
 
   KLK = n_l * lambda * K + m_mat
-  # KLK = fixit(KLK, epsilon = eig_tol_D)
+  KLK = fixit(KLK, epsilon = eig_tol_D)
   # max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
   # KLK_temp = solve(inv_KLK)
@@ -409,8 +409,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # KLK = lambda * K + m_mat
   inv_KLK = inverse(KLK, epsilon = eig_tol_I)
   # KLK_temp = inverse(inv_KLK, epsilon = eig_tol_I)
-  # KLK_temp = solve(inv_KLK)
-  # sum(abs(KLK - KLK_temp))
+  KLK_temp = solve(inv_KLK)
+  sum(abs(KLK - KLK_temp))
 
   # inv_KLK = chol2inv(chol(KLK))
   # KLK = nearPD(KLK)$mat
