@@ -164,6 +164,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
 
 	  graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+    L = fixit(L, epsilon = 0)
 
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
     valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
@@ -310,7 +311,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                                eig_tol_D = 2e-16, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -341,7 +342,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = 2e-15, is_diag = TRUE)
+  Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   # max_D = max(Dmat)
   # Dmat = Dmat / max_D
   # diag(Dmat) = diag(Dmat) + epsilon_D
@@ -387,7 +388,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 1e-10, eig_tol_I = 1e-12, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                             eig_tol_D = 2e-16, eig_tol_I = 1e-12, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -424,7 +425,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   KLK = n_l * lambda * K + m_mat
   # KLK_origin = n_l * lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol_D)
+  KLK = fixit(KLK, epsilon = eig_tol_I)
   # KLK_temp = fixit(KLK, epsilon = eig_tol_D)
   # sum(abs(KLK - KLK_temp))
   # max_KLK = max(abs(KLK))
