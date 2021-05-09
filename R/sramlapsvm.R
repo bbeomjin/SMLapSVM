@@ -381,7 +381,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
   #    print(bvec)
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  theta[theta < 1e-8] = 0
+  # theta[theta < 1e-8] = 0
   # theta_sol[theta_sol < 1e-6] = 0
   #    print(beta)
   return(theta)
@@ -478,7 +478,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 # }
 
 sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                           eig_tol_D = 0, eig_tol_I = 1e-12, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                           eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
 
   out = list()

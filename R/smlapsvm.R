@@ -131,7 +131,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     # graph = W
   	graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-
+    L = fixit(L, epsilon = 0)
 #     if (any(theta > 0)) {
 # 	   graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
 # 	   L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
@@ -287,7 +287,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 }
 
 find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                               eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                               eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-8)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -317,12 +317,9 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   # max_D = max(abs(Dmat))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = 2e-15, is_diag = TRUE)
-  # max_D = max(Dmat)
+  max_D = max(abs(Dmat))
   # Dmat = Dmat / max_D
-  # diag(Dmat) = diag(Dmat) + epsilon_D
-  # Dmat = nearPD(Dmat)$mat
-
+  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
 
   dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = 0
@@ -354,7 +351,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 1e-10, eig_tol_I = 1e-12, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-8)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -392,9 +389,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   KLK = n_l * lambda * K + m_mat
   KLK = fixit(KLK, epsilon = eig_tol_D)
-  # max_KLK = max(abs(KLK))
-  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-  # KLK_temp = solve(inv_KLK)
+  max_KLK = max(abs(KLK))
+  inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
 
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # KLK_temp = solve(inv_KLK)
@@ -403,7 +399,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # inv_KLK = chol2inv(chol(KLK + diag(epsilon_I, n)))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  inv_KLK = chol2inv(chol(KLK))
+  # inv_KLK = chol2inv(chol(KLK))
   # KLK = corpcor::make.positive.definite(KLK)
   # KLK = (KLK + t(KLK)) / 2
   # KLK = lambda * K + m_mat
