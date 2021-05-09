@@ -343,7 +343,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   #    print(bvec)
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  # theta[theta < 1e-8] = 0
+  theta[theta < 1e-10] = 0
   # theta_sol[theta_sol < 1e-6] = 0
   #    print(beta)
   return(theta)
