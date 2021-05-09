@@ -357,7 +357,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
   # dvec_temp = as.vector(Y)
   # dvec_temp[dvec_temp == 1] = 0
   # dvec_temp[dvec_temp < 0] = 1
-  # dvec = c(dvec, as.vector(dvec_temp))
+  dvec = c(dvec, as.vector(dvec_temp))
   dvec = dvec / max_D
   # solve QP
   # diag(Dmat) = diag(Dmat) + epsilon
