@@ -478,7 +478,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 # }
 
 sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                           eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-8)
+                           eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-13)
 {
 
   out = list()
@@ -532,10 +532,10 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
   KLK = n_l * lambda * K + m_mat
   # KLK = (KLK + t(KLK)) / 2
-  # KLK = fixit(KLK, epsilon = eig_tol_D)
+  KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(abs(KLK))
-  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
+  inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
+  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # KLK = fixit(KLK, epsilon = eig_tol_I)
   # diag(KLK) = diag(KLK) + 1e-6
   # inv_KLK = solve(KLK)
@@ -545,8 +545,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  # Q = fixit(Q, epsilon = eig_tol_D)
-  # Q = fixit(Q, epsilon = eig_tol_D)
+  Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK

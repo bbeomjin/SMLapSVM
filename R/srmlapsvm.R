@@ -387,7 +387,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = 1e-12, epsilon_D = 1e-6, epsilon_I = 1e-8)
+                             eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-13)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -424,10 +424,10 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   KLK = n_l * lambda * K + m_mat
   # KLK_origin = n_l * lambda * K + m_mat
-  # KLK = fixit(KLK, epsilon = eig_tol_D)
+  KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(abs(KLK))
-  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
+  inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
+  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # KLK_temp = fixit(KLK, epsilon = eig_tol_D)
   # sum(abs(KLK - KLK_temp))
   # max_KLK = max(abs(KLK))
@@ -449,8 +449,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
   Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  # Q = fixit(Q, epsilon = eig_tol_D)
-  # Q = fixit(Q, epsilon = eig_tol_D)
+  Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
