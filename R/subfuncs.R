@@ -481,9 +481,9 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     # tol = n * epsilon
     tol = epsilon
     eps = tol * max(d)
-    if (any(d < eps)) {
-      d = d - min(d) + eps
-    }
+    # if (any(d < eps)) {
+    #   d = d - min(d) + eps
+    # }
     d[d < eps] = eps
     Q = diag(d)
   } else {
@@ -492,9 +492,9 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     # tol = n * epsilon
     tol = epsilon
     eps = tol * abs(eig$values[1])
-    if (any(eig$values < eps)) {
-      eig$values = eig$values - eig$values[n] + eps
-    }
+    # if (any(eig$values < eps)) {
+    #   eig$values = eig$values - eig$values[n] + eps
+    # }
     eig$values[eig$values < eps] = eps
     Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
   }
