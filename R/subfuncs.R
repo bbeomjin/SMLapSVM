@@ -1,21 +1,18 @@
-main_kernel = function(x, u, kernel)
+main_kernel = function(x, y, kernel)
 {
   x = as.matrix(x)
-  u = as.matrix(u)
+  y = as.matrix(y)
   if (kernel$type == "linear")
-    K = (x %*% t(u))
+    K = (x %*% t(y))
   if (kernel$type == "poly")
-    K = (1 + x %*% t(u))^kernel$par
+    K = (1 + x %*% t(y))^kernel$par
   if (kernel$type == "radial" | kernel$type == "radial2")
   {
-    a = as.matrix(rowSums(x^2))
-    b = as.matrix(rowSums(u^2))
-    one.a = matrix(1, ncol = length(b))
-    one.b = matrix(1, ncol = length(a))
-    K1 = one.a %x% a
-    K2 = x %*% t(u)
-    K3 = t(one.b %x% b)
-    K = exp(-(K1 - 2 * K2 + K3) * (kernel$par))
+    normx = drop((x^2) %*% rep(1.0, ncol(x)))
+    normy = drop((y^2) %*% rep(1.0, ncol(y)))
+    temp = x %*% t(y)
+    temp = (-2.0 * temp + normx) + outer(rep(1.0, nrow(x)), normy, "*")
+    K = exp(-temp * kernel$par)
 	# K = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
   }
   # if (sym) {
