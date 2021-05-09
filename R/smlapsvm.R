@@ -343,7 +343,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   #    print(bvec)
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  theta[theta < 1e-8] = 0
+  # theta[theta < 1e-8] = 0
   # theta_sol[theta_sol < 1e-6] = 0
   #    print(beta)
   return(theta)
@@ -390,7 +390,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = n_l * lambda * K + m_mat
   KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(abs(KLK))
-  inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
+  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
+  inv_KLK = solve(chol(KLK + diag(max_KLK * epsilon_I, n)))
 
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # KLK_temp = solve(inv_KLK)
