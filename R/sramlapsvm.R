@@ -661,9 +661,9 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
   cmat_temp = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
-    cmat_temp[, k] = t(Hmatj[[k]]) %*% alpha_vec
+    cmat_temp[, k] = K %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
   }
-  cmat = inv_KLK %*% K %*% t(J) %*% cmat_temp
+  cmat = inv_KLK %*% cmat_temp
 
   # cmat_temp = matrix(0, n, n_class - 1)
   # for (k in 1:(n_class - 1)) {
