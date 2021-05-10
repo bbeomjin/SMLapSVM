@@ -25,11 +25,12 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
   LK = fixit(LK, epsilon = eig_tol_D)
   max_LK = max(abs(LK))
-  inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
+  inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
+  # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
 
   Q = J %*% K %*% inv_LK %*% t(J)
-  Q = fixit(Q, epsilon = eig_tol_D)
+  # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = J %*% t(inv_LK) %*% K %*% t(J)
 
@@ -42,10 +43,11 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
 
+  D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
-  D = D / max_D
-  diag(D) = diag(D) + epsilon_D
-  # D = fixit(D, epsilon = eig_tol_D)
+  # D = D / max_D
+  diag(D) = diag(D) + max_D * epsilon_D
+
   # diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
@@ -61,8 +63,8 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   #   }
   # }
 
-  # dvec = -g
-  dvec = -g / max_D
+  dvec = -g
+  # dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1

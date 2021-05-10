@@ -34,14 +34,14 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
   LK = fixit(LK, epsilon = eig_tol_D)
   max_LK = max(abs(LK))
-  inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
+  # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
+  inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
 
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
-  Q = K %*% inv_LK
-  Q = J %*% Q %*% t(J)
-  Q = fixit(Q, epsilon = eig_tol_D)
+  Q = J %*% K %*% inv_LK %*% t(J)
+  # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = Q[1:n_l, 1:n_l]
 
@@ -49,17 +49,19 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   D = (Ik - Jk / n_class) %x% Q
 
   # Subset the columns and rows for non-trivial alpha's
+
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
+  Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
-  Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
-  # Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
+  # Reduced_D = Reduced_D / max_D
+  diag(Reduced_D) = diag(Reduced_D) + max_D * epsilon_D
+
 
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  # g = -y_vec
-  g = -y_vec / max_D
+  g = -y_vec
+  # g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
