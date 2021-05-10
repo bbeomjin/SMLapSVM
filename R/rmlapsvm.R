@@ -1,5 +1,5 @@
 rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 2e-13)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -25,11 +25,13 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
   LK = fixit(LK, epsilon = eig_tol_D)
   max_LK = max(abs(LK))
-  inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
+  inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
+  # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
 
-  Q = J %*% K %*% inv_LK %*% t(J)
+  Q = J %*% K %*% inv_LK
+  # Q = J %*% K %*% inv_LK %*% t(J)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = J %*% t(inv_LK) %*% K %*% t(J)
@@ -133,7 +135,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   for (k in 1:n_class) {
     cmat_temp[, k] = Hmatj[[k]] %*% alpha
   }
-  cmat = inv_LK %*% t(J) %*% cmat_temp
+  cmat = inv_LK %*% cmat_temp
 
   # find b vector using LP
   Kcmat = J %*% K %*% cmat
@@ -202,7 +204,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                    eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                    eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 2e-13)
 {
   out = list()
   n_l = NROW(x)

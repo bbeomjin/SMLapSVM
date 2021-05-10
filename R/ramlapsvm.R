@@ -1,6 +1,6 @@
 # dyn.load("../src/alpha_update.dll")
 ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                          eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                          eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 2e-13)
 {
 
   out = list()
@@ -47,10 +47,12 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   LK = fixit(LK, epsilon = eig_tol_D)
   max_LK = max(abs(LK))
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
-  inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
+  # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
+  inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
 
-  Q = J %*% K %*% inv_LK %*% t(J)
+  Q = J %*% K %*% inv_LK
+  # Q = J %*% K %*% inv_LK %*% t(J)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
 
@@ -151,7 +153,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
-    cmat[, k] = inv_LK %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
+    cmat[, k] = inv_LK %*% t(Hmatj[[k]]) %*% alpha_vec
   }
 
   # find b vector using LP
@@ -228,7 +230,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
-                  eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                  eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 2e-13)
 {
 
   n_l = NROW(x)
