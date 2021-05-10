@@ -520,7 +520,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Compute cmat = matrix of estimated coefficients
 
-  cmat = -inv_KLK %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class)))
+  cmat = -inv_KLK %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
   # J = cbind(diag(1, n_l), matrix(0, n_l, n - n_l))
 
   # Find b vector
