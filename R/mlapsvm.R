@@ -18,6 +18,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   # subject to A^Tb <= b_0
   # Following steps (1) - (6)
   # (1) preliminary quantities
+  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
   Jk = matrix(1, nrow = n_class, ncol = n_class)
   Ik = diag(1, n_class)
 
@@ -38,8 +39,6 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
   inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
-
-  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
   Q = J %*% K %*% inv_LK
   # Q = J %*% K %*% inv_LK %*% t(J)
