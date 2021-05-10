@@ -543,7 +543,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
-  inv_KLK = solve(KLK, K %*% t(J))
+  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
 
   # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   Q = J %*% K %*% inv_KLK
