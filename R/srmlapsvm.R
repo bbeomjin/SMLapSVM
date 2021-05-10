@@ -164,7 +164,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
 
 	  graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-    L = fixit(L, epsilon = 0)
+    # L = fixit(L, epsilon = 0)
 
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
     valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
