@@ -551,11 +551,11 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   #   }
   # }
 
-  cmat_temp = matrix(0, n_l, n_class)
+  cmat_temp = matrix(0, n, n_class)
   for (k in 1:n_class) {
-    cmat_temp[, k] = Hmatj[[k]] %*% alpha
+    cmat_temp[, k] = inv_KLK %*% K %*% t(J) %*% Hmatj[[k]] %*% alpha
   }
-  cmat = inv_KLK %*% K %*% t(J) %*% cmat_temp
+  cmat = cmat_temp
 
   # find b vector using LP
   Kcmat = J %*% K %*% cmat

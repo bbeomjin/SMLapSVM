@@ -131,7 +131,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   #   }
   # }
 
-  cmat_temp = matrix(0, n_l, n_class)
+  cmat_temp = matrix(0, n, n_class)
   for (k in 1:n_class) {
     cmat_temp[, k] = inv_LK %*% t(J) %*% Hmatj[[k]] %*% alpha
   }
