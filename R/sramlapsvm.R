@@ -535,7 +535,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
+  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # KLK = fixit(KLK, epsilon = eig_tol_I)
   # diag(KLK) = diag(KLK) + 1e-6
   # inv_KLK = solve(KLK)
@@ -543,8 +543,11 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
+  inv_KLK = solve(KLK, K %*% t(J))
 
-  Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  Q = J %*% K %*% inv_KLK
+
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
@@ -656,11 +659,16 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
   alpha_vec = as.vector(alpha_mat)
 
-  cmat_temp = matrix(0, n, n_class - 1)
+  # cmat_temp = matrix(0, n, n_class - 1)
+  # for (k in 1:(n_class - 1)) {
+  #   cmat_temp[, k] = K %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
+  # }
+  # cmat = inv_KLK %*% cmat_temp
+
   for (k in 1:(n_class - 1)) {
-    cmat_temp[, k] = K %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
+    cmat_temp[, k] = inv_KLK %*% t(Hmatj[[k]]) %*% alpha_vec
   }
-  cmat = inv_KLK %*% cmat_temp
+  cmat = cmat_temp
 
   # find b vector using LP
   Kcmat = (J %*% K %*% cmat) %*% W
