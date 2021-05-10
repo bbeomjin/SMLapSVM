@@ -391,8 +391,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
+  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
+  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
 
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # KLK_temp = solve(inv_KLK)
@@ -416,8 +416,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # inv_KLK = solve(KLK, tol = 1e-40)
 
 
-  # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  Q = J %*% K %*% inv_KLK
+  Q = J %*% K %*% inv_KLK %*% K %*% t(J)
+  # Q = J %*% K %*% inv_KLK
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
@@ -522,8 +522,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Compute cmat = matrix of estimated coefficients
 
-  # cmat = -inv_KLK %*% K %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
-  cmat = -inv_KLK %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
+  cmat = -inv_KLK %*% K %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
+  # cmat = -inv_KLK %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
   # J = cbind(diag(1, n_l), matrix(0, n_l, n - n_l))
 
   # Find b vector
