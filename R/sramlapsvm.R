@@ -138,7 +138,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
     # graph = W
 	  graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-    L = fixit(L, epsilon = 0)
+    # L = fixit(L, epsilon = 0)
 
     valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
     valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
@@ -532,7 +532,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
 
   KLK = n_l * lambda * K + m_mat
   # KLK = (KLK + t(KLK)) / 2
-  KLK = fixit(KLK, epsilon = eig_tol_D)
+  # KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
   inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
