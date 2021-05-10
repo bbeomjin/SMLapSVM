@@ -465,9 +465,9 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # D = fixit(D)
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
-  D = D / max_D
-  diag(D) = diag(D) + epsilon_D
-  # diag(D) = diag(D) + max_D * epsilon_D
+  # D = D / max_D
+  # diag(D) = diag(D) + epsilon_D
+  diag(D) = diag(D) + max_D * epsilon_D
 
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D
@@ -485,8 +485,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   #   }
   # }
 
-  # dvec = -g
-  dvec = -g / max_D
+  dvec = -g
+  # dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
