@@ -1,6 +1,6 @@
 # dyn.load("../src/alpha_update.dll")
 ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                          eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-13)
+                          eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
 
   out = list()
@@ -228,7 +228,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
-                  eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-13)
+                  eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
 
   n_l = NROW(x)

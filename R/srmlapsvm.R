@@ -311,7 +311,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-8)
+                                eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -387,7 +387,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-13)
+                             eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -465,8 +465,9 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # D = fixit(D)
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
-  # D = D / max_D
-  diag(D) = diag(D) + max_D * epsilon_D
+  D = D / max_D
+  diag(D) = diag(D) + epsilon_D
+  # diag(D) = diag(D) + max_D * epsilon_D
 
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D
@@ -484,8 +485,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   #   }
   # }
 
-  dvec = -g
-  # dvec = -g / max_D
+  # dvec = -g
+  dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1

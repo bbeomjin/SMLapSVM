@@ -287,7 +287,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 }
 
 find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                               eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-8)
+                               eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -351,7 +351,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-13)
+                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -457,14 +457,16 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
-  # Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + max_D * epsilon_D
+  Reduced_D = Reduced_D / max_D
+  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
+  # diag(Reduced_D) = diag(Reduced_D) + max_D * epsilon_D
+
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  g = -y_vec
-  # g = -y_vec / max_D
+  # g = -y_vec
+  g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
