@@ -131,7 +131,7 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     # graph = W
   	graph = make_knn_graph_mat(rx, k = adjacency_k)
     L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-    L = fixit(L, epsilon = 0)
+    # L = fixit(L, epsilon = 0)
 #     if (any(theta > 0)) {
 # 	   graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
 # 	   L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
@@ -388,7 +388,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # m_mat = fixit(m_mat, eig_tol_D)
 
   KLK = n_l * lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol_D)
+  # KLK = fixit(KLK, epsilon = eig_tol_D)
   max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
   inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
