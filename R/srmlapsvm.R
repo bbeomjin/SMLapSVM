@@ -387,7 +387,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                             eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 2e-13)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
