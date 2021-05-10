@@ -567,7 +567,7 @@ sramlapsvm_core = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, 
   #################################### for test #######################################
 
   # D = fixit(D)
-  # D = fixit(D, epsilon = eig_tol_D)
+  D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   D = D / max_D
   diag(D) = diag(D) + epsilon_D
