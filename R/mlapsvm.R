@@ -1,5 +1,5 @@
 mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
-                           eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 2e-13)
+                           eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -33,15 +33,17 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   # inv_LK = chol2inv(chol(LK))
   # K = fixit(K, eig_tol_D)
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
-  LK = fixit(LK, epsilon = eig_tol_D)
+  # LK = fixit(LK, epsilon = eig_tol_D)
   max_LK = max(abs(LK))
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
-  inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
+  # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
 
-  # Q = J %*% K %*% inv_LK
-  Q = J %*% K %*% inv_LK %*% t(J)
+  inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
+
+  Q = J %*% K %*% inv_LK
+  # Q = J %*% K %*% inv_LK %*% t(J)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = Q[1:n_l, 1:n_l]
@@ -52,17 +54,17 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   # Subset the columns and rows for non-trivial alpha's
 
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
+  # Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
-  # Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + max_D * epsilon_D
+  Reduced_D = Reduced_D / max_D
+  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
 
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  g = -y_vec
-  # g = -y_vec / max_D
+  # g = -y_vec
+  g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
@@ -114,7 +116,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
 
   # Compute cmat = matrix of estimated coefficients
 
-  cmat = -inv_LK %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
+  cmat = -inv_LK %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
   # J = cbind(diag(1, n_l), matrix(0, n_l, n - n_l))
 
   # Find b vector
@@ -180,7 +182,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
 
 mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = FALSE, adjacency_k = 6, normalized = FALSE,
                    weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                   eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 2e-13)
+                   eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
 {
   out = list()
   n_l = NROW(x)
