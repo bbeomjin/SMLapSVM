@@ -393,7 +393,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
+  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
+  inv_KLK = solve(KLK + diag(epsilon_I, n), K %*% t(J))
 
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # KLK_temp = solve(inv_KLK)
