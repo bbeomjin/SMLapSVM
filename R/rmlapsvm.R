@@ -1,5 +1,5 @@
 rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                            eig_tol_D = 1e-13, eig_tol_I = 1e-13, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -23,18 +23,18 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # K = fixit(K, eig_tol_D)
   # inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
-  # LK = fixit(LK, epsilon = eig_tol_D)
   max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
-  # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
 
-  inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
+  inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_LK
+
+  # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
 
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
 
-  Q = J %*% K %*% inv_LK
-  # Q = J %*% K %*% inv_LK %*% t(J)
+  # Q = J %*% K %*% inv_LK
+  Q = J %*% K %*% inv_LK %*% t(J)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = J %*% t(inv_LK) %*% K %*% t(J)
@@ -48,7 +48,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
   }
 
-  # D = fixit(D, epsilon = eig_tol_D)
+  D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   D = D / max_D
   diag(D) = diag(D) + epsilon_D
@@ -127,7 +127,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
   cmat = matrix(0, n, n_class)
   for (k in 1:n_class) {
-    cmat[, k] = inv_LK %*% Hmatj[[k]] %*% alpha
+    cmat[, k] = inv_LK %*% t(J) %*% Hmatj[[k]] %*% alpha
   }
 
   # find b vector using LP
@@ -197,7 +197,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                    eig_tol_D = 0, eig_tol_I = 0, epsilon_D = 1e-6, epsilon_I = 1e-6)
+                    eig_tol_D = 1e-13, eig_tol_I = 1e-13, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
   out = list()
   n_l = NROW(x)
