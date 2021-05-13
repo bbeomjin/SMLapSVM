@@ -1,6 +1,6 @@
 # dyn.load("../src/alpha_update.dll")
 ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                          eig_tol_D = 1e-13, eig_tol_I = 1e-13, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                          eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
 
   out = list()
@@ -51,7 +51,8 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   # inv_LK = inverse(LK, epsilon = eig_tol_I)
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
-  inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_LK
+  # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_LK
+  inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # Q = J %*% K %*% inv_LK
   Q = J %*% K %*% inv_LK %*% t(J)
@@ -223,7 +224,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
-                  eig_tol_D = 1e-13, eig_tol_I = 1e-13, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                  eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
 
   n_l = NROW(x)

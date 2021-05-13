@@ -1,5 +1,5 @@
 rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 1e-13, eig_tol_I = 1e-13, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                            eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -26,7 +26,8 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
 
-  inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_LK
+  # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_LK
+  inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
 
@@ -197,7 +198,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                    eig_tol_D = 1e-13, eig_tol_I = 1e-13, epsilon_D = 1e-6, epsilon_I = 1e-12)
+                    eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
   out = list()
   n_l = NROW(x)
