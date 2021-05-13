@@ -520,11 +520,11 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     # tol = n * epsilon
     tol = epsilon
     eps = tol * abs(eig$values[1])
-    if (any(eig$values < eps)) {
-      eig$values = eig$values - eig$values[n] + eps
-    }
-    eig$values[eig$values < eps] = eps
-    Q = eig$vectors %*% diag(1 / eig$values) %*% t(eig$vectors)
+    # if (any(eig$values < eps)) {
+    #   eig$values = eig$values - eig$values[n] + eps
+    # }
+    positive = eig$values > eps
+    Q = eig$vectors[, positive, drop = FALSE] %*% diag(1 / eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
   }
   return(Q)
 }
