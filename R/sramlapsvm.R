@@ -346,7 +346,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = eig_tol_D)
+  Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
 
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   # diag(Dmat) = diag(Dmat) + 1e-8
