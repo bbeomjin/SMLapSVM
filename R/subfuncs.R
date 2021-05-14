@@ -8,12 +8,14 @@ main_kernel = function(x, y, kernel)
     K = (1 + x %*% t(y))^kernel$par
   if (kernel$type == "radial" | kernel$type == "radial2")
   {
-    normx = drop((x^2) %*% rep(1.0, ncol(x)))
-    normy = drop((y^2) %*% rep(1.0, ncol(y)))
+    # normx = drop((x^2) %*% rep(1.0, ncol(x)))
+    normx = rowSums(x^2)
+    # normy = drop((y^2) %*% rep(1.0, ncol(y)))
+    normy = rowSums(y^2)
     temp = x %*% t(y)
-    temp = (-2.0 * temp + normx) + outer(rep(1.0, nrow(x)), normy, "*")
+    temp = (-2.0 * temp) + outer(normx, rep(1.0, nrow(y)), "*") + outer(rep(1.0, nrow(x)), normy, "*")
     K = exp(-temp * kernel$par)
-	# K = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(u))
+    # K_temp = kernlab::kernelMatrix(rbfdot(sigma = kernel$par), as.matrix(x), as.matrix(y))
   }
   # if (sym) {
   #   K = (K + t(K)) / 2
@@ -34,12 +36,12 @@ kernelMat = function(x, y, kernel = "radial", kparam = 1.0) {
   if (kernel == "poly") {
     obj = (x %*% t(y) + 1.0)^kparam
   } else if (kernel == "radial" | kernel == "radial2") {
-    normx = drop((x^2) %*% rep(1.0, ncol(x)))
-    normy = drop((y^2) %*% rep(1.0, ncol(y)))
+    normx = rowSums(x^2)
+    # normy = drop((y^2) %*% rep(1.0, ncol(y)))
+    normy = rowSums(y^2)
     temp = x %*% t(y)
-    temp = (-2.0 * temp + normx) + outer(rep(1.0, nrow(x)), normy, "*")
-    obj = exp(-temp * kparam)
-    # obj = kernelMatrix(rbfdot(sigma = kparam), x, y)@.Data
+    temp = (-2.0 * temp) + outer(normx, rep(1.0, nrow(y)), "*") + outer(rep(1.0, nrow(x)), normy, "*")
+    obj = exp(-temp * kernel$par)
   } else if (kernel == "spline") {
     K = 0
     p = ncol(x)
@@ -496,12 +498,12 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     #   eig$values = eig$values - eig$values[n] + eps
     # }
     eig$values[eig$values < eps] = eps
-    Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+    Q = eig$vectors %*% (eig$values * t(eig$vectors))
   }
   return(Q)
 }
 
-inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+inverse = function(A, epsilon = sqrt(.Machine$double.eps), is_diag = FALSE)
 {
   if (is_diag) {
     d = diag(A)
@@ -519,16 +521,15 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     n = length(eig$values)
     # tol = n * epsilon
     tol = epsilon
-    eps = tol * abs(eig$values[1])
+    eps = max(tol * abs(eig$values[1]), 0)
     # if (any(eig$values < eps)) {
     #   eig$values = eig$values - eig$values[n] + eps
     # }
     positive = eig$values > eps
-    Q = eig$vectors[, positive, drop = FALSE] %*% diag(1 / eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
+    Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
   }
   return(Q)
 }
-
 
 # fixit = function(A, epsilon)
 # {
