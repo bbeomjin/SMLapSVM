@@ -41,7 +41,7 @@ kernelMat = function(x, y, kernel = "radial", kparam = 1.0) {
     normy = rowSums(y^2)
     temp = x %*% t(y)
     temp = (-2.0 * temp) + outer(normx, rep(1.0, nrow(y)), "*") + outer(rep(1.0, nrow(x)), normy, "*")
-    obj = exp(-temp * kernel$par)
+    obj = exp(-temp * kparam)
   } else if (kernel == "spline") {
     K = 0
     p = ncol(x)
