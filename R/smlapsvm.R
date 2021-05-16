@@ -374,32 +374,39 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  m_mat = 0
+  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
+
+  lambda_KLK = 0
   for (i in 1:anova_K$numK) {
-    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+    lambda_KLK = lambda_KLK + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
+
+  lambda_K = n_l * lambda * K
+
+  diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
+  diag(lambda_KLK) = diag(lambda_KLK) + max(abs(lambda_KLK)) * epsilon_I
 
   # m_mat = 0
   # for (i in 1:anova_K$numK) {
   #   m_mat = m_mat + lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   # }
 
-  J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
-
   # K = fixit(K, eig_tol_I)
   # m_mat = fixit(m_mat, eig_tol_D)
 
-  KLK = n_l * lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol_I)
-
-  max_KLK = max(abs(KLK))
+  # KLK = n_l * lambda * K + m_mat
+  # KLK = fixit(KLK, epsilon = eig_tol_I)
+  #
+  # max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # inv_KLK = solve(KLK + diag(epsilon_I, n))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
   # inv_KLK = solve(KLK + diag(epsilon_I, n), K %*% t(J))
 
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), tol = eig_tol_I / 100) %*% K %*% t(J)
+  K_KLK = lambda_K + lambda_KLK
+
+  inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
   # inv_KLK = inverse(KLK + diag(max_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n))) %*% K %*% t(J)
@@ -427,7 +434,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
 
   # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  Q = J %*% K %*% inv_KLK
+  Q = J %*% K %*% inv_K_KLK
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
@@ -533,7 +540,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # Compute cmat = matrix of estimated coefficients
 
   # cmat = -inv_KLK %*% K %*% t(J) %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
-  cmat = -inv_KLK %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
+  cmat = -inv_K_KLK %*% (alpha - matrix(rep(rowMeans(alpha), n_class), ncol = n_class))
   # J = cbind(diag(1, n_l), matrix(0, n_l, n - n_l))
 
   # Find b vector

@@ -45,7 +45,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
   # K = fixit(K, eig_tol_D)
 
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
-  max_LK = max(abs(LK))
+  # max_LK = max(abs(LK))
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
@@ -53,7 +53,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_LK
-  inv_LK = solve(LK + diag(max_LK * epsilon_I, n), tol = eig_tol_I / 100)
+  inv_LK = solve(LK + diag(max(abs(LK)) * epsilon_I, n), tol = eig_tol_I / 100)
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # Q = J %*% K %*% inv_LK

@@ -416,17 +416,24 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
 
-  m_mat = 0
+  lambda_KLK = 0
   for (i in 1:anova_K$numK) {
-    m_mat = m_mat + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+    lambda_KLK = lambda_KLK + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
+
+  lambda_K = n_l * lambda * K
+
+  diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
+  diag(lambda_KLK) = diag(lambda_KLK) + max(abs(lambda_KLK)) * epsilon_I
 
   # K = fixit(K, eig_tol_D)
   # m_mat = fixit(m_mat, eig_tol_D)
 
-  KLK = n_l * lambda * K + m_mat
-  KLK = fixit(KLK, epsilon = eig_tol_I)
-  max_KLK = max(abs(KLK))
+  K_KLK = lambda_K + lambda_KLK
+
+  # KLK = n_l * lambda * K + m_mat
+  # KLK = fixit(KLK, epsilon = eig_tol_I)
+  # max_KLK = max(abs(KLK))
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
@@ -451,13 +458,14 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_KLK
-  inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), tol = eig_tol_I / 100) %*% K %*% t(J)
+  inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
+  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), tol = eig_tol_I / 100) %*% K %*% t(J)
   # inv_KLK = inverse(KLK + diag(max_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n))) %*% K %*% t(J)
 
   # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
-  Q = J %*% K %*% inv_KLK
+  Q = J %*% K %*% inv_K_KLK
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
@@ -557,7 +565,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   cmat = matrix(0, n, n_class)
   for (k in 1:n_class) {
-    cmat[, k] = inv_KLK %*% Hmatj[[k]] %*% alpha
+    cmat[, k] = inv_K_KLK %*% Hmatj[[k]] %*% alpha
   }
 
   # find b vector using LP

@@ -23,10 +23,10 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # K = fixit(K, eig_tol_D)
   # inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
-  max_LK = max(abs(LK))
+  # max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
 
-  inv_LK = solve(LK + diag(max_LK * epsilon_I, n), tol = eig_tol_I / 100)
+  inv_LK = solve(LK + diag(max(abs(LK)) * epsilon_I, n), tol = eig_tol_I / 100)
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
