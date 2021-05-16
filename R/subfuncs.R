@@ -503,31 +503,15 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   return(Q)
 }
 
-inverse = function(A, epsilon = sqrt(.Machine$double.eps), is_diag = FALSE)
+inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 {
-  if (is_diag) {
-    d = diag(A)
-    n = length(d)
-    # tol = n * epsilon
-    tol = epsilon
-    eps = tol * max(d)
-    if (any(d < eps)) {
-      d = d - min(d) + eps
-    }
-    d[d < eps] = eps
-    Q = diag(1 / d)
-  } else {
-    eig = eigen(A, symmetric = TRUE)
-    n = length(eig$values)
-    # tol = n * epsilon
-    tol = epsilon
-    eps = max(tol * abs(eig$values[1]), 0)
-    # if (any(eig$values < eps)) {
-    #   eig$values = eig$values - eig$values[n] + eps
-    # }
-    positive = eig$values > eps
-    Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
-  }
+  eig = eigen(A, symmetric = TRUE)
+  # n = length(eig$values)
+  # tol = n * epsilon
+  tol = epsilon
+  eps = max(tol * abs(eig$values[1]), 0)
+  positive = eig$values > eps
+  Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
   return(Q)
 }
 

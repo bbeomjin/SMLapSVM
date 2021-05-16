@@ -389,7 +389,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = .Machine$double.eps, eig_tol_I = 2e-14, epsilon_D = 1e-8, epsilon_I = 0)
+                             eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-8, epsilon_I = 0)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -423,8 +423,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   lambda_K = n_l * lambda * K
 
-  diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
-  diag(lambda_KLK) = diag(lambda_KLK) + max(abs(lambda_KLK)) * epsilon_I
+  # diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
+  # diag(lambda_KLK) = diag(lambda_KLK) + max(abs(lambda_KLK)) * epsilon_I
 
   # K = fixit(K, eig_tol_D)
   # m_mat = fixit(m_mat, eig_tol_D)
@@ -451,14 +451,14 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_KLK = chol2inv(chol(KLK))
   # KLK_temp = chol2inv(chol(inv_KLK))
 
-  # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
+  inv_K_KLK = inverse(K_KLK, epsilon = eig_tol_I) %*% K %*% t(J)
   # KLK_temp = inverse(inv_KLK, epsilon = eig_tol_I)
   # sum(abs(KLK_origin - KLK_temp))
 
   # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
 
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), tol = eig_tol_I / 100) / max_KLK
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), tol = eig_tol_I / 100) %*% K %*% t(J)
   # inv_KLK = inverse(KLK + diag(max_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)
