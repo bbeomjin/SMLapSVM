@@ -383,9 +383,6 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   lambda_K = n_l * lambda * K
 
-  diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
-  diag(lambda_KLK) = diag(lambda_KLK) + max(abs(lambda_KLK)) * epsilon_I
-
   # m_mat = 0
   # for (i in 1:anova_K$numK) {
   #   m_mat = m_mat + lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
@@ -472,7 +469,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
 
   # Subset the columns and rows for non-trivial alpha's
-  Reduced_D = D[nonzeroIndex, nonzeroIndex]
+  # Reduced_D = D[nonzeroIndex, nonzeroIndex]
+  Reduced_D = D
   Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
@@ -487,7 +485,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
-  Reduced_g = g[nonzeroIndex]
+  # Reduced_g = g[nonzeroIndex]
+  Reduced_g = g
   n_nonzeroIndex = length(Reduced_g)
 
   # (4) Compute A <- R
@@ -498,7 +497,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   R1 = matrix(R1[1:(n_class - 1), ], nrow = n_class - 1, ncol = ncol(R1))
 
   # Choose components with non-trivial alpha's
-  Reduced_R1 = matrix(R1[, nonzeroIndex], nrow = nrow(R1), ncol = n_nonzeroIndex)
+  # Reduced_R1 = matrix(R1[, nonzeroIndex], nrow = nrow(R1), ncol = n_nonzeroIndex)
+  Reduced_R1 = R1
 
   # Inequality constraint matrix
   R2 = diag(rep(1, n_l * (n_class - 1)))
