@@ -574,10 +574,10 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
       B2 = matrix(1, n_l, n_class - 1)
       A = cbind(B1, -B1)
       A = rbind(A, cbind(B2, -B2))
-      A = A[nonzeroIndex, ] # reduced.A
+      # A = A[nonzeroIndex, ] # reduced.A
       A = cbind(A, diag(1, n_l * (n_class - 1)))
       b = matrix(Kcmat - trans_Y, ncol = 1)
-      b = b[nonzeroIndex] # reduced.b
+      # b = b[nonzeroIndex] # reduced.b
       # constraint directions
       const.dir = matrix(rep(">=", nrow(A)))
 
