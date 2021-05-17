@@ -528,8 +528,9 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # dual_temp = solve.QP(Reduced_D, Reduced_g, R, r, meq = nrow(Reduced_R1))
 
   # Place the dual solution into the non-trivial alpha positions
-  alpha = rep(0, qp_dim)
-  alpha[nonzeroIndex] = dual$solution
+  # alpha = rep(0, qp_dim)
+  # alpha[nonzeroIndex] = dual$solution
+  alpha = dual$solution
 
   # Make alpha zero if they are too small
   alpha[alpha < 0] = 0
