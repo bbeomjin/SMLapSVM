@@ -454,7 +454,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   y_vec = as.vector(trans_Y)
 
   # Index for non-trivial alphas
-  nonzeroIndex = (y_vec != 1)
+  nonzeroIndex = (y_vec != 0)
 
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   # Q = K %*% inv_LK
@@ -469,8 +469,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
 
   # Subset the columns and rows for non-trivial alpha's
-  # Reduced_D = D[nonzeroIndex, nonzeroIndex]
-  Reduced_D = D
+  Reduced_D = D[nonzeroIndex, nonzeroIndex]
   Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
   Reduced_D = Reduced_D / max_D
@@ -485,8 +484,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
-  # Reduced_g = g[nonzeroIndex]
-  Reduced_g = g
+  Reduced_g = g[nonzeroIndex]
   n_nonzeroIndex = length(Reduced_g)
 
   # (4) Compute A <- R
@@ -497,8 +495,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   R1 = matrix(R1[1:(n_class - 1), ], nrow = n_class - 1, ncol = ncol(R1))
 
   # Choose components with non-trivial alpha's
-  # Reduced_R1 = matrix(R1[, nonzeroIndex], nrow = nrow(R1), ncol = n_nonzeroIndex)
-  Reduced_R1 = R1
+  Reduced_R1 = matrix(R1[, nonzeroIndex], nrow = nrow(R1), ncol = n_nonzeroIndex)
 
   # Inequality constraint matrix
   R2 = diag(rep(1, n_l * (n_class - 1)))
@@ -528,16 +525,15 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # dual_temp = solve.QP(Reduced_D, Reduced_g, R, r, meq = nrow(Reduced_R1))
 
   # Place the dual solution into the non-trivial alpha positions
-  # alpha = rep(0, qp_dim)
-  # alpha[nonzeroIndex] = dual$solution
-  alpha = dual$solution
+  alpha = rep(0, qp_dim)
+  alpha[nonzeroIndex] = dual$solution
 
   # Make alpha zero if they are too small
   alpha[alpha < 0] = 0
   # alpha[alpha > 1] = 1
 
   # Reshape alpha into a n by n_class matrix
-  alpha = matrix(alpha, nrow = n_l)
+  alpha = matrix(alpha, nrow = n_l, ncol = n_class)
 
   # Compute cmat = matrix of estimated coefficients
 
@@ -574,10 +570,10 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
       B2 = matrix(1, n_l, n_class - 1)
       A = cbind(B1, -B1)
       A = rbind(A, cbind(B2, -B2))
-      # A = A[nonzeroIndex, ] # reduced.A
+      A = A[nonzeroIndex, ] # reduced.A
       A = cbind(A, diag(1, n_l * (n_class - 1)))
       b = matrix(Kcmat - trans_Y, ncol = 1)
-      # b = b[nonzeroIndex] # reduced.b
+      b = b[nonzeroIndex] # reduced.b
       # constraint directions
       const.dir = matrix(rep(">=", nrow(A)))
 
