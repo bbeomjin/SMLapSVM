@@ -454,7 +454,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   y_vec = as.vector(trans_Y)
 
   # Index for non-trivial alphas
-  nonzeroIndex = (y_vec != 0)
+  nonzeroIndex = (y_vec != 1)
 
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
   # Q = K %*% inv_LK
