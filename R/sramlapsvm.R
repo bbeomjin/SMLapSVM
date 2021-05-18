@@ -353,7 +353,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
   # diag(Dmat) = diag(Dmat) + 1e-8
   # Dmat = Dmat / max_D
   max_D = max(abs(Dmat))
-  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
+  diag(Dmat) = diag(Dmat) + max_D * .Machine$double.eps
 
   dvec_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = gamma

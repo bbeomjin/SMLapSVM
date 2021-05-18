@@ -320,7 +320,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   max_D = max(abs(Dmat))
   # Dmat = Dmat / max_D
-  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
+  diag(Dmat) = diag(Dmat) + max_D * .Machine$double.eps
 
   dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = 0
