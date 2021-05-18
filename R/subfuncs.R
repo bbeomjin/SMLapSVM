@@ -494,9 +494,7 @@ fixit = function(A, epsilon = 100 * .Machine$double.eps, is_diag = FALSE)
     # tol = n * epsilon
     tol = epsilon
     eps = tol * abs(eig$values[1])
-    if (any(eig$values < eps)) {
-      eig$values[eig$values < eps] = eps
-    }
+    eig$values[eig$values < eps] = eps
     Q = eig$vectors %*% (eig$values * t(eig$vectors))
   }
   return(Q)
@@ -510,11 +508,7 @@ inverse = function(A, epsilon = 100 * .Machine$double.eps)
   tol = epsilon
   eps = max(tol * abs(eig$values[1]), 0)
   positive = eig$values > eps
-  if (all(positive)) {
-    Q = eig$vectors %*% (1 / eig$values * t(eig$vectors))
-  } else {
-    Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
-  }
+  Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
   return(Q)
 }
 
