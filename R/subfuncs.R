@@ -186,34 +186,34 @@ make_L_mat = function(X, kernel = "radial", kparam = 1, graph, weightType = c("H
 
 
 
-# predict_kernel = function(K_test, beta, beta0, k)
-# {
-#   n = nrow(K_test)
-#
-#   XI = XI_gen(k = k)
-#
-#   beta0 = matrix(beta0,
-#                  nrow = n,
-#                  ncol = ncol(beta),
-#                  byrow = TRUE)
-#
-#   f_matrix = t(K_test %*% beta + beta0)
-#
-#   inner_matrix = matrix(data = 0, nrow = n, ncol = k)
-#
-#   for(ii in 1:k) inner_matrix[, ii] = colSums(f_matrix * XI[, ii])
-#
-#   z = apply(X = inner_matrix, MARGIN = 1, FUN = pred)
-#
-#   return(list(class = z, inner_prod = inner_matrix))
-#
-# }
+predict_kernel = function(K_test, beta, beta0, k)
+{
+  n = nrow(K_test)
 
-# pred = function(f) {
-#   tst = sapply(f, function(i) {isTRUE(all.equal(i, max(f)))})
-#   y = min(which(tst))
-#   return(y)
-# }
+  XI = XI_gen(k = k)
+
+  beta0 = matrix(beta0,
+                 nrow = n,
+                 ncol = ncol(beta),
+                 byrow = TRUE)
+
+  f_matrix = t(K_test %*% beta + beta0)
+
+  inner_matrix = matrix(data = 0, nrow = n, ncol = k)
+
+  for(ii in 1:k) inner_matrix[, ii] = colSums(f_matrix * XI[, ii])
+
+  z = apply(X = inner_matrix, MARGIN = 1, FUN = pred)
+
+  return(list(class = z, inner_prod = inner_matrix))
+
+}
+
+pred = function(f) {
+  tst = sapply(f, function(i) {isTRUE(all.equal(i, max(f)))})
+  y = min(which(tst))
+  return(y)
+}
 
 
 make_anovaKernel = function(x, u, kernel)
@@ -475,7 +475,7 @@ code = function(y)
 #   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 # }
 
-fixit = function(A, epsilon = 100 * .Machine$double.eps, is_diag = FALSE)
+fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 {
   if (is_diag) {
     d = diag(A)
@@ -494,13 +494,16 @@ fixit = function(A, epsilon = 100 * .Machine$double.eps, is_diag = FALSE)
     # tol = n * epsilon
     tol = epsilon
     eps = tol * abs(eig$values[1])
+    # if (any(eig$values < eps)) {
+    #   eig$values = eig$values - eig$values[n] + eps
+    # }
     eig$values[eig$values < eps] = eps
     Q = eig$vectors %*% (eig$values * t(eig$vectors))
   }
   return(Q)
 }
 
-inverse = function(A, epsilon = 100 * .Machine$double.eps)
+inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 {
   eig = eigen(A, symmetric = TRUE)
   # n = length(eig$values)
@@ -511,7 +514,6 @@ inverse = function(A, epsilon = 100 * .Machine$double.eps)
   Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
   return(Q)
 }
-
 
 # fixit = function(A, epsilon)
 # {
