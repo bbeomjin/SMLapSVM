@@ -252,7 +252,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 
                         if (!inherits(error, "try-error")) {
                           valid_subK = combine_kernel(valid_anova_K, theta)
-                          pred_val = predict.ramlapsvm_core(init_model, newK = valid_subK)$class
+                          pred_val = predict.ramlapsvm_compact(init_model, newK = valid_subK)$class
 
                           if (criterion == "0-1") {
                             acc = sum(valid_y == pred_val) / length(valid_y)
