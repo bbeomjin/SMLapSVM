@@ -186,34 +186,34 @@ make_L_mat = function(X, kernel = "radial", kparam = 1, graph, weightType = c("H
 
 
 
-predict_kernel = function(K_test, beta, beta0, k)
-{
-  n = nrow(K_test)
+# predict_kernel = function(K_test, beta, beta0, k)
+# {
+#   n = nrow(K_test)
+#
+#   XI = XI_gen(k = k)
+#
+#   beta0 = matrix(beta0,
+#                  nrow = n,
+#                  ncol = ncol(beta),
+#                  byrow = TRUE)
+#
+#   f_matrix = t(K_test %*% beta + beta0)
+#
+#   inner_matrix = matrix(data = 0, nrow = n, ncol = k)
+#
+#   for(ii in 1:k) inner_matrix[, ii] = colSums(f_matrix * XI[, ii])
+#
+#   z = apply(X = inner_matrix, MARGIN = 1, FUN = pred)
+#
+#   return(list(class = z, inner_prod = inner_matrix))
+#
+# }
 
-  XI = XI_gen(k = k)
-
-  beta0 = matrix(beta0,
-                 nrow = n,
-                 ncol = ncol(beta),
-                 byrow = TRUE)
-
-  f_matrix = t(K_test %*% beta + beta0)
-
-  inner_matrix = matrix(data = 0, nrow = n, ncol = k)
-
-  for(ii in 1:k) inner_matrix[, ii] = colSums(f_matrix * XI[, ii])
-
-  z = apply(X = inner_matrix, MARGIN = 1, FUN = pred)
-
-  return(list(class = z, inner_prod = inner_matrix))
-
-}
-
-pred = function(f) {
-  tst = sapply(f, function(i) {isTRUE(all.equal(i, max(f)))})
-  y = min(which(tst))
-  return(y)
-}
+# pred = function(f) {
+#   tst = sapply(f, function(i) {isTRUE(all.equal(i, max(f)))})
+#   y = min(which(tst))
+#   return(y)
+# }
 
 
 make_anovaKernel = function(x, u, kernel)
@@ -492,7 +492,7 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     eig = eigen(A, symmetric = TRUE)
     n = length(eig$values)
     # tol = n * epsilon
-    tol = epsilon
+    tol = nrow(A) * epsilon
     eps = tol * abs(eig$values[1])
     # if (any(eig$values < eps)) {
     #   eig$values = eig$values - eig$values[n] + eps
@@ -508,7 +508,7 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   eig = eigen(A, symmetric = TRUE)
   # n = length(eig$values)
   # tol = n * epsilon
-  tol = epsilon
+  tol = nrow(A) * epsilon
   eps = max(tol * abs(eig$values[1]), 0)
   positive = eig$values > eps
   Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
