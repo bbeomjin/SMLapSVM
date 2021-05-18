@@ -1,6 +1,6 @@
 # dyn.load("../src/alpha_update.dll")
-ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                          eig_tol_D = .Machine$double.eps, eig_tol_I = 2e-14, epsilon_D = 1e-8, epsilon_I = 0)
+ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
+                          eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-8, epsilon_I = 0)
 {
 
   out = list()
@@ -226,7 +226,7 @@ ramlapsvm_core = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
-                  eig_tol_D = .Machine$double.eps, eig_tol_I = 2e-14, epsilon_D = 1e-8, epsilon_I = 0)
+                  eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-8, epsilon_I = 0)
 {
 
   n_l = NROW(x)
@@ -260,7 +260,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   graph = make_knn_graph_mat(rx, k = adjacency_k)
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
 
-  solutions = ramlapsvm_core(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon,
+  solutions = ramlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon,
                              eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D, epsilon_I = epsilon_I)
 
   out = list()
@@ -450,7 +450,7 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 }
 
 # dyn.load("../src/alpha_update.dll")
-# ramlapsvm_core_old = function(K, L, y, gamma = 0.5, lambda, lambda_I, weight = NULL, epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300)
+# ramlapsvm_compact_old = function(K, L, y, gamma = 0.5, lambda, lambda_I, weight = NULL, epsilon = 1e-4 * length(y) * length(unique(y)), maxiter = 300)
 # {
 #
 #   out = list()
@@ -525,11 +525,11 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 #   out$beta0 = beta0out
 #   out$epsilon = epsilon
 #   out$warm = warm
-#   class(out) = "ramlapsvm_core"
+#   class(out) = "ramlapsvm_compact"
 #   return(out)
 # }
 
-# predict.ramlapsvm_core = function(object, newK = NULL) {
+# predict.ramlapsvm_compact = function(object, newK = NULL) {
 #
 #   beta = object$beta
 #   beta0 = object$beta0
@@ -546,7 +546,7 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 # }
 
 
-predict.ramlapsvm_core = function(object, newK = NULL) {
+predict.ramlapsvm_compact = function(object, newK = NULL) {
 
   beta = object$beta
   beta0 = object$beta0

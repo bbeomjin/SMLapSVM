@@ -320,7 +320,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   max_D = max(abs(Dmat))
   # Dmat = Dmat / max_D
-  diag(Dmat) = diag(Dmat) + max_D * eig_tol_D
+  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
 
   dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = 0
@@ -382,9 +382,6 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   }
 
   lambda_K = n_l * lambda * K
-
-  diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
-  diag(lambda_KLK) = diag(lambda_KLK) + max(abs(lambda_KLK)) * epsilon_I
 
   # m_mat = 0
   # for (i in 1:anova_K$numK) {
