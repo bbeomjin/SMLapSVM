@@ -403,7 +403,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   K_KLK = lambda_K + lambda_KLK
 
-  inv_K_KLK = inverse(K_KLK, epsilon = eig_tol_I) %*% K %*% t(J)
+  max_K_KLK = max(abs(K_KLK))
+  inv_K_KLK = inverse(K_KLK + diag(max_K_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
   # inv_KLK = inverse(KLK + diag(max_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)

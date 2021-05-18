@@ -451,7 +451,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_KLK = chol2inv(chol(KLK))
   # KLK_temp = chol2inv(chol(inv_KLK))
 
-  inv_K_KLK = inverse(K_KLK, epsilon = eig_tol_I) %*% K %*% t(J)
+  max_K_KLK = max(abs(K_KLK))
+  inv_K_KLK = inverse(K_KLK + diag(max_K_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
   # KLK_temp = inverse(inv_KLK, epsilon = eig_tol_I)
   # sum(abs(KLK_origin - KLK_temp))
 
