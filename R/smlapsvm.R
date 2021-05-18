@@ -60,7 +60,7 @@ predict.smlapsvm = function(object, newx = NULL, newK = NULL)
   c0vec = model$c0vec
 
   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
+  pred_class = apply(pred_y, 1, pred)
   return(list(class = pred_class, pred_value = pred_y))
 }
 
@@ -287,7 +287,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 }
 
 find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                               eig_tol_D = .Machine$double.eps, eig_tol_I = 2e-14, epsilon_D = 1e-8, epsilon_I = 0)
+                               eig_tol_D = 0, eig_tol_I = 100 * .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -320,7 +320,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   max_D = max(abs(Dmat))
   # Dmat = Dmat / max_D
-  diag(Dmat) = diag(Dmat) + max_D * eig_tol_D
+  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
 
   dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = 0
@@ -353,7 +353,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 2e-15, eig_tol_I = 2e-15, epsilon_D = 1e-8, epsilon_I = 0)
+                            eig_tol_D = 0, eig_tol_I = 100 * .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
 {
 
   # The sample size, the number of classes and dimension of QP problem
