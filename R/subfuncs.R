@@ -209,11 +209,11 @@ make_L_mat = function(X, kernel = "radial", kparam = 1, graph, weightType = c("H
 #
 # }
 
-pred = function(f) {
-  tst = sapply(f, function(i) {isTRUE(all.equal(i, max(f)))})
-  y = min(which(tst))
-  return(y)
-}
+# pred = function(f) {
+#   tst = sapply(f, function(i) {isTRUE(all.equal(i, max(f)))})
+#   y = min(which(tst))
+#   return(y)
+# }
 
 
 make_anovaKernel = function(x, u, kernel)

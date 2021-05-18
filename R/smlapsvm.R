@@ -60,7 +60,7 @@ predict.smlapsvm = function(object, newx = NULL, newK = NULL)
   c0vec = model$c0vec
 
   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, pred)
+  pred_class = apply(pred_y, 1, which.max)
   return(list(class = pred_class, pred_value = pred_y))
 }
 

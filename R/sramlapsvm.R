@@ -74,7 +74,7 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
   for (i in 1:n_class) {
     fit[, i] = colSums(temp_fit * W[, i])
   }
-  pred_y = apply(fit, 1, pred)
+  pred_y = apply(fit, 1, which.max)
   return(list(class = pred_y, pred_value = fit))
 }
 
