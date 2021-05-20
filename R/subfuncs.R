@@ -521,7 +521,7 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   eig = eigen(A, symmetric = TRUE)
   # n = length(eig$values)
   # tol = n * epsilon
-  tol = nrow(A) * epsilon
+  tol = epsilon
 
   sign_d = sign(eig$values)
   d = sign_d * eig$values
