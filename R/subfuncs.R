@@ -529,7 +529,7 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   eps = max(tol * d[1], 0)
   positive = d > eps
 
-  Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / d[positive] * sign_d[positive]) * t(eig$vectors[, positive, drop = FALSE]))
+  Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / (d[positive] * sign_d[positive])) * t(eig$vectors[, positive, drop = FALSE]))
   return(Q)
 }
 
