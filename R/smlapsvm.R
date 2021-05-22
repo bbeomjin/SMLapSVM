@@ -287,7 +287,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 }
 
 find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                               eig_tol_D = .Machine$double.eps, eig_tol_I = 100 * .Machine$double.eps, epsilon_D = 0, epsilon_I = 0)
+                               eig_tol_D = .Machine$double.eps, eig_tol_I = 100 * .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -354,7 +354,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = .Machine$double.eps, eig_tol_I = 100 * .Machine$double.eps, epsilon_D = 0, epsilon_I = 0)
+                            eig_tol_D = .Machine$double.eps, eig_tol_I = 100 * .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
 {
 
   # The sample size, the number of classes and dimension of QP problem
