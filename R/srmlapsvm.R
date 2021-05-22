@@ -311,7 +311,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 0, eig_tol_I = 1e-10, epsilon_D = 1e-8, epsilon_I = 0)
+                                eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 0, epsilon_I = 0)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -339,14 +339,16 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
     A_mat = cbind(A_mat, temp_A)
   }
 
-  Dmat = c(Dmat, c(rep(0, n_l * n_class)))
+  max_D = max(abs(Dmat))
+  Dmat = c(Dmat, c(rep(max_D * eig_tol_D, n_l * n_class)))
   Dmat = diag(Dmat)
+  # diag(Dmat) = diag(Dmat) + max_D * .Machine$double.eps
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
 
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
-  max_D = max(abs(Dmat))
+
   # Dmat = Dmat / max_D
-  diag(Dmat) = diag(Dmat) + max_D * .Machine$double.eps
+
 
   # dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
   # dvec_temp[cbind(1:n_l, y)] = 0
@@ -389,7 +391,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = sqrt(.Machine$double.eps), epsilon_D = 1e-8, epsilon_I = 0)
+                             eig_tol_D = .Machine$double.eps, eig_tol_I = .Machine$double.eps, epsilon_D = 0, epsilon_I = 0)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
