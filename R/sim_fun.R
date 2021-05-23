@@ -1,4 +1,4 @@
-generateMultiorange = function(n, p = 2, sd = 1.5, seed = 1, with_noise = TRUE, noise_p = 1)
+generateMultiorange = function(n, p = 2, sd = 1, seed = 1, with_noise = TRUE, noise_p = 1)
 {
   set.seed(seed)
   X = matrix(nrow = n, ncol = p)
@@ -7,15 +7,15 @@ generateMultiorange = function(n, p = 2, sd = 1.5, seed = 1, with_noise = TRUE, 
   while (k <= n) {
     x = rnorm(p, sd = sd)
     sx = sum(x^2)
-    if (sx <= 0.5) {
+    if (sx <= 0.25) {
       y[k] = 1
       X[k, ] = x
       k = k + 1
-    } else if (1.5 < sx & sx <= 2.5) {
+    } else if (1 < sx & sx <= 1.5) {
       y[k] = 2
       X[k, ] = x
       k = k + 1
-    } else if (4.5 < sx & sx <= 6.5) {
+    } else if (3 < sx & sx <= 5) {
       y[k] = 3
       X[k, ] = x
       k = k + 1
@@ -31,7 +31,7 @@ generateMultiorange = function(n, p = 2, sd = 1.5, seed = 1, with_noise = TRUE, 
   return(list(x = X, y = y))
 }
 
-generateMultiMoon = function(each_n = 100, sigma = 1, noise_p = 4, seed = NULL)
+generateMultiMoon = function(each_n = 100, sigma = 1, noise_p = 4, noise_sd = 3, seed = NULL)
 {
   set.seed(seed)
   x = runif(each_n, 0, pi)
@@ -44,13 +44,13 @@ generateMultiMoon = function(each_n = 100, sigma = 1, noise_p = 4, seed = NULL)
   c3 = cbind(5 * cos(x) + 10.5 + rnorm(each_n) * sigma, 10 * sin(x) -
                2.5 + rnorm(each_n) * sigma)
   X = rbind(c1, c2, c3)
-  noise_X = matrix(runif(3 * each_n * noise_p, 0, pi), nrow = 3 * each_n, ncol = noise_p)
+  noise_X = matrix(rnorm(3 * each_n * noise_p, 0, noise_sd), nrow = 3 * each_n, ncol = noise_p)
   X = cbind(X, noise_X)
   y = rep(c(1, 2, 3), each = each_n)
   return(list(x = X, y = y))
 }
 
-require(mlbench)
+
 sim_gen = function(n, p, sd = 2, class = 3, seed = NULL, type = c("bayes", "poly", "cosso", "cosso2", "neuralnet", "neuralnet2"))
 {
   call = match.call()

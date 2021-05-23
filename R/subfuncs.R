@@ -487,8 +487,10 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     eig = eigen(A, symmetric = TRUE)
     tol = epsilon
     eps = max(tol * abs(eig$values[1]), 0)
-    eig$values[eig$values < eps] = eps
-    Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+    positive = eig$values > eps
+    # eig$values[eig$values < eps] = eps
+    # Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+    Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
   }
   return(Q)
 }

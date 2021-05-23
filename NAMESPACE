@@ -3,7 +3,8 @@ export(smlapsvm, cstep.smlapsvm, theta_step.smlapsvm, mlapsvm_compact, mlapsvm,
 	   sramlapsvm, cstep.sramlapsvm, theta_step.sramlapsvm, predict.sramlapsvm,
 	   ramlapsvm, predict.ramlapsvm, Kfold_ramlapsvm,
 	   rmlapsvm, predict.rmlapsvm, Kfold_rmlapsvm,
-	   srmlapsvm, cstep.srmlapsvm, theta_step.srmlapsvm, predict.srmlapsvm)
+	   srmlapsvm, cstep.srmlapsvm, theta_step.srmlapsvm, predict.srmlapsvm,
+	   generateMultiorange, generateMultiMoon, sim_gen)
 
 exportClasses("ramlapsvm_core", "ramlapsvm", "sramlapsvm",
 			  "smlapsvm", "mlapsvm", "rmlapsvm_core", "rmlapsvm", "srmlapsvm")
@@ -20,5 +21,6 @@ import("lpSolve")
 import("parallel")
 import("RSSL")
 import("Matrix")
+import(mlbench)
 # import("igraph")
 	   
