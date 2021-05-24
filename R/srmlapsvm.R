@@ -386,8 +386,8 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  # theta[theta < 1e-10] = 0
-  theta = round(theta, 8)
+  theta[theta < 1e-6] = 0
+  theta = round(theta, 6)
 
   return(theta)
 }
