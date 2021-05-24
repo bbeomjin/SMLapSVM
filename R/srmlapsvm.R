@@ -127,6 +127,9 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
     theta = rep(1, p)
   }
 
+  lambda_seq = sort(lambda_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
+  kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
   params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq, kparam = kparam)
@@ -230,6 +233,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 {
   call = match.call()
   out = list()
+  lambda_theta_seq = sort(as.numeric(lambda_theta_seq), decreasing = FALSE)
   lambda = object$opt_param$lambda
   lambda_I = object$opt_param$lambda_I
   criterion = object$criterion
@@ -311,7 +315,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                                eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-9, epsilon_I = 0)
 {
   n = NROW(cmat)
   n_l = length(y)
@@ -391,7 +395,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                             eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-9, epsilon_I = 0)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem

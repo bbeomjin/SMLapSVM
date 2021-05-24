@@ -487,10 +487,10 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     eig = eigen(A, symmetric = TRUE)
     tol = epsilon
     eps = max(tol * abs(eig$values[1]), 0)
-    positive = eig$values > eps
-    # eig$values[eig$values < eps] = eps
-    # Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
-    Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
+    eig$values[eig$values < eps] = eps
+    Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+    # positive = eig$values > eps
+    # Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
   }
   return(Q)
 }
@@ -508,17 +508,28 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 # }
 
 
+# inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+# {
+#   eig = eigen(A, symmetric = TRUE)
+#   # tol = epsilon
+#   tol = epsilon
+#   eps = max(tol * eig$values[1], 0)
+#   positive = eig$values > eps
+#   Q = eig$vectors[, positive, drop = FALSE] %*% diag(1 / eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
+#   return(Q)
+# }
+
 inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 {
-  eig = eigen(A, symmetric = TRUE)
+  d = dim(A)
+  svds = La.svd(A, d[1], d[1])
   # tol = epsilon
   tol = epsilon
-  eps = max(tol * eig$values[1], 0)
-  positive = eig$values > eps
-  Q = eig$vectors[, positive, drop = FALSE] %*% diag(1 / eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
+  eps = max(tol * svds$d[1], 0)
+  positive = svds$d > eps
+  Q = svds$u[, positive, drop = FALSE] %*% diag(1 / svds$d[positive]) %*% svds$vt[positive, , drop = FALSE]
   return(Q)
 }
-
 
 
 # fixit = function(A, epsilon)

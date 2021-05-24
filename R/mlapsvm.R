@@ -1,5 +1,5 @@
 mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
-                           eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                           eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-9, epsilon_I = 0)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -183,7 +183,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
 
 mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = FALSE, adjacency_k = 6, normalized = FALSE,
                    weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                   eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                   eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-9, epsilon_I = 0)
 {
   out = list()
   n_l = NROW(x)
@@ -311,6 +311,10 @@ Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds
 
   # The number of classes
   k = length(unique(y))
+
+  lambda_seq = sort(lambda_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
+  kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
   # params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq[order(lambda_I_seq, decreasing = TRUE)], kparam = kparam)

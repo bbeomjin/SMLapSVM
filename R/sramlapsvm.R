@@ -101,6 +101,9 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
     theta = rep(1, p)
   }
 
+  lambda_seq = sort(lambda_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
+  kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
   params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq, kparam = kparam)
@@ -211,6 +214,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 {
   call = match.call()
   out = list()
+  lambda_theta_seq = sort(as.numeric(lambda_theta_seq), decreasing = FALSE)
   lambda = object$opt_param$lambda
   lambda_I = object$opt_param$lambda_I
   criterion = object$criterion
@@ -295,7 +299,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 
 
 find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class, lambda, lambda_I, lambda_theta = 1,
-                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-9, epsilon_I = 0)
 {
 
   if (anova_kernel$numK == 1)
@@ -354,8 +358,6 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
   # diag(Dmat) = diag(Dmat) + 1e-8
   # Dmat = Dmat / max_D
 
-
-
   dvec_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   dvec_temp[cbind(1:n_l, y)] = gamma
   # dvec_temp = as.vector(Y)
@@ -393,7 +395,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 
 
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                              eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                              eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-9, epsilon_I = 0)
 {
 
   out = list()
