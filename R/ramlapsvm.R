@@ -66,7 +66,7 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   Amat = matrix(0, n_l * n_class, n_class - 1)
   for (k in 1:(n_class - 1)) {
     D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
-    Amat[, k] = Lmatj[[k]]
+    Amat[, k] = -Lmatj[[k]]
   }
 
   D = fixit(D, epsilon = eig_tol_D)
@@ -308,6 +308,22 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
   return(list(class = pred_y, pred_value = fit))
 }
 
+predict.ramlapsvm_compact = function(object, newK = NULL) {
+
+  beta = object$beta
+  beta0 = object$beta0
+  n_class = object$n_class
+  W = XI_gen(n_class)
+
+  W_beta0 = drop(t(beta0) %*% W)
+
+  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_y = apply(fit, 1, which.max)
+
+  # return(list(class = pred_y, inner_prod = inner_prod))
+  return(list(class = pred_y, pred_value = fit))
+}
+
 
 
 Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 10,
@@ -372,7 +388,7 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
                               acc = sum(valid_y == pred_val$class) / length(valid_y)
                               err = 1 - acc
                             } else {
-                              err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
                             }
                           } else {
                             msvm_fit = NULL
@@ -550,21 +566,5 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 # }
 
 
-predict.ramlapsvm_compact = function(object, newK = NULL) {
-
-  beta = object$beta
-  beta0 = object$beta0
-  n_class = object$n_class
-  W = XI_gen(n_class)
-
-  W_beta0 = drop(t(beta0) %*% W)
-
-  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
-
-  pred_y = apply(fit, 1, which.max)
-
-  # return(list(class = pred_y, inner_prod = inner_prod))
-  return(list(class = pred_y, pred_value = fit))
-}
 
 
