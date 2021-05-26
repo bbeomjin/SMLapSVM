@@ -205,6 +205,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
   # out$valid_anova_K = valid_anova_K
   # out$valid_K = valid_K
   out$kernel = kernel
+  out$kparam = opt_param["kparam"]
   out$scale = scale
   out$criterion = criterion
   if (optModel) {
