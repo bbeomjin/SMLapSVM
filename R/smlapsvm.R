@@ -27,7 +27,7 @@ smlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
   out$theta_valid_err = theta_step_fit$valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
-  out$kparam = opt_cstep_fit$opt_param$kparam
+  out$kparam = opt_cstep_fit$opt_param["kparam"]
   out$opt_theta = theta_step_fit$opt_theta
   out$theta = theta_step_fit$theta
   out$x = x
