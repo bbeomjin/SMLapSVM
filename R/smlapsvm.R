@@ -23,6 +23,7 @@ smlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
+  out$cstep_valid_err = opt_cstep_fit$valid_err
   out$theta_valid_err = theta_step_fit$valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
@@ -96,11 +97,11 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   }
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
-  kparam = sort(kparam, decreasing = TRUE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
+  kparam = sort(kparam, decreasing = FALSE)
 
   # Combination of hyper-parameters
-  params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq, kparam = kparam)
+  params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq)
 
   if (!is.null(valid_x) & !is.null(valid_y)) {
     model_list = vector("list", 1)
@@ -126,52 +127,60 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
       ux = (ux - matrix(center, nrow = n_u, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_u, ncol = p, byrow = TRUE)
     }
 
-    kernel_list = list(type = kernel, par = kparam)
-    anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
-    # K = combine_kernel(anova_kernel = anova_K, theta = theta)
+    valid_err_mat = matrix(NA, nrow = length(kparam), ncol = nrow(params))
 
-    # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
-    # graph = W
-  	graph = make_knn_graph_mat(rx, k = adjacency_k)
-    L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-    # L = fixit(L, epsilon = 0)
-#     if (any(theta > 0)) {
-# 	   graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
-# 	   L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-# 	  } else {
-# 	   graph = make_knn_graph_mat(rx, k = adjacency_k)
-# 	   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
-# 	  }
+    for (i in 1:length(kparam)) {
+      par = kparam[i]
 
-    valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
-    valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
-    #  Parallel computation on the combination of hyper-parameters
-    fold_err = mclapply(1:nrow(params),
-                        function(j) {
-                          error = try({
-                            msvm_fit = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y,
-                                                        lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
-                          })
+      kernel_list = list(type = kernel, par = par)
+      anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
+      # K = combine_kernel(anova_kernel = anova_K, theta = theta)
 
-                          if (!inherits(error, "try-error")) {
-                            pred_val = predict.mlapsvm_compact(msvm_fit, newK = valid_K)$class
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val) / length(valid_y)
-                              err = 1 - acc
+      # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
+      # graph = W
+      graph = make_knn_graph_mat(rx, k = adjacency_k)
+      L = make_L_mat(rx, kernel = kernel, kparam = par, graph = graph, weightType = weightType, normalized = normalized)
+      # L = fixit(L, epsilon = 0)
+      #     if (any(theta > 0)) {
+      # 	   graph = make_knn_graph_mat(rx[, theta > 0, drop = FALSE], k = adjacency_k)
+      # 	   L = make_L_mat(rx[, theta > 0, drop = FALSE], kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+      # 	  } else {
+      # 	   graph = make_knn_graph_mat(rx, k = adjacency_k)
+      # 	   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
+      # 	  }
+
+      valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
+      valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
+      #  Parallel computation on the combination of hyper-parameters
+      fold_err = mclapply(1:nrow(params),
+                          function(j) {
+                            error = try({
+                              msvm_fit = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y,
+                                                          lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
+                            })
+
+                            if (!inherits(error, "try-error")) {
+                              pred_val = predict.mlapsvm_compact(msvm_fit, newK = valid_K)$class
+                              if (criterion == "0-1") {
+                                acc = sum(valid_y == pred_val) / length(valid_y)
+                                err = 1 - acc
+                              } else {
+                                # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                              }
                             } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
+                              msvm_fit = NULL
+                              err = Inf
                             }
-                          } else {
-                            msvm_fit = NULL
-                            err = Inf
-                          }
-                          return(list(error = err, fit_model = msvm_fit))
-                        }, mc.cores = nCores)
-    valid_err = sapply(fold_err, "[[", "error")
-    model_list[[1]] = lapply(fold_err, "[[", "fit_model")
-    opt_ind = max(which(valid_err == min(valid_err)))
-    opt_param = params[opt_ind, ]
-    opt_valid_err = min(valid_err)
+                            return(list(error = err, fit_model = msvm_fit))
+                          }, mc.cores = nCores)
+      valid_err = sapply(fold_err, "[[", "error")
+      # model_list[[1]] = lapply(fold_err, "[[", "fit_model")
+      valid_err_mat[i, ] = valid_err
+    }
+    opt_ind = which(valid_err_mat == min(valid_err_mat), arr.ind = TRUE)
+    opt_ind = opt_ind[order(opt_ind[, 1], opt_ind[, 2], decreasing = c(FALSE, TRUE))[1], ]
+    opt_param = c(lambda = params[opt_ind[2], 1], lambda_I = params[opt_ind[2], 2], kparam = kparam[opt_ind[1]])
+    opt_valid_err = min(valid_err_mat)
   }
   out$opt_param = opt_param
   out$opt_valid_err = opt_valid_err
@@ -183,20 +192,22 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   out$L = L
   out$theta = theta
   out$n_class = n_class
+  out$valid_x = valid_x
+  out$valid_y = valid_y
   # out$adjacency_k = adjacency_k
   # out$normalized = normalized
   # out$weightType = weightType
-  out$valid_x = valid_x
-  out$valid_y = valid_y
-  out$anova_K = anova_K
+  # out$anova_K = anova_K
   # out$K = K
-  out$valid_anova_K = valid_anova_K
-  out$valid_K = valid_K
+  # out$valid_anova_K = valid_anova_K
+  # out$valid_K = valid_K
   out$kernel = kernel
   out$scale = scale
   out$criterion = criterion
   if (optModel) {
-    opt_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, ...)
+    kernel_list = list(type = kernel, par = opt_param["kparam"])
+    anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
+    opt_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = opt_param["lambda"], lambda_I = opt_param["lambda_I"], ...)
     out$opt_model = opt_model
   }
   out$call = call
@@ -210,28 +221,30 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   call = match.call()
   out = list()
   lambda_theta_seq = sort(as.numeric(lambda_theta_seq), decreasing = FALSE)
-  lambda = object$opt_param$lambda
-  lambda_I = object$opt_param$lambda_I
+  lambda = object$opt_param["lambda"]
+  lambda_I = object$opt_param["lambda_I"]
   criterion = object$criterion
   kernel = object$kernel
-  kparam = object$opt_param$kparam
+  kparam = object$opt_param["kparam"]
   n_class = object$n_class
-  # x = object$x
+  x = object$x
   y = object$y
   theta = object$theta
-
-  # ux = object$ux
-  # rx = rbind(x, ux)
+  ux = object$ux
+  rx = rbind(x, ux)
   # adjacency_k = object$adjacency_k
   # normalized = object$normalized
   # weightType = object$weightType
-
+  valid_x = object$valid_x
   valid_y = object$valid_y
-
-  anova_K = object$anova_K
-  # K = object$K
   L = object$L
-  valid_anova_K = object$valid_anova_K
+  # anova_K = object$anova_K
+  # K = object$K
+
+  kernel_list = list(type = kernel, par = kparam)
+  anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
+  valid_anova_K = make_anovaKernel(valid_x, rx, kernel_list)
+
   if (is.null(object$opt_model)) {
     init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
   } else {

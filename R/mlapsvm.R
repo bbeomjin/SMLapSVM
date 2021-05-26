@@ -313,7 +313,7 @@ Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds
   k = length(unique(y))
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
   kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
