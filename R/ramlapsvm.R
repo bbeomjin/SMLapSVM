@@ -29,7 +29,7 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
     Hmatj_temp = NULL
     Lmatj_temp = NULL
     for (i in 1:n_class) {
-      temp = diag(n_l) %x% W[j, i]
+      temp = diag(n_l) * W[j, i]
       diag(temp) = diag(temp) * index_mat[, i]
       Hmatj_temp = rbind(Hmatj_temp, temp)
       Lmatj_temp = c(Lmatj_temp, diag(temp))
