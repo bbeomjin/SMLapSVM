@@ -144,8 +144,9 @@ sim_gen = function(n, p, sd = 2, class = 3, seed = NULL, type = c("bayes", "poly
     lr = X_kern %*% cbind(beta1, beta2, beta3)
 
     probs = exp(lr - as.vector(HTLR:::log_sum_exp(lr)))
-    y = apply(probs, 1, function(prob) {
-      sample(1:3, 1, TRUE, prob)})
+    # y = apply(probs, 1, function(prob) {
+    #   sample(1:3, 1, TRUE, prob)})
+    y = apply(probs, 1, which.max)
     X_noise = matrix(rnorm(n * (p - r)), n, (p - r))
     X = cbind(X_tmp, X_noise)
     out = list()
