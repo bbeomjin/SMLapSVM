@@ -258,7 +258,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   # graph = W
 
   graph = make_knn_graph_mat(rx, k = adjacency_k)
-  L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType)
+  L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
   solutions = ramlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon,
                              eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D, epsilon_I = epsilon_I)
