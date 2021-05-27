@@ -86,24 +86,16 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
   out = list()
   p = ncol(x)
 
-  if (!is.numeric(lambda_seq)) {
-    lambda_seq = as.numeric(lambda_seq)
-  }
-
-  if (!is.numeric(lambda_I_seq)) {
-    lambda_I_seq = as.numeric(lambda_I_seq)
-  }
-
-  if (!is.numeric(kparam)) {
-    kparam = as.numeric(kparam)
-  }
+  lambda_seq = as.numeric(lambda_seq)
+  lambda_I_seq = as.numeric(lambda_I_seq)
+  kparam = as.numeric(kparam)
 
   if (is.null(theta)) {
     theta = rep(1, p)
   }
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
   kparam = sort(kparam, decreasing = FALSE)
 
   # Combination of hyper-parameters
@@ -316,8 +308,12 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 
 
 find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class, lambda, lambda_I, lambda_theta = 1,
-                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-6, epsilon_I = 0)
+                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
+  if (lambda_theta <= 0) {
+    theta = rep(1, anova_kernel$numK)
+    return(theta)
+  }
 
   if (anova_kernel$numK == 1)
   {
@@ -412,7 +408,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 
 
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                              eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-6, epsilon_I = 0)
+                              eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
 
   out = list()
@@ -489,7 +485,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
   # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), tol = eig_tol_I / 100) %*% K %*% t(J)
   max_K_KLK = max(abs(K_KLK))
-  inv_K_KLK = inverse(K_KLK + diag(max_K_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
+  inv_K_KLK = solve(K_KLK + diag(max_K_KLK * epsilon_I, n), tol = eig_tol_I) %*% K %*% t(J)
   # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n))) %*% K %*% t(J)
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)
 
@@ -510,9 +506,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
-  D = D / max_D
-  diag(D) = diag(D) + epsilon_D
-  # diag(D) = diag(D) + max_D * epsilon_D
+  # D = D / max_D
+  # diag(D) = diag(D) + epsilon_D
+  diag(D) = diag(D) + max_D * epsilon_D
   #################################### for test #######################################
   # alpha_mat = matrix(rnorm(n_l * n_class), n_l, n_class)
   # temp_vec = 0
@@ -528,8 +524,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
 
-  # dvec = -g
-  dvec = -g / max_D
+  dvec = -g
+  # dvec = -g / max_D
 
   # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1

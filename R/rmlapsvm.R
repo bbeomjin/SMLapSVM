@@ -26,7 +26,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
 
-  inv_LK = solve(LK + diag(max(abs(LK)) * epsilon_I, n), tol = eig_tol_I / 100)
+  inv_LK = solve(LK + diag(max(abs(LK)) * epsilon_I, n), tol = eig_tol_I)
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
@@ -310,23 +310,15 @@ Kfold_rmlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   #   }
   # }
 
-  if (!is.numeric(lambda_seq)) {
-    lambda_seq = as.numeric(lambda_seq)
-  }
-
-  if (!is.numeric(lambda_I_seq)) {
-    lambda_I_seq = as.numeric(lambda_I_seq)
-  }
-
-  if (!is.numeric(kparam)) {
-    kparam = as.numeric(kparam)
-  }
+  lambda_seq = as.numeric(lambda_seq)
+  lambda_I_seq = as.numeric(lambda_I_seq)
+  kparam = as.numeric(kparam)
 
   # The number of classes
   k = length(unique(y))
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
   kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters

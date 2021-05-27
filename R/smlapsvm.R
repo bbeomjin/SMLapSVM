@@ -80,24 +80,16 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   out = list()
   p = ncol(x)
 
-  if (!is.numeric(lambda_seq)) {
-    lambda_seq = as.numeric(lambda_seq)
-  }
-
-  if (!is.numeric(lambda_I_seq)) {
-    lambda_I_seq = as.numeric(lambda_I_seq)
-  }
-
-  if (!is.numeric(kparam)) {
-    kparam = as.numeric(kparam)
-  }
+  lambda_seq = as.numeric(lambda_seq)
+  lambda_I_seq = as.numeric(lambda_I_seq)
+  kparam = as.numeric(kparam)
 
   if (is.null(theta)) {
     theta = rep(1, p)
   }
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
   kparam = sort(kparam, decreasing = FALSE)
 
   # Combination of hyper-parameters
@@ -305,8 +297,12 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 }
 
 find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                               eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-6, epsilon_I = 0)
+                               eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
+  if (lambda_theta <= 0) {
+    theta = rep(1, anova_kernel$numK)
+    return(theta)
+  }
   n = NROW(cmat)
   n_l = length(y)
   n_u = n - n_l
@@ -372,7 +368,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = .Machine$double.eps^{1 / 2}, epsilon_D = 1e-6, epsilon_I = 0)
+                            eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-6, epsilon_I = 1e-12)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -423,7 +419,8 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   K_KLK = lambda_K + lambda_KLK
 
   max_K_KLK = max(abs(K_KLK))
-  inv_K_KLK = inverse(K_KLK + diag(max_K_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
+  # inv_K_KLK = inverse(K_KLK + diag(max_K_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
+  inv_K_KLK = solve(K_KLK + diag(max_K_KLK * epsilon_I, n), tol = eig_tol_I) %*% K %*% t(J)
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
   # inv_KLK = inverse(KLK + diag(max_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
   # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)
@@ -487,21 +484,20 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # (2) Compute D <- H
   D = (Ik - Jk / n_class) %x% Q
 
-
   # Subset the columns and rows for non-trivial alpha's
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
-  Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
-  # diag(Reduced_D) = diag(Reduced_D) + max_D * epsilon_D
+  # Reduced_D = Reduced_D / max_D
+  # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
+  diag(Reduced_D) = diag(Reduced_D) + max_D * epsilon_D
 
   # Reduced_D = nearPD(Reduced_D, eig.tol = rel_eig_tol)$mat
   # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
 
   # (3) Compute d <- g
-  # g = -y_vec
-  g = -y_vec / max_D
+  g = -y_vec
+  # g = -y_vec / max_D
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
