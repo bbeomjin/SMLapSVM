@@ -183,7 +183,7 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
 
 mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, scale = FALSE, adjacency_k = 6, normalized = FALSE,
                    weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                   eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-6, epsilon_I = 0)
+                   eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
 {
   out = list()
   n_l = NROW(x)

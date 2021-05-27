@@ -524,8 +524,8 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   d = dim(A)
   svds = La.svd(A, d[1], d[1])
   # tol = epsilon
-  tol = epsilon
-  eps = max(tol * svds$d[1], 0)
+  tol = d[1] * epsilon
+  eps = tol * max(svds$d)
   positive = svds$d > eps
   Q = svds$u[, positive, drop = FALSE] %*% diag(1 / svds$d[positive]) %*% svds$vt[positive, , drop = FALSE]
   return(Q)
