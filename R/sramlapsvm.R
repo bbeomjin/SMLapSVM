@@ -308,7 +308,7 @@ theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 
 
 find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class, lambda, lambda_I, lambda_theta = 1,
-                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -408,7 +408,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, n_class
 
 
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                              eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                              eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
 
   out = list()
@@ -452,43 +452,20 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
 
-  lambda_KLK = 0
+  KLK = 0
   for (i in 1:anova_K$numK) {
-    lambda_KLK = lambda_KLK + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+    KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
+  max_K = max(abs(K))
+  diag(K) = diag(K) + max_K * epsilon_I
+
   lambda_K = n_l * lambda * K
+  lambda_KLK = n_l * lambda_I / n^2 * KLK
 
-  # diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
-  # diag(lambda_KLK) = diag(lambda_KLK) + max(abs(lambda_KLK)) * epsilon_I
-
-  # K = fixit(K, eig_tol_D)
-  # m_mat = fixit(m_mat, eig_tol_D)
-
-  K_KLK = lambda_K + lambda_KLK
-  # KLK = (KLK + t(KLK)) / 2
-  # KLK = fixit(KLK, epsilon = eig_tol_I)
-  # max_KLK = max(abs(KLK))
-  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-
-  # KLK = fixit(KLK, epsilon = eig_tol_I)
-  # diag(KLK) = diag(KLK) + 1e-6
-  # inv_KLK = solve(KLK)
-  # inv_KLK = chol2inv(chol(KLK))
-  # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
-  # inv_KLK = solve(n_l * lambda * K + m_mat + diag(epsilon, n))
-
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
-
-
-  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), tol = eig_tol_I / 100) %*% K %*% t(J)
-  max_K_KLK = max(abs(K_KLK))
-  inv_K_KLK = inverse(K_KLK + diag(max_K_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
-  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n))) %*% K %*% t(J)
-  # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)
-
+  max_K_KLK = max(lambda_K + lambda_KLK)
+  K_KLK = lambda_K + lambda_KLK + diag((max_K_KLK - n_l * lambda * max_K) * epsilon_I, n)
+  inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
 
   Q = J %*% K %*% inv_K_KLK
   # Q = J %*% K %*% inv_KLK

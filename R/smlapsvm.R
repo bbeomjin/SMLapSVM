@@ -297,7 +297,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 }
 
 find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
-                               eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                               eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -368,7 +368,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
 smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                            eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
 
   # The sample size, the number of classes and dimension of QP problem
@@ -391,64 +391,21 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   J = cbind(diag(n_l), matrix(0, n_l, n - n_l))
 
-  lambda_KLK = 0
+  KLK = 0
   for (i in 1:anova_K$numK) {
-    lambda_KLK = lambda_KLK + n_l * lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+    KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
+  max_K = max(abs(K))
+  diag(K) = diag(K) + max_K * epsilon_I
+
   lambda_K = n_l * lambda * K
+  lambda_KLK = n_l * lambda_I / n^2 * KLK
 
-  # m_mat = 0
-  # for (i in 1:anova_K$numK) {
-  #   m_mat = m_mat + lambda_I / n^2 * theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-  # }
+  max_K_KLK = max(lambda_K + lambda_KLK)
+  K_KLK = lambda_K + lambda_KLK + diag((max_K_KLK - n_l * lambda * max_K) * epsilon_I, n)
+  inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
 
-  # K = fixit(K, eig_tol_I)
-  # m_mat = fixit(m_mat, eig_tol_D)
-
-  # KLK = n_l * lambda * K + m_mat
-  # KLK = fixit(KLK, epsilon = eig_tol_I)
-  #
-  # max_KLK = max(abs(KLK))
-  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n)))
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  # inv_KLK = solve(KLK + diag(epsilon_I, n))
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n), K %*% t(J))
-  # inv_KLK = solve(KLK + diag(epsilon_I, n), K %*% t(J))
-
-  K_KLK = lambda_K + lambda_KLK
-
-  max_K_KLK = max(abs(K_KLK))
-  inv_K_KLK = inverse(K_KLK + diag(max_K_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
-  # inv_K_KLK = solve(K_KLK + diag(max_K_KLK * epsilon_I, n), tol = eig_tol_I) %*% K %*% t(J)
-  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I / 100) %*% K %*% t(J)
-  # inv_KLK = inverse(KLK + diag(max_KLK * epsilon_I, n), epsilon = eig_tol_I) %*% K %*% t(J)
-  # inv_KLK = solve(KLK / max_KLK + diag(epsilon_I, n), K %*% t(J) / max_KLK)
-  # inv_KLK = chol2inv(chol(KLK + diag(max_KLK * epsilon_I, n))) %*% K %*% t(J)
-
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  # KLK_temp = solve(inv_KLK)
-
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  # inv_KLK = chol2inv(chol(KLK + diag(epsilon_I, n)))
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  # inv_KLK = solve(KLK + diag(max_KLK * epsilon_I, n))
-  # inv_KLK = chol2inv(chol(KLK))
-  # KLK = corpcor::make.positive.definite(KLK)
-  # KLK = (KLK + t(KLK)) / 2
-  # KLK = lambda * K + m_mat
-  # inv_KLK = inverse(KLK, epsilon = eig_tol_I)
-  # KLK_temp = inverse(inv_KLK, epsilon = eig_tol_I)
-  # KLK_temp = solve(inv_KLK)
-  # sum(abs(KLK - KLK_temp))
-
-  # inv_KLK = chol2inv(chol(KLK))
-  # KLK = nearPD(KLK)$mat
-  # diag(KLK) = diag(KLK) + epsilon_D
-  # inv_KLK = solve(KLK, tol = 1e-40)
-
-
-  # Q = J %*% K %*% inv_KLK %*% K %*% t(J)
   Q = J %*% K %*% inv_K_KLK
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
