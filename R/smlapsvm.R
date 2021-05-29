@@ -303,6 +303,12 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
     theta = rep(1, anova_kernel$numK)
     return(theta)
   }
+
+  anova_kernel$K = lapply(anova_kernel$K, function(x) {
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
+    return(x)
+  })
+
   n = NROW(cmat)
   n_l = length(y)
   n_u = n - n_l
@@ -375,7 +381,13 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   out = list()
   n_class = length(unique(y))
-  n_l = length(y)
+
+  max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
+  anova_K$K = lapply(1:anova_K$numK, function(i) {
+    x = anova_K$K[[i]]
+    diag(x) = diag(x) + max_K_vec[i] * epsilon_I
+    return(x)
+  })
 
   K = combine_kernel(anova_K, theta = theta)
 
@@ -386,6 +398,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   }
 
   n = nrow(K)
+  n_l = length(y)
   n_u = n - n_l
   qp_dim = n_l * n_class
 
@@ -396,8 +409,9 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
     KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
-  max_K = max(abs(K))
-  diag(K) = diag(K) + max_K * epsilon_I
+  max_K = sum(theta * max_K_vec)
+  # max_K = max(abs(K))
+  # diag(K) = diag(K) + max_K * epsilon_I
 
   lambda_K = n_l * lambda * K
   lambda_KLK = n_l * lambda_I / n^2 * KLK

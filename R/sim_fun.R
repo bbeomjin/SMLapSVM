@@ -1,4 +1,4 @@
-generateMultiorange = function(n, p = 2, sd = 1, seed = 1, with_noise = TRUE, noise_p = 1)
+generateMultiorange = function(n, p = 2, sd = 1.5, seed = 1, with_noise = TRUE, noise_p = 1)
 {
   set.seed(seed)
   X = matrix(nrow = n, ncol = p)
@@ -7,27 +7,26 @@ generateMultiorange = function(n, p = 2, sd = 1, seed = 1, with_noise = TRUE, no
   while (k <= n) {
     x = rnorm(p, sd = sd)
     sx = sum(x^2)
-    if (sx <= 0.25) {
+    if (sx <= 0.5) {
       y[k] = 1
       X[k, ] = x
       k = k + 1
-    } else if (1 < sx & sx <= 1.5) {
+    }
+    else if (1.5 < sx & sx <= 2.5) {
       y[k] = 2
       X[k, ] = x
       k = k + 1
-    } else if (3 < sx & sx <= 5) {
+    }
+    else if (4.5 < sx & sx <= 6.5) {
       y[k] = 3
       X[k, ] = x
       k = k + 1
     }
   }
-  # table(y)
-  # plot(X, col = factor(y), pch = 16)
   if (with_noise) {
     noise_dat = matrix(rnorm(n * noise_p, sd = sd), n, noise_p)
     X = cbind(X, noise_dat)
   }
-  # X = scale(X)
   return(list(x = X, y = y))
 }
 

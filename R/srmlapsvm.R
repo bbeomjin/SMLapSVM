@@ -332,6 +332,12 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
     theta = rep(1, anova_kernel$numK)
     return(theta)
   }
+
+  anova_kernel$K = lapply(anova_kernel$K, function(x) {
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
+    return(x)
+  })
+
   n = NROW(cmat)
   n_l = length(y)
   n_u = n - n_l
@@ -416,6 +422,13 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
   n_class = length(unique(y))
 
+  max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
+  anova_K$K = lapply(1:anova_K$numK, function(i) {
+    x = anova_K$K[[i]]
+    diag(x) = diag(x) + max_K_vec[i] * epsilon_I
+    return(x)
+  })
+
   K = combine_kernel(anova_K, theta = theta)
   # K = (K + t(K)) / 2
 
@@ -442,8 +455,9 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
-  max_K = max(abs(K))
-  diag(K) = diag(K) + max_K * epsilon_I
+  max_K = sum(theta * max_K_vec)
+  # max_K = max(abs(K))
+  # diag(K) = diag(K) + max_K * epsilon_I
 
   lambda_K = n_l * lambda * K
   lambda_KLK = n_l * lambda_I / n^2 * KLK
