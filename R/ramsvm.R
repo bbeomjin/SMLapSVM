@@ -9,7 +9,7 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   yyi = code_mat$yyi
   W = code_mat$W
   y_index = code_mat$index
-  Hmatj = code_mat$HmatJ
+  Hmatj = code_mat$Hmatj
   Lmatj = code_mat$Lmatj
 
   D = 0
