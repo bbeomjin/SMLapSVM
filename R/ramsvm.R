@@ -8,7 +8,7 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   code_mat = code_ramsvm(y)
   yyi = code_mat$yyi
   W = code_mat$W
-  y_index = code_mat$index
+  y_index = code_mat$y_index
   Hmatj = code_mat$Hmatj
   Lmatj = code_mat$Lmatj
 
@@ -51,8 +51,8 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   alpha_mat = matrix(alpha, nrow = n, ncol = n_class)
 
   cmat = matrix(0, n, n_class - 1)
-  for (k in 1:(n_class - 1)) {
-    cmat[, k] = t(Hmatj[[k]]) %*% alpha / (n * lambda)
+  for (j in 1:(n_class - 1)) {
+    cmat[, j] = t(Hmatj[[j]]) %*% alpha / (n * lambda)
   }
 
   Kcmat = (K %*% cmat) %*% W
