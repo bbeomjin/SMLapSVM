@@ -204,7 +204,7 @@ theta_step.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.
   fold_err = mclapply(1:length(lambda_theta_seq),
                       function(j) {
                         error = try({
-                          theta = find_theta.sramsvm(y = y, anova_kernel = anova_K, gamma = gamma, cmat = init_model$beta, c0vec = init_model$beta0,
+                          theta = find_theta.sramsvm(y = y, anova_kernel = anova_K, gamma = gamma, cmat = init_model$cmat, c0vec = init_model$c0vec,
                                                     n_class = n_class, lambda = lambda, lambda_theta = lambda_theta_seq[j], ...)
                           if (isCombined) {
                             subK = combine_kernel(anova_K, theta)

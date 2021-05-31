@@ -306,9 +306,9 @@ find_theta.srmsvm = function(y, anova_kernel, gamma, cmat, c0vec, n_class, lambd
   sign_mat[y_index] = -1
 
   # A matrix
-  I_nonzeroIndex = diag(1, n_data * n_class)
+  I_nonzeroIndex = diag(1, n * n_class)
   N_nonzeroIndex = as.matrix(N) * as.vector(sign_mat)
-  A_theta = cbind(matrix(0, anova_kernel$numK, n_data * n_class), diag(-1, anova_kernel$numK))
+  A_theta = cbind(matrix(0, anova_kernel$numK, n * n_class), diag(-1, anova_kernel$numK))
   A_ineq = rbind(cbind(I_nonzeroIndex, -N_nonzeroIndex), A_theta)
 
   bb = matrix(rep(c0vec, n), n, n_class, byrow = TRUE)
@@ -325,7 +325,7 @@ find_theta.srmsvm = function(y, anova_kernel, gamma, cmat, c0vec, n_class, lambd
   lp = lp("min", objective.in = a, const.mat = A_ineq, const.dir = const_dir,
           const.rhs = b_ineq)$solution
   # find the theta vector only from the solution
-  theta = cbind(matrix(0, anova_kernel$numK, n_data * n_class),
+  theta = cbind(matrix(0, anova_kernel$numK, n * n_class),
                 diag(1, anova_kernel$numK)) %*% matrix(lp, ncol = 1)
   return(as.vector(theta))
 }
