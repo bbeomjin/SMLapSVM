@@ -465,7 +465,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   yyi = code_mat$yyi
   W = code_mat$W
   y_index = code_mat$index
-  Hmatj = code_mat$HmatJ
+  Hmatj = code_mat$Hmatj
   Lmatj = code_mat$Lmatj
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
