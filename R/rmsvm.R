@@ -28,7 +28,7 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
   g_temp[y_index] = -n_class + 1
   g = as.vector(g_temp)
 
-  dvec = -g
+  dvec = -g * n * lambda
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -63,7 +63,7 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
 
   cmat = matrix(0, n, n_class)
   for (k in 1:n_class) {
-    cmat[, k] = inv_LK %*% t(J) %*% Hmatj[[k]] %*% alpha
+    cmat[, k] = Hmatj[[k]] %*% alpha / (n * lambda)
   }
 
   Kcmat = J %*% K %*% cmat

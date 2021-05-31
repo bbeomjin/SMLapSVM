@@ -27,7 +27,7 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
 
-  dvec = -g
+  dvec = -g * n * lambda
 
   Amat = cbind(Amat, diag(-1, n * n_class), diag(1, n * n_class))
 
@@ -52,7 +52,7 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
 
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
-    cmat[, k] = inv_LK %*% t(J) %*% t(Hmatj[[k]]) %*% alpha
+    cmat[, k] = t(Hmatj[[k]]) %*% alpha / (n * lambda)
   }
 
   Kcmat = (J %*% K %*% cmat) %*% W
