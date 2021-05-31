@@ -38,8 +38,8 @@ predict.sramsvm = function(object, newx = NULL, newK = NULL)
   model = object$opt_model
   kernel = object$kernel
   kparam = object$kparam
-  beta = model$beta
-  beta0 = model$beta0
+  cmat = model$cmat
+  c0vec = model$c0vec
   n_class = object$n_class
   W = XI_gen(n_class)
 
@@ -54,9 +54,9 @@ predict.sramsvm = function(object, newx = NULL, newK = NULL)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  W_beta0 = drop(t(beta0) %*% W)
+  W_c0 = drop(t(c0vec) %*% W)
 
-  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  fit = matrix(W_c0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% cmat) %*% W)
   pred_y = apply(fit, 1, which.max)
   return(list(class = pred_y, pred_value = fit))
 }

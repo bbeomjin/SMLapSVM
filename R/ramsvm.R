@@ -92,8 +92,8 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
 
   # Return the output
   out$alpha = alpha_mat
-  out$beta = cmat
-  out$beta0 = c0vec
+  out$cmat = cmat
+  out$c0vec = c0vec
   out$fit = fit
   out$fit_class = fit_class
   out$n = n
@@ -150,14 +150,14 @@ predict.ramsvm = function(object, newx = NULL, newK = NULL, ...) {
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  beta = object$beta
-  beta0 = object$beta0
+  cmat = object$cmat
+  c0vec = object$c0vec
   n_class = object$n_class
   W = XI_gen(n_class)
 
-  W_beta0 = drop(t(beta0) %*% W)
+  W_c0 = drop(t(c0vec) %*% W)
 
-  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  fit = matrix(W_c0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% cmat) %*% W)
   pred_y = apply(fit, 1, which.max)
 
   return(list(class = pred_y, pred_value = fit))
@@ -165,14 +165,14 @@ predict.ramsvm = function(object, newx = NULL, newK = NULL, ...) {
 
 predict.ramsvm_compact = function(object, newK = NULL) {
 
-  beta = object$beta
-  beta0 = object$beta0
+  cmat = object$cmat
+  c0vec = object$c0vec
   n_class = object$n_class
   W = XI_gen(n_class)
 
-  W_beta0 = drop(t(beta0) %*% W)
+  W_c0 = drop(t(c0vec) %*% W)
 
-  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  fit = matrix(W_c0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% cmat) %*% W)
   pred_y = apply(fit, 1, which.max)
 
   # return(list(class = pred_y, inner_prod = inner_prod))
