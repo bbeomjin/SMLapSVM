@@ -439,28 +439,34 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
-  W = XI_gen(n_class)
+  # yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
+  # W = XI_gen(n_class)
+  #
+  # y_index = cbind(1:n_l, y)
+  # index_mat = matrix(-1, nrow = n_l, ncol = n_class)
+  # index_mat[y_index] = 1
+  #
+  # Hmatj = list()
+  # Lmatj = list()
+  # for (j in 1:(n_class - 1)) {
+  #   Hmatj_temp = NULL
+  #   Lmatj_temp = NULL
+  #   for (i in 1:n_class) {
+  #     temp = diag(n_l) * W[j, i]
+  #     diag(temp) = diag(temp) * index_mat[, i]
+  #     Hmatj_temp = rbind(Hmatj_temp, temp)
+  #     Lmatj_temp = c(Lmatj_temp, diag(temp))
+  #   }
+  #   Hmatj[[j]] = Hmatj_temp
+  #   Lmatj[[j]] = Lmatj_temp
+  # }
 
-  y_index = cbind(1:n_l, y)
-  index_mat = matrix(-1, nrow = n_l, ncol = n_class)
-  index_mat[y_index] = 1
-
-
-  Hmatj = list()
-  Lmatj = list()
-  for (j in 1:(n_class - 1)) {
-    Hmatj_temp = NULL
-    Lmatj_temp = NULL
-    for (i in 1:n_class) {
-      temp = diag(n_l) * W[j, i]
-      diag(temp) = diag(temp) * index_mat[, i]
-      Hmatj_temp = rbind(Hmatj_temp, temp)
-      Lmatj_temp = c(Lmatj_temp, diag(temp))
-    }
-    Hmatj[[j]] = Hmatj_temp
-    Lmatj[[j]] = Lmatj_temp
-  }
+  code_mat = code_ramsvm(y)
+  yyi = code_mat$yyi
+  W = code_mat$W
+  y_index = code_mat$index
+  Hmatj = code_mat$HmatJ
+  Lmatj = code_mat$Lmatj
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
 
@@ -489,9 +495,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # Compute Q = K x inv_LK
   D = 0
   Amat = matrix(0, n_l * n_class, n_class - 1)
-  for (k in 1:(n_class - 1)) {
-    D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
-    Amat[, k] = -Lmatj[[k]]
+  for (j in 1:(n_class - 1)) {
+    D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
+    Amat[, j] = -Lmatj[[j]]
   }
 
   D = fixit(D, epsilon = eig_tol_D)
@@ -582,7 +588,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   #   }
   # }
 
-  alpha_vec = as.vector(alpha_mat)
+  # alpha_vec = as.vector(alpha_mat)
 
   # cmat = matrix(0, n, n_class - 1)
   # for (k in 1:(n_class - 1)) {
@@ -591,7 +597,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
-    cmat[, k] = inv_K_KLK %*% t(Hmatj[[k]]) %*% alpha_vec
+    cmat[, k] = inv_K_KLK %*% t(Hmatj[[k]]) %*% alpha
   }
 
   # find b vector using LP

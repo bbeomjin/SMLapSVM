@@ -16,27 +16,34 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
-  W = XI_gen(n_class)
+  # yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
+  # W = XI_gen(n_class)
+  #
+  # y_index = cbind(1:n_l, y)
+  # index_mat = matrix(-1, nrow = n_l, ncol = n_class)
+  # index_mat[y_index] = 1
+  #
+  # Hmatj = list()
+  # Lmatj = list()
+  # for (j in 1:(n_class - 1)) {
+  #   Hmatj_temp = NULL
+  #   Lmatj_temp = NULL
+  #   for (i in 1:n_class) {
+  #     temp = diag(n_l) * W[j, i]
+  #     diag(temp) = diag(temp) * index_mat[, i]
+  #     Hmatj_temp = rbind(Hmatj_temp, temp)
+  #     Lmatj_temp = c(Lmatj_temp, diag(temp))
+  #   }
+  #   Hmatj[[j]] = Hmatj_temp
+  #   Lmatj[[j]] = Lmatj_temp
+  # }
 
-  y_index = cbind(1:n_l, y)
-  index_mat = matrix(-1, nrow = n_l, ncol = n_class)
-  index_mat[y_index] = 1
-
-  Hmatj = list()
-  Lmatj = list()
-  for (j in 1:(n_class - 1)) {
-    Hmatj_temp = NULL
-    Lmatj_temp = NULL
-    for (i in 1:n_class) {
-      temp = diag(n_l) * W[j, i]
-      diag(temp) = diag(temp) * index_mat[, i]
-      Hmatj_temp = rbind(Hmatj_temp, temp)
-      Lmatj_temp = c(Lmatj_temp, diag(temp))
-    }
-    Hmatj[[j]] = Hmatj_temp
-    Lmatj[[j]] = Lmatj_temp
-  }
+  code_mat = code_ramsvm(y)
+  yyi = code_mat$yyi
+  W = code_mat$W
+  y_index = code_mat$index
+  Hmatj = code_mat$HmatJ
+  Lmatj = code_mat$Lmatj
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
@@ -64,22 +71,22 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   # Compute Q = K x inv_LK
   D = 0
   Amat = matrix(0, n_l * n_class, n_class - 1)
-  for (k in 1:(n_class - 1)) {
-    D = D + Hmatj[[k]] %*% Q %*% t(Hmatj[[k]])
-    Amat[, k] = -Lmatj[[k]]
+  for (j in 1:(n_class - 1)) {
+    D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
+    Amat[, j] = -Lmatj[[j]]
   }
 
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
-  D = D / max_D
-  diag(D) = diag(D) + epsilon_D
+  # D = D / max_D
+  diag(D) = diag(D) + max_D * epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
 
-  # dvec = -g
-  dvec = -g / max_D
+  dvec = -g
+  # dvec = -g / max_D
 
   # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -145,11 +152,9 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   #   }
   # }
 
-  alpha_vec = as.vector(alpha_mat)
-
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
-    cmat[, k] = inv_LK %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
+    cmat[, k] = inv_LK %*% t(J) %*% t(Hmatj[[k]]) %*% alpha
   }
 
   # find b vector using LP
@@ -177,7 +182,6 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
   Alp1 = diag(qp_dim)
   Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
-
 
   for (i in 1:(n_class - 1)) {
     Alp2[, (2 * i - 1)] = Lmatj[[i]]

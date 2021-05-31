@@ -9,7 +9,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  code_mat = code(y)
+  code_mat = code_rmsvm(y)
   In = code_mat$In
   vmatj = code_mat$vmatj
   umatj = code_mat$umatj
@@ -43,16 +43,15 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # Compute Q = K x inv_LK
   D = matrix(0, qp_dim, qp_dim)
   Amat = matrix(0, (2 * qp_dim + n_class), qp_dim)
-
-  for (k in 1:n_class) {
-    D = D + t(Hmatj[[k]]) %*% Q %*% Hmatj[[k]]
-    Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
+  for (j in 1:n_class) {
+    D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
+    Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
 
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
-  D = D / max_D
-  diag(D) = diag(D) + epsilon_D
+  # D = D / max_D
+  diag(D) = diag(D) + max_D * epsilon_D
 
   # diag(D) = diag(D) + epsilon_D
 
@@ -60,8 +59,8 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   g_temp[y_index] = -n_class + 1
   g = as.vector(g_temp)
 
-  # dvec = -g
-  dvec = -g / max_D
+  dvec = -g
+  # dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
@@ -93,28 +92,29 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # }
 
   # remove one redudant constraint
-  Amat1 = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
-  bvec1 = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
+  Amat = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
+  bvec = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
 
   # (5) find solution by solve.QP
 
-  nonzero = find_nonzero(t(Amat1))
+  nonzero = find_nonzero(t(Amat))
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
 
-  dual = solve.QP.compact(D, dvec, Amat, Aind, bvec1, meq = (n_class - 1))
+  dual = solve.QP.compact(D, dvec, Amat, Aind, bvec, meq = (n_class - 1))
   # dual_temp = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
 
   alpha = dual$solution
   alpha[alpha < 0] = 0
 
   alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
-  alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
+  # alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
 
-  for (j in 1:n_class) {
-    alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
-  }
-
+  # for (j in 1:n_class) {
+  #   alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
+  # }
+  #
+  # alpha = as.vector(alpha_mat)
   # for (j in 1:n_class) {
   #   for (i in 1:n_l) {
   #     if (y[i] == j & (alpha[(j - 1) * n_l + i] > gamma)) {

@@ -90,9 +90,6 @@ predict.srmlapsvm = function(object, newx = NULL, newK = NULL)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  cmat = model$cmat
-  c0vec = model$c0vec
-
   pred_y = (matrix(c0vec, nrow = nrow(newK), ncol = object$n_class, byrow = T) + (newK %*% cmat))
   pred_class = apply(pred_y, 1, which.max)
   return(list(class = pred_class, pred_value = pred_y))
@@ -441,7 +438,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  code_mat = code(y)
+  code_mat = code_rmsvm(y)
   In = code_mat$In
   vmatj = code_mat$vmatj
   umatj = code_mat$umatj
@@ -473,10 +470,9 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # Compute Q = K x inv_LK
   D = matrix(0, qp_dim, qp_dim)
   Amat = matrix(0, (2 * qp_dim + n_class), qp_dim)
-
-  for (k in 1:n_class) {
-    D = D + t(Hmatj[[k]]) %*% Q %*% Hmatj[[k]]
-    Amat[k, ] = rep(1, n_l) %*% Hmatj[[k]]
+  for (j in 1:n_class) {
+    D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
+    Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
 
   D = fixit(D, epsilon = eig_tol_D)

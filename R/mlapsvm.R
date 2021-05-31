@@ -57,15 +57,12 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   Reduced_D = D[nonzeroIndex, nonzeroIndex]
   Reduced_D = fixit(Reduced_D, epsilon = eig_tol_D)
   max_D = max(abs(Reduced_D))
-  Reduced_D = Reduced_D / max_D
-  diag(Reduced_D) = diag(Reduced_D) + epsilon_D
-
-
-  # diag(Reduced_D) = diag(Reduced_D) + epsilon_D
+  # Reduced_D = Reduced_D / max_D
+  diag(Reduced_D) = diag(Reduced_D) + max_D * epsilon_D
 
   # (3) Compute d <- g
   # g = -y_vec
-  g = -y_vec / max_D
+  g = -y_vec
 
   # Subset the components with non-trivial alpha's
   Reduced_g = g[nonzeroIndex]
@@ -188,6 +185,8 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   out = list()
   n_l = NROW(x)
   n_u = NROW(ux)
+  n = n_l + n_u
+  n_class = length(unique(y))
   rx = rbind(x, ux)
   p = ncol(x)
   center = rep(0, p)
@@ -200,9 +199,6 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
     x = (x - matrix(center, nrow = n_l, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_l, ncol = p, byrow = TRUE)
     ux = (ux - matrix(center, nrow = n_u, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_u, ncol = p, byrow = TRUE)
   }
-
-  n = n_l + n_u
-  n_class = max(y)
 
   K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
 

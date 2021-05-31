@@ -423,7 +423,7 @@ find_nonzero = function(Amat)
   return(list(Amat_compact = Amat_compact, Aind = Aind))
 }
 
-code = function(y)
+code_rmsvm = function(y)
 {
   n_class = length(unique(y))
   n = length(y)
@@ -454,6 +454,34 @@ code = function(y)
   }
 
   return(list(In = In, vmatj = vmatj, umatj = umatj, AH = AH, Hmatj = Hmatj, y_index = y_index))
+}
+
+code_ramsvm = function(y)
+{
+  n_class = length(unique(y))
+  n = length(y)
+  yyi = Y_matrix_gen(k = n_class, nobs = n, y = y)
+  W = XI_gen(n_class)
+
+  y_index = cbind(1:n, y)
+  index_mat = matrix(-1, nrow = n, ncol = n_class)
+  index_mat[y_index] = 1
+
+  Hmatj = list()
+  Lmatj = list()
+  for (j in 1:(n_class - 1)) {
+    Hmatj_temp = NULL
+    Lmatj_temp = NULL
+    for (i in 1:n_class) {
+      temp = diag(n) * W[j, i]
+      diag(temp) = diag(temp) * index_mat[, i]
+      Hmatj_temp = rbind(Hmatj_temp, temp)
+      Lmatj_temp = c(Lmatj_temp, diag(temp))
+    }
+    Hmatj[[j]] = Hmatj_temp
+    Lmatj[[j]] = Lmatj_temp
+  }
+  return(list(yyi = yyi, W = W, Hmatj = Hmatj, Lmatj = Lmatj, y_index = y_index))
 }
 
 # adjacency_knn = function(X, distance = "euclidean", k = 6)
