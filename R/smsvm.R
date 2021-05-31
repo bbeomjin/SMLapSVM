@@ -266,9 +266,9 @@ find_theta.smsvm = function(y, anova_kernel, cmat, c0vec, n_class, lambda, lambd
   # standard LP form :
   # min a^T x , subject to A1x <= a1
   n = length(y)
-  c0vec = as.matrix(c0vec)
+  # c0vec = as.matrix(c0vec)
   # convert y into msvm class code
-  trans_Y = class_code(y, n)
+  trans_Y = class_code(y, n_class)
 
   # calculate the 'a' matrix
   a = matrix(trans_Y, ncol = 1)
