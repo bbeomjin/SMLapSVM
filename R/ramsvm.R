@@ -55,7 +55,7 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
     cmat[, k] = t(Hmatj[[k]]) %*% alpha / (n * lambda)
   }
 
-  Kcmat = (J %*% K %*% cmat) %*% W
+  Kcmat = (K %*% cmat) %*% W
 
   alp_temp = matrix(1 - gamma, nrow = n, ncol = n_class)
   alp_temp[y_index] = gamma
