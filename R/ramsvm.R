@@ -4,33 +4,33 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   n_class = length(unique(y))
   n = length(y)
   qp_dim = n * n_class
-  
+
   code_mat = code_ramsvm(y)
   yyi = code_mat$yyi
   W = code_mat$W
   y_index = code_mat$index
   Hmatj = code_mat$HmatJ
   Lmatj = code_mat$Lmatj
-  
+
   D = 0
   Amat = matrix(0, n * n_class, n_class - 1)
   for (j in 1:(n_class - 1)) {
-    D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
+    D = D + Hmatj[[j]] %*% K %*% t(Hmatj[[j]])
     Amat[, j] = -Lmatj[[j]]
   }
-  
+
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   diag(D) = diag(D) + max_D * epsilon_D
-  
+
   g_temp = matrix(-1, n, n_class)
   g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
-  
+
   dvec = -g
-  
+
   Amat = cbind(Amat, diag(-1, n * n_class), diag(1, n * n_class))
-  
+
   bvec_temp = matrix(gamma - 1, nrow = n, ncol = n_class)
   bvec_temp[y_index] = -gamma
   if (gamma == 0 | gamma == 1) {
@@ -38,44 +38,44 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   }
   # bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
   bvec = c(rep(0, n_class - 1), as.vector(bvec_temp), rep(0, n * n_class))
-  
+
   nonzero = find_nonzero(Amat)
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
-  
+
   dual = solve.QP.compact(D, dvec, Amat, Aind, bvec, meq = (n_class - 1))
   # dual_temp = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
   alpha = dual$solution
   alpha[alpha < 0] = 0
-  
+
   alpha_mat = matrix(alpha, nrow = n, ncol = n_class)
-  
+
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
     cmat[, k] = inv_LK %*% t(J) %*% t(Hmatj[[k]]) %*% alpha
   }
- 
+
   Kcmat = (J %*% K %*% cmat) %*% W
-  
+
   alp_temp = matrix(1 - gamma, nrow = n, ncol = n_class)
   alp_temp[y_index] = gamma
-  
+
   alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
-  
+
   Alp1 = diag(qp_dim)
   Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
-  
+
   for (i in 1:(n_class - 1)) {
     Alp2[, (2 * i - 1)] = Lmatj[[i]]
     Alp2[, (2 * i)] = -Lmatj[[i]]
   }
-  
+
   Alp = cbind(Alp1, Alp2)
-  
+
   blp_temp = Kcmat + 1
   blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
   blp = as.vector(blp_temp)
-  
+
   const_dir = rep(">=", qp_dim)
   # const_dir[1] = "="
   cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * (n_class - 1))]
@@ -83,13 +83,13 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   for(j in 1:(n_class - 1)) {
     c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
   }
-  
+
   W_c0vec = drop(t(c0vec) %*% W)
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n, ncol = n_class, byrow = T) + Kcmat)
   fit_class = apply(fit, 1, which.max)
   # table(y, fit_class)
-  
+
   # Return the output
   out$alpha = alpha_mat
   out$beta = cmat
@@ -108,19 +108,19 @@ ramsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALS
   n = NROW(x)
   p = ncol(x)
   n_class = length(unique(y))
-  
+
   center = rep(0, p)
   scaled = rep(1, p)
-  
+
   if (scale) {
     x = scale(x)
     center = attr(x, "scaled:center")
     scaled = attr(x, "scaled:scale")
   }
-  
+
   K = kernelMat(x, x, kernel = kernel, kparam = kparam)
   solutions = ramsvm_compact(K = K, y = y, gamma = gamma, lambda = lambda, epsilon = epsilon, eig_tol_D = eig_tol_D, epsilon_D = epsilon_D)
-  
+
   out$x = x
   out$y = y
   out$gamma = gamma
@@ -144,37 +144,37 @@ ramsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALS
 
 
 predict.ramsvm = function(object, newx = NULL, newK = NULL, ...) {
-  
+
   if (is.null(newK)) {
     newK = kernelMat(newx, object$x, kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
-  
+
   beta = object$beta
   beta0 = object$beta0
   n_class = object$n_class
   W = XI_gen(n_class)
-  
+
   W_beta0 = drop(t(beta0) %*% W)
-  
+
   fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
   pred_y = apply(fit, 1, which.max)
-  
+
   return(list(class = pred_y, pred_value = fit))
 }
 
 predict.ramsvm_compact = function(object, newK = NULL) {
-  
+
   beta = object$beta
   beta0 = object$beta0
   n_class = object$n_class
   W = XI_gen(n_class)
-  
+
   W_beta0 = drop(t(beta0) %*% W)
-  
+
   fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
   pred_y = apply(fit, 1, which.max)
-  
+
   # return(list(class = pred_y, inner_prod = inner_prod))
   return(list(class = pred_y, pred_value = fit))
 }
@@ -187,7 +187,7 @@ Kfold_ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
-  
+
   # if (scale) {
   #   x = scale(x)
   #   if (!is.null(valid_x)) {
@@ -196,33 +196,33 @@ Kfold_ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
   #     valid_x = (valid_x - matrix(means, NROW(x), NCOL(x), byrow = TRUE)) / matrix(stds, NROW(x), NCOL(x), byrow = TRUE)
   #   }
   # }
-  
+
   lambda_seq = as.numeric(lambda_seq)
   kparam = as.numeric(kparam)
-  
+
   # The number of classes
   n_class = length(unique(y))
-  
+
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   kparam = sort(kparam, decreasing = TRUE)
-  
+
   # Combination of hyper-parameters
   params = expand.grid(lambda = lambda_seq, kparam = kparam)
-  
+
   if (!is.null(valid_x) & !is.null(valid_y)) {
     model_list = vector("list", 1)
     fold_list = NULL
-    
+
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
                           error = try({
                             msvm_fit = ramsvm(x = x, y = y, gamma = gamma, lambda = params$lambda[j], kernel = kernel, kparam = params$kparam[j], scale = scale, ...)
                           })
-                          
+
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.ramsvm(msvm_fit, newx = valid_x)$class
-                            
+
                             if (criterion == "0-1") {
                               acc = sum(valid_y == pred_val) / length(valid_y)
                               err = 1 - acc
@@ -233,7 +233,7 @@ Kfold_ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
                             msvm_fit = NULL
                             err = Inf
                           }
-                          
+
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     valid_err = sapply(fold_err, "[[", "error")
@@ -242,7 +242,7 @@ Kfold_ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
     opt_param = params[opt_ind, ]
     opt_valid_err = min(valid_err)
   }
-  
+
   out = list()
   out$opt_param = opt_param
   out$opt_valid_err = opt_valid_err

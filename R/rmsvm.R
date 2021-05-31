@@ -4,94 +4,94 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
   n_class = length(unique(y))
   n = length(y)
   qp_dim = n * n_class
-  
+
   code_mat = code_rmsvm(y)
-  
+
   In = code_mat$In
   vmatj = code_mat$vmatj
   umatj = code_mat$umatj
   Hmatj = code_mat$Hmatj
   y_index = code_mat$y_index
-  
+
   D = matrix(0, qp_dim, qp_dim)
   Amat = matrix(0, (2 * qp_dim + n_class), qp_dim)
   for (j in 1:n_class) {
-    D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
+    D = D + t(Hmatj[[j]]) %*% K %*% Hmatj[[j]]
     Amat[j, ] = rep(1, n) %*% Hmatj[[j]]
   }
-  
+
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   diag(D) = diag(D) + max_D * epsilon_D
-  
+
   g_temp = matrix(-1, n, n_class)
   g_temp[y_index] = -n_class + 1
   g = as.vector(g_temp)
-  
+
   dvec = -g
-  
+
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
-  
+
   bvec_temp = matrix(gamma - 1, nrow = n, ncol = n_class)
   bvec_temp[y_index] = -gamma
   if (gamma == 0 | gamma == 1) {
     bvec_temp = bvec_temp - epsilon
   }
   bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
-  
+
   Amat = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
   bvec = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
-  
+
   nonzero = find_nonzero(t(Amat))
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
-  
+
   dual = solve.QP.compact(D, dvec, Amat, Aind, bvec, meq = (n_class - 1))
-  
+
   alpha = dual$solution
   alpha[alpha < 0] = 0
-  
+
   alpha_mat = matrix(alpha, nrow = n, ncol = n_class)
   # alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
-  # 
+  #
   # for (j in 1:n_class) {
   #   alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
   # }
-  # 
+  #
   # alpha = as.vector(alpha_mat)
-  
+
   cmat = matrix(0, n, n_class)
   for (k in 1:n_class) {
     cmat[, k] = inv_LK %*% t(J) %*% Hmatj[[k]] %*% alpha
   }
-  
+
   Kcmat = J %*% K %*% cmat
-  
+
   alp_temp = matrix(1 - gamma, nrow = n, ncol = n_class)
   alp_temp[y_index] = gamma
-  
+
   alp = c(as.vector(alp_temp), rep(0, 2 * n_class))
-  
+
   Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class))
   Alp2 = diag(qp_dim)
-  
+
   Alp3 = matrix(0, nrow = qp_dim, ncol = 2 * n_class)
-  
+
   Alp3_temp = matrix(-1, nrow = n, ncol = n_class)
   Alp3_temp[y_index] = 1
-  
+
   for (i in 1:n_class) {
     Alp3[(n * (i - 1) + 1):(n * i), (2 * i - 1)] = Alp3_temp[, i]
     Alp3[(n * (i - 1) + 1):(n * i), (2 * i)] = -Alp3_temp[, i]
   }
-  
+
   Alp = rbind(Alp1, cbind(Alp2, Alp3))
-  
+
   blp_temp = Kcmat + 1
   blp_temp[y_index] = (k - 1) - Kcmat[y_index]
   blp = c(0, as.vector(blp_temp))
-  
+
   # constraint directions
   const_dir = rep(">=", (qp_dim + 1))
   const_dir[1] = "="
@@ -100,10 +100,10 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
   for(j in 1:n_class) {
     c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
   }
-  
+
   fit = (matrix(rep(c0vec, n), ncol = n_class, byrow = T) + Kcmat)
   fit_class = apply(fit, 1, which.max)
-  
+
   # Return the output
   out$alpha = alpha_mat
   out$cmat = cmat
@@ -122,19 +122,19 @@ rmsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALSE
   n = NROW(x)
   p = ncol(x)
   n_class = length(unique(y))
-  
+
   center = rep(0, p)
   scaled = rep(1, p)
-  
+
   if (scale) {
     x = scale(x)
     center = attr(x, "scaled:center")
     scaled = attr(x, "scaled:scale")
   }
-  
+
   K = kernelMat(x, x, kernel = kernel, kparam = kparam)
   solutions = rmsvm_compact(K = K, y = y, gamma = gamma, lambda = lambda, epsilon = epsilon, eig_tol_D = eig_tol_D, epsilon_D = epsilon_D)
-  
+
   out$x = x
   out$y = y
   out$gamma = gamma
@@ -168,19 +168,19 @@ predict.rmsvm_compact = function(object, newK = NULL)
 
 predict.rmsvm = function(object, newx = NULL, newK = NULL)
 {
-  
+
   if (object$scale) {
     newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
   }
-  
+
   if (is.null(newK)) {
     newK = kernelMat(newx, object$x, kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
-  
+
   cmat = object$cmat
   c0vec = object$c0vec
-  
+
   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
   pred_class = apply(pred_y, 1, which.max)
   return(list(class = pred_class, pred_value = pred_y))
@@ -194,7 +194,7 @@ Kfold_rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
-  
+
   # if (scale) {
   #   x = scale(x)
   #   if (!is.null(valid_x)) {
@@ -203,33 +203,33 @@ Kfold_rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds
   #     valid_x = (valid_x - matrix(means, NROW(x), NCOL(x), byrow = TRUE)) / matrix(stds, NROW(x), NCOL(x), byrow = TRUE)
   #   }
   # }
-  
+
   lambda_seq = as.numeric(lambda_seq)
   kparam = as.numeric(kparam)
-  
+
   # The number of classes
   n_class = length(unique(y))
-  
+
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   kparam = sort(kparam, decreasing = TRUE)
-  
+
   # Combination of hyper-parameters
   params = expand.grid(lambda = lambda_seq, kparam = kparam)
-  
+
   if (!is.null(valid_x) & !is.null(valid_y)) {
     model_list = vector("list", 1)
     fold_list = NULL
-    
+
     #  Parallel computation on the combination of hyper-parameters
     fold_err = mclapply(1:nrow(params),
                         function(j) {
                           error = try({
                             msvm_fit = rmsvm(x = x, y = y, gamma = gamma, lambda = params$lambda[j], kernel = kernel, kparam = params$kparam[j], scale = scale, ...)
                           })
-                          
+
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.rmsvm(msvm_fit, newx = valid_x)$class
-                            
+
                             if (criterion == "0-1") {
                               acc = sum(valid_y == pred_val) / length(valid_y)
                               err = 1 - acc
@@ -240,7 +240,7 @@ Kfold_rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds
                             msvm_fit = NULL
                             err = Inf
                           }
-                          
+
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     valid_err = sapply(fold_err, "[[", "error")
@@ -249,7 +249,7 @@ Kfold_rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds
     opt_param = params[opt_ind, ]
     opt_valid_err = min(valid_err)
   }
-  
+
   out = list()
   out$opt_param = opt_param
   out$opt_valid_err = opt_valid_err
