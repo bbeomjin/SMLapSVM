@@ -375,9 +375,14 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 {
 
   # The sample size, the number of classes and dimension of QP problem
-
   out = list()
-  n_class = length(unique(y))
+
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+
+  n_class = length(levs)
+  y_int = as.integer(y)
 
   max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
   anova_K$K = lapply(1:anova_K$numK, function(i) {
@@ -395,7 +400,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   }
 
   n = nrow(K)
-  n_l = length(y)
+  n_l = length(y_int)
   n_u = n - n_l
   qp_dim = n_l * n_class
 
@@ -425,7 +430,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   # Q = J %*% Q %*% t(J)
   # diag(Q) = diag(Q) + epsilon_D
   # Convert y into msvm class code
-  trans_Y = class_code(y, n_class)
+  trans_Y = class_code(y_int, n_class)
 
   # Optimize alpha by solve.QP:
   # min (-d^Tb + 1/2 b^TDb)
@@ -570,7 +575,10 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
   # Compute the fitted values
   fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
-  fit_class = apply(fit, 1, which.max)
+  fit_class = levs[apply(fit, 1, which.max)]
+  if (attr(levs, "type") == "factor") {fit_class = factor(fit_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
+  if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
   # table(y, fit_class)
   # Return the output
   out$alpha = alpha
@@ -581,7 +589,7 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
   out$n_l = n_l
   out$n_u = n_u
   out$n_class = n_class
-
+  out$levels = levs
   return(out)
 }
 

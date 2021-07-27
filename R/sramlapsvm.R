@@ -418,7 +418,12 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
-  n_class = length(unique(y))
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+
+  n_class = length(levs)
+  y_int = as.integer(y)
 
   max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
   anova_K$K = lapply(1:anova_K$numK, function(i) {
@@ -435,7 +440,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   }
 
   n = nrow(K)
-  n_l = length(y)
+  n_l = length(y_int)
   n_u = n - n_l
   qp_dim = n_l * n_class
 
@@ -461,7 +466,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   #   Lmatj[[j]] = Lmatj_temp
   # }
 
-  code_mat = code_ramsvm(y)
+  code_mat = code_ramsvm(y_int)
   yyi = code_mat$yyi
   W = code_mat$W
   y_index = code_mat$y_index
@@ -655,7 +660,10 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   W_c0vec = drop(t(c0vec) %*% W)
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
-  fit_class = apply(fit, 1, which.max)
+  fit_class = levs[apply(fit, 1, which.max)]
+  if (attr(levs, "type") == "factor") {fit_class = factor(fit_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
+  if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
   # table(y, fit_class)
 
   # Return the output
@@ -667,6 +675,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   out$n_l = n_l
   out$n_u = n_u
   out$n_class = n_class
+  out$levels = levs
   return(out)
 }
 
