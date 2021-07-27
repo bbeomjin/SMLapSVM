@@ -1,8 +1,8 @@
 export(smlapsvm, cstep.smlapsvm, theta_step.smlapsvm, mlapsvm_compact, mlapsvm, 
-	   predict.mlapsvm_compact, predict.mlapsvm, Kfold_mlapsvm, predict.smlapsvm,
+	   predict.mlapsvm_compact, predict.mlapsvm, cv.mlapsvm, predict.smlapsvm,
 	   sramlapsvm, cstep.sramlapsvm, theta_step.sramlapsvm, predict.sramlapsvm,
-	   ramlapsvm, predict.ramlapsvm, Kfold_ramlapsvm,
-	   rmlapsvm, predict.rmlapsvm, Kfold_rmlapsvm,
+	   ramlapsvm, predict.ramlapsvm, cv.ramlapsvm,
+	   rmlapsvm, predict.rmlapsvm, cv.rmlapsvm,
 	   srmlapsvm, cstep.srmlapsvm, theta_step.srmlapsvm, predict.srmlapsvm,
 	   generateMultiorange, generateMultiMoon, sim_gen)
 
