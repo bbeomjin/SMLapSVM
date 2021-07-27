@@ -4,14 +4,22 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
 
   # The sample size, the number of classes and dimension of QP problem
   out = list()
-  n_class = length(unique(y))
-  n_l = length(y)
+
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+
+  n_class = length(levs)
+  y_int = as.integer(y)
+  # if (is(y, "numeric")) {levs = as.numeric(classname)}
+
+  n_l = length(y_int)
   n = nrow(K)
   n_u = n - n_l
   qp_dim = n_l * n_class
 
   # Convert y into msvm class code
-  trans_Y = class_code(y, n_class)
+  trans_Y = class_code(y_int, n_class)
 
   # Optimize alpha by solve.QP:
   # min (-d^Tb + 1/2 b^TDb)
@@ -162,7 +170,10 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
 
   # Compute the fitted values
   fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
-  fit_class = apply(fit, 1, which.max)
+  fit_class = levs[apply(fit, 1, which.max)]
+  if (attr(levs, "type") == "factor") {fit_class = factor(fit_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
+  if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
 
   # Return the output
   out$alpha = alpha
@@ -173,8 +184,23 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   out$n_l = n_l
   out$n_u = n_u
   out$n_class = n_class
-
+  out$levels = levs
   return(out)
+}
+
+predict.mlapsvm_compact = function(object, newK = NULL)
+{
+  cmat = object$cmat
+  c0vec = object$c0vec
+  levs = object$levels
+  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
+  return(list(class = pred_class, pred_value = pred_y))
 }
 
 
@@ -186,7 +212,6 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   n_l = NROW(x)
   n_u = NROW(ux)
   n = n_l + n_u
-  n_class = length(unique(y))
   rx = rbind(x, ux)
   p = ncol(x)
   center = rep(0, p)
@@ -223,7 +248,8 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   out$x = x
   out$ux = ux
   out$y = y
-  out$n_class = n_class
+  out$n_class = solutions$n_class
+  out$levels = solutions$levels
   out$weight = weight
   out$lambda = lambda
   out$lambda_I = lambda_I
@@ -245,15 +271,6 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
   return(out)
 }
 
-predict.mlapsvm_compact = function(object, newK = NULL)
-{
-  cmat = object$cmat
-  c0vec = object$c0vec
-  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
-  return(list(class = pred_class, pred_value = pred_y))
-}
-
 
 predict.mlapsvm = function(object, newx = NULL, newK = NULL)
 {
@@ -269,17 +286,23 @@ predict.mlapsvm = function(object, newx = NULL, newK = NULL)
 
   cmat = object$cmat
   c0vec = object$c0vec
-
+  levs = object$levels
   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
-Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
-                         lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
-                         kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1), normalized = FALSE,
-                         scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+cv.mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
+                      lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
+                      kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = 1, normalized = FALSE,
+                      scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
+  out = list()
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
@@ -296,9 +319,6 @@ Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds
   lambda_seq = as.numeric(lambda_seq)
   lambda_I_seq = as.numeric(lambda_I_seq)
   kparam = as.numeric(kparam)
-
-  # The number of classes
-  k = length(unique(y))
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
@@ -333,7 +353,6 @@ Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds
                             msvm_fit = NULL
                             err = Inf
                           }
-
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     valid_err = sapply(fold_err, "[[", "error")
@@ -343,13 +362,10 @@ Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds
     opt_valid_err = min(valid_err)
   }
 
-  out = list()
-  out$opt_param = opt_param
+  out$opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, kparam = opt_param$kparam)
   out$opt_valid_err = opt_valid_err
   out$opt_ind = opt_ind
   out$valid_err = valid_err
-  out$fold_models = lapply(model_list, "[[", opt_ind)
-  out$fold_ind = fold_list
   out$x = x
   out$y = y
   out$valid_x = valid_x
@@ -367,132 +383,3 @@ Kfold_mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds
 }
 
 
-
-
-
-# mclapply.hack = function(..., nCores) {
-#   ## Create a cluster
-#   size.of.list = length(list(...)[[1]])
-#   cl <- makeCluster(nCores)
-#   ## Find out the names of the loaded packages
-#   loaded.package.names = c(
-#     ## Base packages
-#     sessionInfo()$basePkgs,
-#     ## Additional packages
-#     names( sessionInfo()$otherPkgs ))
-#   tryCatch({
-#     ## Copy over all of the objects within scope to
-#     ## all clusters.
-#     this.env = environment()
-#     while (identical(this.env, globalenv()) == FALSE) {
-#       clusterExport(cl,
-#                     ls(all.names = TRUE, env = this.env),
-#                     envir = this.env)
-#       this.env = parent.env(environment())
-#     }
-#     clusterExport(cl,
-#                   ls(all.names = TRUE, env = globalenv()),
-#                   envir = globalenv())
-#
-#     ## Load the libraries on all the clusters
-#     ## N.B. length(cl) returns the number of clusters
-#     parLapply(cl, 1:length(cl), function(xx){
-#       lapply(loaded.package.names, function(yy) {
-#         require(yy, character.only = TRUE)})
-#     })
-#
-#     ## Run the lapply in parallel
-#     return(parLapply(cl, ...) )
-#   }, finally = {
-#     ## Stop the cluster
-#     stopCluster(cl)
-#   })
-# }
-
-# Kfold_mlapsvm_win = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
-#                          lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = c(2^{seq(-20, 15, length.out = 20)}),
-#                          kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
-#                          weightType = "Heatmap", adjacency_k = 6, normalized = FALSE,
-#                          scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
-# {
-#   call = match.call()
-#   kernel = match.arg(kernel)
-#   criterion = match.arg(criterion)
-#
-#   # if (scale) {
-#   #   x = scale(x)
-#   #   if (!is.null(valid_x)) {
-#   #     means = attr(x, "scaled:center")
-#   #     stds = attr(x, "scaled:scale")
-#   #     valid_x = (valid_x - matrix(means, NROW(x), NCOL(x), byrow = TRUE)) / matrix(stds, NROW(x), NCOL(x), byrow = TRUE)
-#   #   }
-#   # }
-#
-#   if (!is.numeric(lambda_seq)) {
-#     lambda_seq = as.numeric(lambda_seq)
-#   }
-#
-#   if (!is.numeric(lambda_I_seq)) {
-#     lambda_I_seq = as.numeric(lambda_I_seq)
-#   }
-#
-#   if (!is.numeric(kparam)) {
-#     kparam = as.numeric(kparam)
-#   }
-#
-#   # The number of classes
-#   k = length(unique(y))
-#
-#   # Combination of hyper-parameters
-#   params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq, kparam = kparam)
-#
-#   if (!is.null(valid_x) & !is.null(valid_y)) {
-#     model_list = vector("list", 1)
-#     fold_list = NULL
-#
-#     #  Parallel computation on the combination of hyper-parameters
-#     fold_err = mclapply.hack(1:nrow(params),
-#                         function(j) {
-#                           msvm_fit = mlapsvm(x = x, y = y, ux = ux, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
-#                                              kernel = kernel, kparam = params$kparam[j], scale = scale, normalized = normalized,
-#                                              weightType = weightType, adjacency_k = adjacency_k, ...)
-#                           pred_val = predict.mlapsvm(msvm_fit, newx = valid_x)$class
-#
-#                           if (criterion == "0-1") {
-#                             acc = sum(valid_y == pred_val) / length(valid_y)
-#                             err = 1 - acc
-#                           } else {
-#                             # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-#                           }
-#                           return(list(error = err, fit_model = msvm_fit))
-#                         }, nCores = nCores)
-#     valid_err = sapply(fold_err, "[[", "error")
-#     model_list[[1]] = lapply(fold_err, "[[", "fit_model")
-#     opt_ind = max(which(valid_err == min(valid_err)))
-#     opt_param = params[opt_ind, ]
-#     opt_valid_err = min(valid_err)
-#   }
-#
-#   out = list()
-#   out$opt_param = opt_param
-#   out$opt_valid_err = opt_valid_err
-#   out$opt_ind = opt_ind
-#   out$valid_err = valid_err
-#   out$fold_models = lapply(model_list, "[[", opt_ind)
-#   out$fold_ind = fold_list
-#   out$x = x
-#   out$y = y
-#   out$valid_x = valid_x
-#   out$valid_y = valid_y
-#   out$kernel = kernel
-#   out$scale = scale
-#   if (optModel) {
-#     opt_model = mlapsvm(x = x, y = y, ux = ux, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I,
-#                         kernel = kernel, kparam = opt_param$kparam, scale = scale, normalized = normalized,
-#                         weightType = weightType, adjacency_k = adjacency_k, ...)
-#     out$opt_model = opt_model
-#   }
-#   out$call = call
-#   class(out) = "mlapsvm"
-#   return(out)
-# }

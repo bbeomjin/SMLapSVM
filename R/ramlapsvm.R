@@ -1,44 +1,27 @@
-# dyn.load("../src/alpha_update.dll")
 ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
                              eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-6, epsilon_I = 0)
 {
 
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
-  n_class = length(unique(y))
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+
+  n_class = length(levs)
+  y_int = as.integer(y)
+  # if (is(y, "numeric")) {levs = as.numeric(levs)}
 
   # if (sum(K) == 0) {
   #   diag(K) = 1
   # }
 
   n = nrow(K)
-  n_l = length(y)
+  n_l = length(y_int)
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  # yyi = Y_matrix_gen(k = n_class, nobs = n_l, y = y)
-  # W = XI_gen(n_class)
-  #
-  # y_index = cbind(1:n_l, y)
-  # index_mat = matrix(-1, nrow = n_l, ncol = n_class)
-  # index_mat[y_index] = 1
-  #
-  # Hmatj = list()
-  # Lmatj = list()
-  # for (j in 1:(n_class - 1)) {
-  #   Hmatj_temp = NULL
-  #   Lmatj_temp = NULL
-  #   for (i in 1:n_class) {
-  #     temp = diag(n_l) * W[j, i]
-  #     diag(temp) = diag(temp) * index_mat[, i]
-  #     Hmatj_temp = rbind(Hmatj_temp, temp)
-  #     Lmatj_temp = c(Lmatj_temp, diag(temp))
-  #   }
-  #   Hmatj[[j]] = Hmatj_temp
-  #   Lmatj[[j]] = Lmatj_temp
-  # }
-
-  code_mat = code_ramsvm(y)
+  code_mat = code_ramsvm(y_int)
   yyi = code_mat$yyi
   W = code_mat$W
   y_index = code_mat$y_index
@@ -105,23 +88,6 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   # bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
   bvec = c(rep(0, n_class - 1), as.vector(bvec_temp), rep(0, n_l * n_class))
 
-  # for (j in 1:n_class) {
-  #   for (i in 1:n_l) {
-  #     flag = 0
-  #     if (y[i] == j) {
-  #       flag = 1
-  #     }
-  #     bvec[n_class + qp_dim + (j - 1) * n_l + i] = -(gamma * flag + (1 - gamma) * (1 - flag))
-  #     # correction to avoid redundant constraints when gamma = 0 or 1
-  #     if ((flag == 1 & gamma == 0) | (flag == 0 & gamma == 1)) {
-  #       bvec[n_class + qp_dim + (j - 1) * n_l + i] = bvec[n_class + qp_dim + (j - 1) * n_l + i] - epsilon
-  #     }
-  #   }
-  # }
-
-  # remove one redudant constraint
-  # Amat1 = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
-  # bvec1 = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
 
   # (5) find solution by solve.QP
 
@@ -136,21 +102,6 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
 
   alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
   # alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
-
-  # for (j in 1:n_class) {
-  #   alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
-  # }
-
-  # for (j in 1:n_class) {
-  #   for (i in 1:n_l) {
-  #     if (y[i] == j & (alpha[(j - 1) * n_l + i] > gamma)) {
-  #       alpha[(j - 1) * n_l + i] = gamma
-  #     }
-  #     if (y[i] != j & (alpha[(j - 1) * n_l + i] > (1 - gamma))) {
-  #       alpha[(j - 1) * n_l + i] = (1 - gamma)
-  #     }
-  #   }
-  # }
 
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
@@ -168,15 +119,6 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
 
   alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
 
-  # alp = rep((1 - gamma), (qp_dim + 2 * n_class))
-  # for (j in 1:n_class) {
-  #   for (i in 1:n_l) {
-  #     if (y[i] == j) {
-  #       alp[n_l * (j - 1) + i] = gamma
-  #     }
-  #   }
-  # }
-  # alp[(qp_dim + 1):(qp_dim + 2 * n_class)] = 0
 
   # constraint matrix and vector
   # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
@@ -212,7 +154,11 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   W_c0vec = drop(t(c0vec) %*% W)
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
-  fit_class = apply(fit, 1, which.max)
+  fit_class = levs[apply(fit, 1, which.max)]
+  if (attr(levs, "type") == "factor") {fit_class = factor(fit_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
+  if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
+
   # table(y, fit_class)
 
   # Return the output
@@ -224,21 +170,45 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   out$n_l = n_l
   out$n_u = n_u
   out$n_class = n_class
+  out$levels = levs
   return(out)
 }
+
+
+predict.ramlapsvm_compact = function(object, newK = NULL) {
+
+  beta = object$beta
+  beta0 = object$beta0
+  n_class = object$n_class
+  levs = object$levels
+
+  W = XI_gen(n_class)
+
+  W_beta0 = drop(t(beta0) %*% W)
+
+  pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
+  # return(list(class = pred_y, inner_prod = inner_prod))
+  return(list(class = pred_class, pred_value = pred_y))
+}
+
 
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
                   eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
 {
-
+  out = list()
   n_l = NROW(x)
   n_u = NROW(ux)
   rx = rbind(x, ux)
   # X = X - matrix(colMeans(X), byrow = TRUE, nrow(X), ncol(X))
   n = n_l + n_u
-  n_class = length(unique(y))
 
   p = ncol(rx)
   center = rep(0, p)
@@ -267,11 +237,11 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   solutions = ramlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon,
                              eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D, epsilon_I = epsilon_I)
 
-  out = list()
   out$x = x
   out$ux = ux
   out$y = y
-  out$n_class = n_class
+  out$n_class = solutions$n_class
+  out$levels = solutions$levels
   out$gamma = gamma
   out$lambda = lambda
   out$lambda_I = lambda_I
@@ -287,6 +257,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   out$scale = scale
   out$center = center
   out$scaled = scaled
+  out$fit_class = solutions$fit_class
   class(out) = "ramlapsvm"
   return(out)
 }
@@ -302,40 +273,30 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
   beta = object$beta
   beta0 = object$beta0
   n_class = object$n_class
+  levs = object$levels
+
   W = XI_gen(n_class)
 
   W_beta0 = drop(t(beta0) %*% W)
 
-  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
-  pred_y = apply(fit, 1, which.max)
+  pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_class = levs[apply(fit, 1, which.max)]
 
-  return(list(class = pred_y, pred_value = fit))
-}
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
 
-predict.ramlapsvm_compact = function(object, newK = NULL) {
-
-  beta = object$beta
-  beta0 = object$beta0
-  n_class = object$n_class
-  W = XI_gen(n_class)
-
-  W_beta0 = drop(t(beta0) %*% W)
-
-  fit = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
-  pred_y = apply(fit, 1, which.max)
-
-  # return(list(class = pred_y, inner_prod = inner_prod))
-  return(list(class = pred_y, pred_value = fit))
+  return(list(class = pred_class, pred_value = pred_y))
 }
 
 
-
-Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 10,
+cv.ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 10,
                          lambda_seq = 2^{seq(-10, 15, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                          scale = FALSE, adjacency_k = 6, weightType = "Heatmap", normalized = TRUE,
                          gamma = 0.5, kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
                          criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
+  out = list()
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
@@ -352,9 +313,6 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
   lambda_seq = as.numeric(lambda_seq)
   lambda_I_seq = as.numeric(lambda_I_seq)
   kparam = as.numeric(kparam)
-
-  # The number of classes
-  k = length(unique(y))
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
@@ -440,13 +398,12 @@ Kfold_ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
   #   opt_valid_err = min(valid_err)
   # }
 
-  out = list()
-  out$opt_param = opt_param
+  out$opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, kparam = opt_param$kparam)
   out$opt_valid_err = opt_valid_err
   out$opt_ind = opt_ind
   out$valid_err = valid_err
-  out$fold_models = lapply(model_list, "[[", opt_ind)
-  out$fold_ind = fold_list
+  # out$fold_models = lapply(model_list, "[[", opt_ind)
+  # out$fold_ind = fold_list
   out$x = x
   out$y = y
   out$valid_x = valid_x

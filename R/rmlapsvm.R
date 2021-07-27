@@ -3,13 +3,19 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
-  n_class = length(unique(y))
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+
+  n_class = length(levs)
+  y_int = as.integer(y)
+
   n = nrow(K)
-  n_l = length(y)
+  n_l = length(y_int)
   n_u = n - n_l
   qp_dim = n_l * n_class
 
-  code_mat = code_rmsvm(y)
+  code_mat = code_rmsvm(y_int)
   In = code_mat$In
   vmatj = code_mat$vmatj
   umatj = code_mat$umatj
@@ -181,7 +187,10 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
   # compute the fitted values
   fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
-  fit_class = apply(fit, 1, which.max)
+  fit_class = levs[apply(fit, 1, which.max)]
+  if (attr(levs, "type") == "factor") {fit_class = factor(fit_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
+  if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
 
   # Return the output
   out$alpha = alpha_mat
@@ -192,7 +201,25 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   out$n_l = n_l
   out$n_u = n_u
   out$n_class = n_class
+  out$levels = levs
   return(out)
+}
+
+
+predict.rmlapsvm_compact = function(object, newK = NULL)
+{
+  cmat = object$cmat
+  c0vec = object$c0vec
+  levs = object$levels
+
+  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
+  return(list(class = pred_class, pred_value = pred_y))
 }
 
 
@@ -203,6 +230,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   out = list()
   n_l = NROW(x)
   n_u = NROW(ux)
+  n = n_l + n_u
   rx = rbind(x, ux)
   p = ncol(x)
   center = rep(0, p)
@@ -216,19 +244,8 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
     ux = (ux - matrix(center, nrow = n_u, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_u, ncol = p, byrow = TRUE)
   }
 
-  n = n_l + n_u
-  n_class = max(y)
 
   K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
-
-  # W = RSSL:::adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
-  # d = rowSums(W)
-  # L = diag(d) - W
-  # if (normalized) {
-  #   L = diag(1 / sqrt(d)) %*% L %*% diag(1 / sqrt(d))
-  # }
-
-
 
   # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
   # graph = W
@@ -241,7 +258,8 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   out$x = x
   out$ux = ux
   out$y = y
-  out$n_class = n_class
+  out$n_class = solutions$n_class
+  out$levels = solutions$levels
   out$weight = weight
   out$lambda = lambda
   out$lambda_I = lambda_I
@@ -263,14 +281,6 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   return(out)
 }
 
-predict.rmlapsvm_compact = function(object, newK = NULL)
-{
-  cmat = object$cmat
-  c0vec = object$c0vec
-  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
-  return(list(class = pred_class, pred_value = pred_y))
-}
 
 predict.rmlapsvm = function(object, newx = NULL, newK = NULL)
 {
@@ -286,17 +296,24 @@ predict.rmlapsvm = function(object, newx = NULL, newK = NULL)
 
   cmat = object$cmat
   c0vec = object$c0vec
+  levs = object$levels
 
   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
-Kfold_rmlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
-                         gamma = 0.5, lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
-                         kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1), normalized = FALSE,
-                         scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+cv.rmlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
+                       gamma = 0.5, lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
+                       kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1), normalized = FALSE,
+                       scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
+  out = list()
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
@@ -313,9 +330,6 @@ Kfold_rmlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   lambda_seq = as.numeric(lambda_seq)
   lambda_I_seq = as.numeric(lambda_I_seq)
   kparam = as.numeric(kparam)
-
-  # The number of classes
-  k = length(unique(y))
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
@@ -360,13 +374,10 @@ Kfold_rmlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     opt_valid_err = min(valid_err)
   }
 
-  out = list()
-  out$opt_param = opt_param
+  out$opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, kparam = opt_param$kparam)
   out$opt_valid_err = opt_valid_err
   out$opt_ind = opt_ind
   out$valid_err = valid_err
-  out$fold_models = lapply(model_list, "[[", opt_ind)
-  out$fold_ind = fold_list
   out$x = x
   out$y = y
   out$valid_x = valid_x
