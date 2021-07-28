@@ -1,11 +1,17 @@
 msvm_compact = function(K, y, lambda, epsilon = 1e-6, eig_tol_D = 0, epsilon_D = 1e-6)
 {
   out = list()
-  n_class = length(unique(y))
-  n = length(y)
+
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
+
+  n_class = length(levs)
+  n = length(y_int)
   qp_dim = n * n_class
 
-  trans_Y = class_code(y, n_class)
+  trans_Y = class_code(y_int, n_class)
 
   # Optimize alpha by solve.QP:
   # min (-d^Tb + 1/2 b^TDb)
@@ -122,17 +128,30 @@ msvm_compact = function(K, y, lambda, epsilon = 1e-6, eig_tol_D = 0, epsilon_D =
   out$fit_class = fit_class
   out$n = n
   out$n_class = n_class
+  out$levels = levs
   return(out)
 }
 
+predict.msvm_compact = function(object, newK = NULL)
+{
+  cmat = object$cmat
+  c0vec = object$c0vec
+  levs = object$levels
+  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
+  pred_class = levs[apply(pred_y, 1, which.max)]
 
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
+  return(list(class = pred_class, pred_value = pred_y))
+}
 
 msvm = function(x = NULL, y, lambda, kernel, kparam, scale = FALSE, epsilon = 1e-6, eig_tol_D = 0, epsilon_D = 1e-8)
 {
   out = list()
   n = NROW(x)
   p = ncol(x)
-  n_class = length(unique(y))
 
   center = rep(0, p)
   scaled = rep(1, p)
@@ -148,7 +167,8 @@ msvm = function(x = NULL, y, lambda, kernel, kparam, scale = FALSE, epsilon = 1e
 
   out$x = x
   out$y = y
-  out$n_class = n_class
+  out$n_class = solutions$n_class
+  out$levels = solutions$levels
   out$lambda = lambda
   out$kparam = kparam
   out$cmat = solutions$cmat
@@ -167,16 +187,6 @@ msvm = function(x = NULL, y, lambda, kernel, kparam, scale = FALSE, epsilon = 1e
 }
 
 
-predict.msvm_compact = function(object, newK = NULL)
-{
-  cmat = object$cmat
-  c0vec = object$c0vec
-  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
-  return(list(class = pred_class, pred_value = pred_y))
-}
-
-
 predict.msvm = function(object, newx = NULL, newK = NULL)
 {
 
@@ -191,16 +201,23 @@ predict.msvm = function(object, newx = NULL, newK = NULL)
 
   cmat = object$cmat
   c0vec = object$c0vec
+  levs = object$levels
 
   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
-Kfold_msvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
-                      kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
-                      scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+cv.msvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
+                   kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                   scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
+  out = list()
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
@@ -216,9 +233,6 @@ Kfold_msvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_s
 
   lambda_seq = as.numeric(lambda_seq)
   kparam = as.numeric(kparam)
-
-  # The number of classes
-  n_class = length(unique(y))
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   kparam = sort(kparam, decreasing = TRUE)
@@ -260,13 +274,10 @@ Kfold_msvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_s
     opt_valid_err = min(valid_err)
   }
 
-  out = list()
-  out$opt_param = opt_param
+  out$opt_param = c(lambda = opt_param$lambda, kparam = opt_param$kparam)
   out$opt_valid_err = opt_valid_err
   out$opt_ind = opt_ind
   out$valid_err = valid_err
-  out$fold_models = lapply(model_list, "[[", opt_ind)
-  out$fold_ind = fold_list
   out$x = x
   out$y = y
   out$valid_x = valid_x

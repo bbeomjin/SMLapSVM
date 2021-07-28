@@ -1,11 +1,17 @@
 rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 0, epsilon_D = 1e-6)
 {
   out = list()
-  n_class = length(unique(y))
-  n = length(y)
+
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
+
+  n_class = length(levs)
+  n = length(y_int)
   qp_dim = n * n_class
 
-  code_mat = code_rmsvm(y)
+  code_mat = code_rmsvm(y_int)
 
   In = code_mat$In
   vmatj = code_mat$vmatj
@@ -112,7 +118,23 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
   out$fit_class = fit_class
   out$n = n
   out$n_class = n_class
+  out$levels = levs
   return(out)
+}
+
+predict.rmsvm_compact = function(object, newK = NULL)
+{
+  cmat = object$cmat
+  c0vec = object$c0vec
+  levs = object$levels
+  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
+  return(list(class = pred_class, pred_value = pred_y))
 }
 
 
@@ -121,7 +143,6 @@ rmsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALSE
   out = list()
   n = NROW(x)
   p = ncol(x)
-  n_class = length(unique(y))
 
   center = rep(0, p)
   scaled = rep(1, p)
@@ -138,7 +159,8 @@ rmsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALSE
   out$x = x
   out$y = y
   out$gamma = gamma
-  out$n_class = n_class
+  out$n_class = solutions$n_class
+  out$levels = solutions$levels
   out$lambda = lambda
   out$kparam = kparam
   out$cmat = solutions$cmat
@@ -157,14 +179,6 @@ rmsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALSE
 }
 
 
-predict.rmsvm_compact = function(object, newK = NULL)
-{
-  cmat = object$cmat
-  c0vec = object$c0vec
-  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
-  return(list(class = pred_class, pred_value = pred_y))
-}
 
 predict.rmsvm = function(object, newx = NULL, newK = NULL)
 {
@@ -180,17 +194,24 @@ predict.rmsvm = function(object, newx = NULL, newK = NULL)
 
   cmat = object$cmat
   c0vec = object$c0vec
+  levs = object$levels
 
   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
 
-Kfold_rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
+cv.rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
                       kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
                       scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
+  out = list()
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
@@ -250,13 +271,10 @@ Kfold_rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds
     opt_valid_err = min(valid_err)
   }
 
-  out = list()
-  out$opt_param = opt_param
+  out$opt_param = c(lambda = opt_param$lambda, kparam = opt_param$kparam)
   out$opt_valid_err = opt_valid_err
   out$opt_ind = opt_ind
   out$valid_err = valid_err
-  out$fold_models = lapply(model_list, "[[", opt_ind)
-  out$fold_ind = fold_list
   out$x = x
   out$y = y
   out$valid_x = valid_x

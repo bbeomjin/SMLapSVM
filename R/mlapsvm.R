@@ -8,9 +8,9 @@ mlapsvm_compact = function(K, L, y, lambda, lambda_I, epsilon = 1e-6,
   y_temp = factor(y)
   levs = levels(y_temp)
   attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
 
   n_class = length(levs)
-  y_int = as.integer(y)
   # if (is(y, "numeric")) {levs = as.numeric(classname)}
 
   n_l = length(y_int)

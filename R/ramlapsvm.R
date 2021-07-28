@@ -7,9 +7,9 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   y_temp = factor(y)
   levs = levels(y_temp)
   attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
 
   n_class = length(levs)
-  y_int = as.integer(y)
   # if (is(y, "numeric")) {levs = as.numeric(levs)}
 
   # if (sum(K) == 0) {

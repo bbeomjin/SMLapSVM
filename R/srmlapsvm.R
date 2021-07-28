@@ -420,9 +420,9 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   y_temp = factor(y)
   levs = levels(y_temp)
   attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
 
   n_class = length(levs)
-  y_int = as.integer(y)
 
   max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
   anova_K$K = lapply(1:anova_K$numK, function(i) {
