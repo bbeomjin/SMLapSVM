@@ -119,7 +119,7 @@ make_knn_graph_mat = function(X, k = 6)
 make_L_mat = function(X, kernel = "gaussian", kparam = 1, graph, weightType = c("Heatmap", "Binary"), normalized = FALSE)
 {
   # make edge weights matrix W
-  W_mat = main_kernel(X, X, kernel = list(type = kernel, par = kparam))
+  W_mat = kernelMatrix(X, X, kernel = kernel, kparam = kparam)
   W_mat = W_mat * graph
   if(weightType == "Binary")
   {
