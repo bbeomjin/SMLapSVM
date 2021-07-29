@@ -41,10 +41,9 @@ smlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
 predict.smlapsvm = function(object, newx = NULL, newK = NULL)
 {
   model = object$opt_model
-  kernel = object$kernel
-  kparam = object$kparam
   cmat = model$cmat
   c0vec = model$c0vec
+  levs = model$levels
 
   # if (object$scale) {
   #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
@@ -57,8 +56,13 @@ predict.smlapsvm = function(object, newx = NULL, newK = NULL)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
+  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = model$n_class, byrow = T) + (newK %*% cmat))
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
@@ -100,10 +104,6 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
     n_u = NROW(ux)
     n = n_l + n_u
     rx = rbind(x, ux)
-
-
-    # The number of classes
-    n_class = length(unique(y))
 
     center = rep(0, p)
     scaled = rep(1, p)
@@ -180,7 +180,6 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
   out$y = y
   out$L = L
   out$theta = theta
-  out$n_class = n_class
   out$valid_x = valid_x
   out$valid_y = valid_y
   # out$adjacency_k = adjacency_k
@@ -245,7 +244,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                       function(j) {
                         error = try({
                           theta = find_theta.smlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$cmat, c0vec = init_model$c0vec,
-                                                      n_class = n_class, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
+                                                      lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
                           if (isCombined) {
                             init_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
                           }
@@ -293,7 +292,7 @@ theta_step.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   return(out)
 }
 
-find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
+find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, lambda, lambda_I, lambda_theta = 1,
                                eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
   if (lambda_theta <= 0) {
@@ -306,11 +305,17 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
     return(x)
   })
 
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
+  n_class = length(levs)
+
   n = NROW(cmat)
-  n_l = length(y)
+  n_l = length(y_int)
   n_u = n - n_l
 
-  Y = class_code(y, k = n_class)
+  Y = class_code(y_int, k = n_class)
 
   Dmat = numeric(anova_kernel$numK)
   dvec = numeric(anova_kernel$numK)
@@ -341,7 +346,7 @@ find_theta.smlapsvm = function(y, anova_kernel, L, cmat, c0vec, n_class, lambda,
 
 
   dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
-  dvec_temp[cbind(1:n_l, y)] = 0
+  dvec_temp[cbind(1:n_l, y_int)] = 0
   # dvec_temp = as.vector(Y)
   # dvec_temp[dvec_temp == 1] = 0
   # dvec_temp[dvec_temp < 0] = 1

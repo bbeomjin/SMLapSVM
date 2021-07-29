@@ -36,10 +36,9 @@ srmsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
 predict.srmsvm = function(object, newx = NULL, newK = NULL)
 {
   model = object$opt_model
-  kernel = object$kernel
-  kparam = object$kparam
   cmat = model$cmat
   c0vec = model$c0vec
+  levs = model$levels
 
   # if (object$scale) {
   #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
@@ -52,8 +51,13 @@ predict.srmsvm = function(object, newx = NULL, newK = NULL)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = object$n_class, byrow = T) + (newK %*% cmat))
+  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = model$n_class, byrow = T) + (newK %*% cmat))
   pred_class = apply(pred_y, 1, which.max)
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
@@ -87,8 +91,6 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
     fold_list = NULL
 
     n = NROW(x)
-    # The number of classes
-    n_class = length(unique(y))
 
     center = rep(0, p)
     scaled = rep(1, p)
@@ -149,7 +151,6 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
   out$y = y
   out$gamma = gamma
   out$theta = theta
-  out$n_class = n_class
   out$valid_x = valid_x
   out$valid_y = valid_y
   out$kernel = kernel
@@ -201,7 +202,7 @@ theta_step.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
                       function(j) {
                         error = try({
                           theta = find_theta.srmsvm(y = y, anova_kernel = anova_K, gamma = gamma, cmat = init_model$cmat, c0vec = init_model$c0vec,
-                                                   n_class = n_class, lambda = lambda, lambda_theta = lambda_theta_seq[j], ...)
+                                                    lambda = lambda, lambda_theta = lambda_theta_seq[j], ...)
                           if (isCombined) {
                             subK = combine_kernel(anova_K, theta)
                             init_model = rmsvm_compact(K = subK, y = y, gamma = gamma, lambda = lambda, ...)
@@ -251,7 +252,7 @@ theta_step.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
 }
 
 
-find_theta.srmsvm = function(y, anova_kernel, gamma, cmat, c0vec, n_class, lambda, lambda_theta, eig_tol_D = 0, epsilon_D = 1e-8)
+find_theta.srmsvm = function(y, anova_kernel, gamma, cmat, c0vec, lambda, lambda_theta, eig_tol_D = 0, epsilon_D = 1e-8)
 {
 
   if (anova_kernel$numK == 1)
@@ -265,10 +266,16 @@ find_theta.srmsvm = function(y, anova_kernel, gamma, cmat, c0vec, n_class, lambd
     return(theta)
   }
 
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
+  n_class = length(levs)
+
   # standard LP form :
   # min a^T x , subject to A1x <= a1
-  n = length(y)
-  y_index = cbind(1:n, y)
+  n = length(y_int)
+  y_index = cbind(1:n, y_int)
 
   a_tmp = matrix(gamma / n, nrow = n, ncol = n_class)
   a_tmp[y_index] = (1 - gamma) / n

@@ -36,11 +36,10 @@ sramsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfo
 predict.sramsvm = function(object, newx = NULL, newK = NULL)
 {
   model = object$opt_model
-  kernel = object$kernel
-  kparam = object$kparam
   cmat = model$cmat
   c0vec = model$c0vec
-  n_class = object$n_class
+  levs = model$levels
+
   W = XI_gen(n_class)
 
   # if (object$scale) {
@@ -56,9 +55,14 @@ predict.sramsvm = function(object, newx = NULL, newK = NULL)
 
   W_c0 = drop(t(c0vec) %*% W)
 
-  fit = matrix(W_c0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% cmat) %*% W)
-  pred_y = apply(fit, 1, which.max)
-  return(list(class = pred_y, pred_value = fit))
+  pred_y = matrix(W_c0, nrow = nrow(newK), ncol = model$n_class, byrow = T) + ((newK %*% cmat) %*% W)
+  pred_class = levs[apply(fit, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
+  return(list(class = pred_class, pred_value = pred_y))
 }
 
 
@@ -91,8 +95,6 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
     fold_list = NULL
 
     n = NROW(x)
-    # The number of classes
-    n_class = length(unique(y))
 
     center = rep(0, p)
     scaled = rep(1, p)
@@ -153,7 +155,6 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
   out$y = y
   out$gamma = gamma
   out$theta = theta
-  out$n_class = n_class
   out$valid_x = valid_x
   out$valid_y = valid_y
   out$kernel = kernel
@@ -205,7 +206,7 @@ theta_step.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.
                       function(j) {
                         error = try({
                           theta = find_theta.sramsvm(y = y, anova_kernel = anova_K, gamma = gamma, cmat = init_model$cmat, c0vec = init_model$c0vec,
-                                                    n_class = n_class, lambda = lambda, lambda_theta = lambda_theta_seq[j], ...)
+                                                    lambda = lambda, lambda_theta = lambda_theta_seq[j], ...)
                           if (isCombined) {
                             subK = combine_kernel(anova_K, theta)
                             init_model = ramsvm_compact(K = subK, y = y, gamma = gamma, lambda = lambda, ...)
@@ -255,7 +256,7 @@ theta_step.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.
 }
 
 
-find_theta.sramsvm = function(y, anova_kernel, gamma, cmat, c0vec, n_class, lambda, lambda_theta, eig_tol_D = 0, epsilon_D = 1e-8)
+find_theta.sramsvm = function(y, anova_kernel, gamma, cmat, c0vec, lambda, lambda_theta, eig_tol_D = 0, epsilon_D = 1e-8)
 {
 
   if (anova_kernel$numK == 1)
@@ -269,12 +270,18 @@ find_theta.sramsvm = function(y, anova_kernel, gamma, cmat, c0vec, n_class, lamb
     return(theta)
   }
 
-  n = length(y)
-  y_index = cbind(1:n, y)
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
+  n_class = length(levs)
+
+  n = length(y_int)
+  y_index = cbind(1:n, y_int)
 
   c0vec = as.matrix(c0vec)
   # convert y into ramsvm class code
-  trans_Y = Y_matrix_gen(n_class, nobs = n, y = y)
+  trans_Y = Y_matrix_gen(n_class, nobs = n, y = y_int)
 
   # calculate the 'a' matrix
   a_tmp = matrix(gamma / n, nrow = n, ncol = n_class)

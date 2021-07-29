@@ -74,10 +74,9 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
 predict.srmlapsvm = function(object, newx = NULL, newK = NULL)
 {
   model = object$opt_model
-  kernel = object$kernel
-  kparam = object$kparam
   cmat = model$cmat
   c0vec = model$c0vec
+  levs = model$levels
 
   # if (object$scale) {
   #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
@@ -90,8 +89,13 @@ predict.srmlapsvm = function(object, newx = NULL, newK = NULL)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  pred_y = (matrix(c0vec, nrow = nrow(newK), ncol = object$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = apply(pred_y, 1, which.max)
+  pred_y = (matrix(c0vec, nrow = nrow(newK), ncol = model$n_class, byrow = T) + (newK %*% cmat))
+  pred_class = levs[apply(pred_y, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
@@ -132,10 +136,6 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
     n_u = NROW(ux)
     n = n_l + n_u
     rx = rbind(x, ux)
-
-
-    # The number of classes
-    n_class = length(unique(y))
 
     center = rep(0, p)
     scaled = rep(1, p)
@@ -207,7 +207,6 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
   out$L = L
   out$theta = theta
   out$gamma = gamma
-  out$n_class = n_class
   out$valid_x = valid_x
   out$valid_y = valid_y
   # out$anova_K = anova_K
@@ -269,7 +268,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                       function(j) {
                         error = try({
                           theta = find_theta.srmlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
-                                                       cmat = init_model$cmat, c0vec = init_model$c0vec, n_class = n_class,
+                                                       cmat = init_model$cmat, c0vec = init_model$c0vec,
                                                        lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
                           if (isCombined) {
                             # subK = combine_kernel(anova_K, theta)
@@ -322,7 +321,7 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class, lambda, lambda_I, lambda_theta = 1,
+find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, lambda_I, lambda_theta = 1,
                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
   if (lambda_theta <= 0) {
@@ -335,12 +334,18 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
     return(x)
   })
 
+  y_temp = factor(y)
+  levs = levels(y_temp)
+  attr(levs, "type") = class(y)
+  y_int = as.integer(y_temp)
+  n_class = length(levs)
+
   n = NROW(cmat)
-  n_l = length(y)
+  n_l = length(y_int)
   n_u = n - n_l
 
   # Y = class_code(y, k = n_class)
-  y_index = cbind(1:n_l, y)
+  y_index = cbind(1:n_l, y_int)
 
   Dmat = numeric(anova_kernel$numK)
   dvec = numeric(anova_kernel$numK)
@@ -371,10 +376,6 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
   # Dmat = Dmat / max_D
 
-
-  # dvec_temp = matrix(1, nrow = n_l, ncol = n_class)
-  # dvec_temp[cbind(1:n_l, y)] = 0
-
   dvec_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   dvec_temp[y_index] = gamma
 
@@ -389,7 +390,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, n_class,
 
   # diag(Dmat) = diag(Dmat) + epsilon_D
 
-  m_index = matrix(1:(n_l * n_class), ncol = n_class)[cbind(1:n_l, y)]
+  m_index = matrix(1:(n_l * n_class), ncol = n_class)[y_index]
   A_mat[m_index, ] = -A_mat[m_index, ]
   A_mat = cbind(-A_mat, diag(1, n_l * n_class))
   A_mat = rbind(A_mat, diag(1, ncol(A_mat)))
