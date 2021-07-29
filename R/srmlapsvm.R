@@ -2,7 +2,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                     lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                     lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
                     adjacency_k = 6, normalized = TRUE, weightType = "Binary",
-                    kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                    kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                     scale = FALSE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
 {
   out = list()
@@ -83,9 +83,9 @@ predict.srmlapsvm = function(object, newx = NULL, newK = NULL)
   # }
 
   if (is.null(newK)) {
-    new_anova_K = make_anovaKernel(newx, rbind(object$x, object$ux), kernel = list(type = object$kernel, par = object$kparam))
+    new_anova_K = make_anovaKernel(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     newK = combine_kernel(new_anova_K, theta = object$opt_theta)
-    # newK = kernelMat(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+    # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
@@ -103,7 +103,7 @@ predict.srmlapsvm = function(object, newx = NULL, newK = NULL)
 cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5,
                  lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)}, theta = NULL,
                  adjacency_k = 6, normalized = FALSE, weightType = "Binary",
-                 kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                 kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                  scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
@@ -153,8 +153,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
     for (i in 1:length(kparam)) {
       par = kparam[i]
 
-      kernel_list = list(type = kernel, par = par)
-      anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
+      anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = kparam)
       # K = combine_kernel(anova_kernel = anova_K, theta = theta)
 
       # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
@@ -164,7 +163,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
       L = make_L_mat(rx, kernel = kernel, kparam = par, graph = graph, weightType = weightType, normalized = normalized)
       # L = fixit(L, epsilon = 0)
 
-      valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel_list)
+      valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel, kparam = kparam)
       valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
       #  Parallel computation on the combination of hyper-parameters
       fold_err = mclapply(1:nrow(params),
@@ -218,8 +217,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
   out$scale = scale
   out$criterion = criterion
   if (optModel) {
-    kernel_list = list(type = kernel, par = opt_param["kparam"])
-    anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
+    anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = opt_param["kparam"])
     opt_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
                                   lambda = opt_param["lambda"], lambda_I = opt_param["lambda_I"], ...)
     out$opt_model = opt_model
@@ -254,9 +252,8 @@ theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
   # K = object$K
   # valid_anova_K = object$valid_anova_K
 
-  kernel_list = list(type = kernel, par = kparam)
-  anova_K = make_anovaKernel(rx, rx, kernel = kernel_list)
-  valid_anova_K = make_anovaKernel(valid_x, rx, kernel_list)
+  anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = kparam)
+  valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel, kparam = kparam)
 
   if (is.null(object$opt_model)) {
     init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, ...)

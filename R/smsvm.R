@@ -1,6 +1,6 @@
 smsvm = function(x = NULL, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
                  lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
-                  kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                  kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                  scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, ...)
 {
   out = list()
@@ -64,7 +64,7 @@ predict.smlapsvm = function(object, newx = NULL, newK = NULL)
 
 cstep.smsvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
                           lambda_seq = 2^{seq(-10, 10, length.out = 100)}, theta = NULL,
-                          kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                          kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                           scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()

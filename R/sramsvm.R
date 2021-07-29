@@ -1,6 +1,6 @@
 sramsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5,
                   lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
-                  kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                  kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                   scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, ...)
 {
   out = list()
@@ -47,9 +47,9 @@ predict.sramsvm = function(object, newx = NULL, newK = NULL)
   # }
 
   if (is.null(newK)) {
-    new_anova_K = make_anovaKernel(newx, object$x, kernel = list(type = object$kernel, par = object$kparam))
+    new_anova_K = make_anovaKernel(newx, object$x, kernel = object$kernel, kparam = object$kparam)
     newK = combine_kernel(new_anova_K, theta = object$opt_theta)
-    # newK = kernelMat(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+    # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
@@ -68,7 +68,7 @@ predict.sramsvm = function(object, newx = NULL, newK = NULL)
 
 cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5,
                         lambda_seq = 2^{seq(-10, 10, length.out = 100)}, theta = NULL,
-                        kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                        kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                         scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
@@ -106,8 +106,7 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
     for (i in 1:length(kparam)) {
       par = kparam[i]
 
-      kernel_list = list(type = kernel, par = par)
-      anova_K = make_anovaKernel(x, x, kernel = kernel_list)
+      anova_K = make_anovaKernel(x, x, kernel = kernel, kparam = par)
 
       if (is.null(theta)) {
         theta = rep(1, anova_K$numK)
@@ -115,7 +114,7 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
 
       K = combine_kernel(anova_K, theta)
 
-      valid_anova_K = make_anovaKernel(valid_x, x, kernel = kernel_list)
+      valid_anova_K = make_anovaKernel(valid_x, x, kernel = kernel, kparam = par)
       valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
 
       #  Parallel computation on the combination of hyper-parameters
@@ -163,8 +162,7 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
   out$scale = scale
   out$criterion = criterion
   if (optModel) {
-    kernel_list = list(type = kernel, par = opt_param["kparam"])
-    anova_K = make_anovaKernel(x, x, kernel = kernel_list)
+    anova_K = make_anovaKernel(x, x, kernel = kernel, kparam = opt_param["kparam"])
     K = combine_kernel(anova_K, theta)
     opt_model = ramsvm_compact(K = K, y = y, gamma = gamma, lambda = opt_param["lambda"], ...)
     out$opt_model = opt_model
@@ -192,9 +190,8 @@ theta_step.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.
   valid_x = object$valid_x
   valid_y = object$valid_y
 
-  kernel_list = list(type = kernel, par = kparam)
-  anova_K = make_anovaKernel(x, x, kernel = kernel_list)
-  valid_anova_K = make_anovaKernel(valid_x, x, kernel_list)
+  anova_K = make_anovaKernel(x, x, kernel = kernel, kparam = kparam)
+  valid_anova_K = make_anovaKernel(valid_x, x, kernel = kernel, kparam = kparam)
 
   if (is.null(object$opt_model)) {
     K = combine_kernel(anova_K, theta)

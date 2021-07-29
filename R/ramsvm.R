@@ -202,7 +202,7 @@ predict.ramsvm = function(object, newx = NULL, newK = NULL, ...) {
 
 
 cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
-                      kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                      kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                       scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   out = list()

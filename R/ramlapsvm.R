@@ -293,7 +293,7 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
 cv.ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 10,
                          lambda_seq = 2^{seq(-10, 15, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                          scale = FALSE, adjacency_k = 6, weightType = "Heatmap", normalized = TRUE,
-                         gamma = 0.5, kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                         gamma = 0.5, kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                          criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   out = list()
