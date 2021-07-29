@@ -280,7 +280,7 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
   W_beta0 = drop(t(beta0) %*% W)
 
   pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
-  pred_class = levs[apply(fit, 1, which.max)]
+  pred_class = levs[apply(pred_y, 1, which.max)]
 
   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
   if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
