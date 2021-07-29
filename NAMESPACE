@@ -1,9 +1,9 @@
-export(smlapsvm, cstep.smlapsvm, theta_step.smlapsvm, mlapsvm_compact, mlapsvm, 
+export(smlapsvm, cstep.smlapsvm, thetastep.smlapsvm, mlapsvm_compact, mlapsvm, 
 	   predict.mlapsvm_compact, predict.mlapsvm, cv.mlapsvm, predict.smlapsvm,
-	   sramlapsvm, cstep.sramlapsvm, theta_step.sramlapsvm, predict.sramlapsvm,
+	   sramlapsvm, cstep.sramlapsvm, thetastep.sramlapsvm, predict.sramlapsvm,
 	   ramlapsvm, predict.ramlapsvm, cv.ramlapsvm,
 	   rmlapsvm, predict.rmlapsvm, cv.rmlapsvm,
-	   srmlapsvm, cstep.srmlapsvm, theta_step.srmlapsvm, predict.srmlapsvm,
+	   srmlapsvm, cstep.srmlapsvm, thetastep.srmlapsvm, predict.srmlapsvm,
 	   generateMultiorange, generateMultiMoon, sim_gen)
 
 exportClasses("ramlapsvm_core", "ramlapsvm", "sramlapsvm",
