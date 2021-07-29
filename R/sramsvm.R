@@ -40,7 +40,7 @@ predict.sramsvm = function(object, newx = NULL, newK = NULL)
   c0vec = model$c0vec
   levs = model$levels
 
-  W = XI_gen(n_class)
+  W = XI_gen(model$n_class)
 
   # if (object$scale) {
   #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)

@@ -62,7 +62,7 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  W = XI_gen(n_class)
+  W = XI_gen(model$n_class)
 
   W_beta0 = drop(t(beta0) %*% W)
 
