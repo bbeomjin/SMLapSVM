@@ -30,7 +30,7 @@ smlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
                     theta = NULL, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                     kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
   
-  if ((gamma == 0 & (type == "rm")) {
+  if ((gamma == 0) & (type == "rm")) {
     cstep_args$gamma = NULL
   }
     
