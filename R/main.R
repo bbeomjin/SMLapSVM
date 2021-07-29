@@ -51,7 +51,7 @@ smlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfol
     cat("CV-error(theta-step):", thetastep_fit$opt_valid_err, "\n")
   }
   
-  out$opt_theta = theta_step_fit$opt_theta
+  out$opt_theta = thetastep_fit$opt_theta
   out$cstep_inform = cstep_fit
   out$thetastep_inform = thetastep_fit
   
