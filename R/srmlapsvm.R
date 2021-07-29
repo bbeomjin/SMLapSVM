@@ -13,10 +13,9 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                      cstep.smlapsvm,
                      cstep.srmlapsvm)
 
-  theta_step_fun = switch(fun_ind,
-                          theta_step.smlapsvm,
-                          theta_step.srmlapsvm)
-
+  thetastep_fun = switch(fun_ind,
+                          thetastep.smlapsvm,
+                          thetastep.srmlapsvm)
 
   cat("Fit c-step \n")
   # cstep_fit = cstep.srmlapsvm(x = x, y = y, ux = ux, gamma = gamma, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
@@ -32,16 +31,16 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
   cstep_fit = do.call(cstep_fun, cstep_args)
 
   cat("Fit theta-step \n")
-  theta_step_fit = theta_step_fun(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
+  thetastep_fit = thetastep_fun(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
 
 
   cat("Fit c-step \n")
   opt_cstep_args = list(x = x, y = y, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                        lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = theta_step_fit$opt_theta,
+                        lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = thetastep_fit$opt_theta,
                         adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                         kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
   # opt_cstep_fit = cstep.srmlapsvm(x = x, y = y, ux = ux, gamma = gamma, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-  #                       lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = theta_step_fit$opt_theta,
+  #                       lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = thetastep_fit$opt_theta,
   #                       adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
   #                       kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
   if (fun_ind == 2) {opt_cstep_args$gamma = gamma}
@@ -49,19 +48,19 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
 
   if (verbose == 1) {
     cat("CV-error(cstep):", cstep_fit$opt_valid_err, "\n")
-	cat("CV-error(theta-step):", theta_step_fit$opt_valid_err, "\n")
+	cat("CV-error(theta-step):", thetastep_fit$opt_valid_err, "\n")
 	cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
   }
 
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$cstep_valid_err = opt_cstep_fit$valid_err
-  out$theta_valid_err = theta_step_fit$valid_err
+  out$theta_valid_err = thetastep_fit$valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
   out$kparam = opt_cstep_fit$opt_param["kparam"]
-  out$opt_theta = theta_step_fit$opt_theta
-  out$theta = theta_step_fit$theta
+  out$opt_theta = thetastep_fit$opt_theta
+  out$theta = thetastep_fit$theta
   out$x = x
   out$y = y
   out$ux = ux
@@ -227,7 +226,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
 }
 
 
-theta_step.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, nCores = 1, ...)
+thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, nCores = 1, ...)
 {
   call = match.call()
   out = list()

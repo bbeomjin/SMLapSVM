@@ -13,29 +13,29 @@ sramlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
                     kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
 
   cat("Fit theta-step \n")
-  theta_step_fit = theta_step.sramlapsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
+  thetastep_fit = thetastep.sramlapsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
 
   cat("Fit c-step \n")
   opt_cstep_fit = cstep.sramlapsvm(x = x, y = y, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                        lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = theta_step_fit$opt_theta,
+                        lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = thetastep_fit$opt_theta,
                         gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                         kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
 
   if (verbose == 1) {
     cat("CV-error(cstep):", cstep_fit$opt_valid_err, "\n")
-    cat("CV-error(theta-step):", theta_step_fit$opt_valid_err, "\n")
+    cat("CV-error(theta-step):", thetastep_fit$opt_valid_err, "\n")
     cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
   }
 
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$cstep_valid_err = opt_cstep_fit$valid_err
-  out$theta_valid_err = theta_step_fit$valid_err
+  out$theta_valid_err = thetastep_fit$valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
   out$kparam = opt_cstep_fit$opt_param["kparam"]
-  out$opt_theta = theta_step_fit$opt_theta
-  out$theta = theta_step_fit$theta
+  out$opt_theta = thetastep_fit$opt_theta
+  out$theta = thetastep_fit$theta
   out$x = x
   out$y = y
   out$ux = ux
@@ -210,7 +210,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
   return(out)
 }
 
-theta_step.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, nCores = 1, ...)
+thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, nCores = 1, ...)
 {
   call = match.call()
   out = list()
