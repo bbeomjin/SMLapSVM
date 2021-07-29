@@ -245,7 +245,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   }
 
 
-  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
+  K = kernelMatrix(rx, rx, kernel = kernel, kparam = kparam)
 
   # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
   # graph = W
@@ -290,7 +290,7 @@ predict.rmlapsvm = function(object, newx = NULL, newK = NULL)
   }
 
   if (is.null(newK)) {
-    newK = kernelMat(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+    newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 

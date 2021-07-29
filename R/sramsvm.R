@@ -81,10 +81,6 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
   lambda_seq = as.numeric(lambda_seq)
   kparam = as.numeric(kparam)
 
-  if (is.null(theta)) {
-    theta = rep(1, p)
-  }
-
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   kparam = sort(kparam, decreasing = FALSE)
 
@@ -112,6 +108,11 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
 
       kernel_list = list(type = kernel, par = par)
       anova_K = make_anovaKernel(x, x, kernel = kernel_list)
+
+      if (is.null(theta)) {
+        theta = rep(1, anova_K$numK)
+      }
+
       K = combine_kernel(anova_K, theta)
 
       valid_anova_K = make_anovaKernel(valid_x, x, kernel = kernel_list)

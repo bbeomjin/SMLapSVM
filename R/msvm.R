@@ -162,7 +162,7 @@ msvm = function(x = NULL, y, lambda, kernel, kparam, scale = FALSE, epsilon = 1e
     scaled = attr(x, "scaled:scale")
   }
 
-  K = kernelMat(x, x, kernel = kernel, kparam = kparam)
+  K = kernelMatrix(x, x, kernel = kernel, kparam = kparam)
   solutions = msvm_compact(K = K, y = y, lambda = lambda, epsilon = epsilon, eig_tol_D = eig_tol_D, epsilon_D = epsilon_D)
 
   out$x = x
@@ -195,7 +195,7 @@ predict.msvm = function(object, newx = NULL, newK = NULL)
   }
 
   if (is.null(newK)) {
-    newK = kernelMat(newx, object$x, kernel = object$kernel, kparam = object$kparam)
+    newK = kernelMatrix(newx, object$x, kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 

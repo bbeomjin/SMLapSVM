@@ -153,7 +153,7 @@ rmsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALSE
     scaled = attr(x, "scaled:scale")
   }
 
-  K = kernelMat(x, x, kernel = kernel, kparam = kparam)
+  K = kernelMatrix(x, x, kernel = kernel, kparam = kparam)
   solutions = rmsvm_compact(K = K, y = y, gamma = gamma, lambda = lambda, epsilon = epsilon, eig_tol_D = eig_tol_D, epsilon_D = epsilon_D)
 
   out$x = x
@@ -188,7 +188,7 @@ predict.rmsvm = function(object, newx = NULL, newK = NULL)
   }
 
   if (is.null(newK)) {
-    newK = kernelMat(newx, object$x, kernel = object$kernel, kparam = object$kparam)
+    newK = kernelMatrix(newx, object$x, kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
@@ -208,7 +208,7 @@ predict.rmsvm = function(object, newx = NULL, newK = NULL)
 
 
 cv.rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
-                      kernel = c("linear", "radial", "poly", "spline", "anova_radial"), kparam = c(1),
+                      kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                       scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   out = list()

@@ -225,7 +225,7 @@ mlapsvm = function(x = NULL, y, ux = NULL, lambda, lambda_I, kernel, kparam, sca
     ux = (ux - matrix(center, nrow = n_u, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_u, ncol = p, byrow = TRUE)
   }
 
-  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
+  K = kernelMatrix(rx, rx, kernel = kernel, kparam = kparam)
 
   # W = RSSL:::adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
   # d = rowSums(W)
@@ -280,7 +280,7 @@ predict.mlapsvm = function(object, newx = NULL, newK = NULL)
   }
 
   if (is.null(newK)) {
-    newK = kernelMat(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+    newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 

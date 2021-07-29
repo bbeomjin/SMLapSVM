@@ -146,7 +146,7 @@ ramsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALS
     scaled = attr(x, "scaled:scale")
   }
 
-  K = kernelMat(x, x, kernel = kernel, kparam = kparam)
+  K = kernelMatrix(x, x, kernel = kernel, kparam = kparam)
   solutions = ramsvm_compact(K = K, y = y, gamma = gamma, lambda = lambda, epsilon = epsilon, eig_tol_D = eig_tol_D, epsilon_D = epsilon_D)
 
   out$x = x
@@ -175,7 +175,7 @@ ramsvm = function(x = NULL, y, gamma = 0.5, lambda, kernel, kparam, scale = FALS
 predict.ramsvm = function(object, newx = NULL, newK = NULL, ...) {
 
   if (is.null(newK)) {
-    newK = kernelMat(newx, object$x, kernel = object$kernel, kparam = object$kparam)
+    newK = kernelMatrix(newx, object$x, kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 

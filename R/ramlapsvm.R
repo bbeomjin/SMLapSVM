@@ -223,10 +223,10 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   }
 
 
-  K = kernelMat(rx, rx, kernel = kernel, kparam = kparam)
+  K = kernelMatrix(rx, rx, kernel = kernel, kparam = kparam)
 
   # K = K + diag(1e-8, n)
-  # K_temp = kernelMat(x, x, kernel = kernel, kparam = kparam) + 1
+  # K_temp = kernelMatrix(x, x, kernel = kernel, kparam = kparam) + 1
 
   # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
   # graph = W
@@ -266,7 +266,7 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
 predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
 
   if (is.null(newK)) {
-    newK = kernelMat(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+    newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
