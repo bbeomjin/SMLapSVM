@@ -203,7 +203,8 @@ cstep.smlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfold
 }
 
 
-thetastep.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, nCores = 1, ...)
+thetastep.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
+                              isCombined = TRUE, optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
   out = list()
@@ -277,14 +278,12 @@ thetastep.smlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.
   out$opt_valid_err = opt_valid_err
   out$valid_err = valid_err
 
-  if (isCombined) {
+  if (optModel) {
     # subK = combine_kernel(anova_K, opt_theta)
     opt_model = smlapsvm_compact(anova_K = anova_K, L = L, theta = opt_theta, y = y, lambda = lambda, lambda_I = lambda_I, ...)
-
-  } else {
-    opt_model = init_model
+    out$opt_model = opt_model
   }
-  out$opt_model = opt_model
+
   class(out) = "smlapsvm"
   return(out)
 }
