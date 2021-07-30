@@ -69,6 +69,8 @@ Y_matrix_gen = function(k, nobs, y) {
 
 }
 
+
+
 beta_kernel = function(y, k, my, warm, lambda, inv_LK){
 
   nobs = length(y)
@@ -386,24 +388,32 @@ code_ramsvm = function(y)
   return(list(yyi = yyi, W = W, Hmatj = Hmatj, Lmatj = Lmatj, y_index = y_index))
 }
 
-# adjacency_knn = function(X, distance = "euclidean", k = 6)
-# {
-#     Ds = as.matrix(dist(X, method = distance))
-#     neighbours = apply(Ds, 1, function(x) sort(x, index.return = TRUE)$ix[2:(k + 1)])
-# 	neighbours = as.integer(neighbours)
-#     adj = as.matrix(Matrix::sparseMatrix(i = rep(1:nrow(X), each = k), j = neighbours, x = 1, dims = c(nrow(X), nrow(X))))
-#     adj = (adj | t(adj)) * 1
-# 	return(adj)
-# }
+data_split = function(y, nfolds, seed = length(y))
+{
+  # k: the number of classes
+  y = as.factor(y)
+  n_data = length(y)
+  n_class = length(levels(y))
+  class_size = table(y)
+  classname = names(class_size)
+  ran = rep(0, n_data)
+  if ((min(class_size) < nfolds) & (nfolds != n_data))
+  {
+    warning('The given fold is bigger than the smallest class size. \n Only a fold size smaller than the minimum class size \n or the same as the sample size (LOOCV) is supported.\n')
+    return(NULL)
+  }
 
-# fixit = function(A, epsilon = .Machine$double.eps)
-# {
-#   eig = eigen(A, symmetric = TRUE)
-#   n = length(eig$values)
-#   eps = epsilon * abs(eig$values[1])
-#   eig$values[eig$values < eps] = eps
-#   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
-# }
+  if (min(class_size) >= nfolds) {
+    set.seed(seed)
+    for (j in 1:n_class) {
+      ran[y == classname[j]] = ceiling(sample(class_size[j]) / (class_size[j] + 1) * nfolds)
+    }
+  }
+  else if (nfolds == n_data) {
+    ran = 1:n_data
+  }
+  return(ran)
+}
 
 fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 {

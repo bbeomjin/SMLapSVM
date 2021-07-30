@@ -10,22 +10,22 @@ srmsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
                           kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
 
   cat("Fit theta-step \n")
-  theta_step_fit = theta_step.srmsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
+  thetastep_fit = thetastep.srmsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
 
   cat("Fit c-step \n")
   opt_cstep_fit = cstep.srmsvm(x = x, y = y, gamma = gamma, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                              lambda_seq = lambda_seq, theta = theta_step_fit$opt_theta,
+                              lambda_seq = lambda_seq, theta = thetastep_fit$opt_theta,
                               kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
 
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$cstep_valid_err = opt_cstep_fit$valid_err
-  out$theta_valid_err = theta_step_fit$valid_err
+  out$theta_valid_err = thetastep_fit$valid_err
   out$opt_model = opt_cstep_fit$opt_model
   out$kernel = kernel
   out$kparam = opt_cstep_fit$opt_param["kparam"]
-  out$opt_theta = theta_step_fit$opt_theta
-  out$theta = theta_step_fit$theta
+  out$opt_theta = thetastep_fit$opt_theta
+  out$theta = thetastep_fit$theta
   out$x = x
   out$y = y
   out$n_class = opt_cstep_fit$n_class
@@ -167,7 +167,7 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
   return(out)
 }
 
-theta_step.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, nCores = 1, ...)
+thetastep.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
   out = list()

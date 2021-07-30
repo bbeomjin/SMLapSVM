@@ -1,65 +1,65 @@
-smsvm = function(x = NULL, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
-                 lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
-                  kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                 scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, ...)
-{
-  out = list()
-  cat("Fit c-step \n")
-  cstep_fit = cstep.smsvm(x = x, y = y, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                          lambda_seq = lambda_seq, theta = NULL,
-                          kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
-
-  cat("Fit theta-step \n")
-  theta_step_fit = theta_step.smsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
-
-  cat("Fit c-step \n")
-  opt_cstep_fit = cstep.smsvm(x = x, y = y, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                              lambda_seq = lambda_seq, theta = theta_step_fit$opt_theta,
-                              kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
-
-  out$opt_param = opt_cstep_fit$opt_param
-  out$opt_valid_err = opt_cstep_fit$opt_valid_err
-  out$cstep_valid_err = opt_cstep_fit$valid_err
-  out$theta_valid_err = theta_step_fit$valid_err
-  out$opt_model = opt_cstep_fit$opt_model
-  out$kernel = kernel
-  out$kparam = opt_cstep_fit$opt_param["kparam"]
-  out$opt_theta = theta_step_fit$opt_theta
-  out$theta = theta_step_fit$theta
-  out$x = x
-  out$y = y
-  out$n_class = opt_cstep_fit$n_class
-  class(out) = "smsvm"
-  return(out)
-}
-
-predict.smlapsvm = function(object, newx = NULL, newK = NULL)
-{
-  model = object$opt_model
-  cmat = model$cmat
-  c0vec = model$c0vec
-  levs = model$levels
-
-  # if (object$scale) {
-  #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
-  # }
-
-  if (is.null(newK)) {
-    new_anova_K = make_anovaKernel(newx, object$x, kernel = object$kernel, kparam = object$kparam)
-    newK = combine_kernel(new_anova_K, theta = object$opt_theta)
-    # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
-    # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
-  }
-
-  pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = model$n_class, byrow = T) + (newK %*% cmat))
-  pred_class = levs[apply(pred_y, 1, which.max)]
-
-  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
-  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
-  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
-
-  return(list(class = pred_class, pred_value = pred_y))
-}
+# smsvm = function(x = NULL, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
+#                  lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
+#                   kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
+#                  scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, ...)
+# {
+#   out = list()
+#   cat("Fit c-step \n")
+#   cstep_fit = cstep.smsvm(x = x, y = y, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
+#                           lambda_seq = lambda_seq, theta = NULL,
+#                           kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
+#
+#   cat("Fit theta-step \n")
+#   thetastep_fit = thetastep.smsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
+#
+#   cat("Fit c-step \n")
+#   opt_cstep_fit = cstep.smsvm(x = x, y = y, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
+#                               lambda_seq = lambda_seq, theta = thetastep_fit$opt_theta,
+#                               kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
+#
+#   out$opt_param = opt_cstep_fit$opt_param
+#   out$opt_valid_err = opt_cstep_fit$opt_valid_err
+#   out$cstep_valid_err = opt_cstep_fit$valid_err
+#   out$theta_valid_err = thetastep_fit$valid_err
+#   out$opt_model = opt_cstep_fit$opt_model
+#   out$kernel = kernel
+#   out$kparam = opt_cstep_fit$opt_param["kparam"]
+#   out$opt_theta = thetastep_fit$opt_theta
+#   out$theta = thetastep_fit$theta
+#   out$x = x
+#   out$y = y
+#   out$n_class = opt_cstep_fit$n_class
+#   class(out) = "smsvm"
+#   return(out)
+# }
+#
+# predict.smlapsvm = function(object, newx = NULL, newK = NULL)
+# {
+#   model = object$opt_model
+#   cmat = model$cmat
+#   c0vec = model$c0vec
+#   levs = model$levels
+#
+#   # if (object$scale) {
+#   #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
+#   # }
+#
+#   if (is.null(newK)) {
+#     new_anova_K = make_anovaKernel(newx, object$x, kernel = object$kernel, kparam = object$kparam)
+#     newK = combine_kernel(new_anova_K, theta = object$opt_theta)
+#     # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+#     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
+#   }
+#
+#   pred_y = (matrix(rep(c0vec, nrow(newK)), ncol = model$n_class, byrow = T) + (newK %*% cmat))
+#   pred_class = levs[apply(pred_y, 1, which.max)]
+#
+#   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+#   if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+#   if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+#
+#   return(list(class = pred_class, pred_value = pred_y))
+# }
 
 
 cstep.smsvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
@@ -166,7 +166,8 @@ cstep.smsvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
   return(out)
 }
 
-theta_step.smsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE, nCores = 1, ...)
+thetastep.smsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)}, isCombined = TRUE,
+                           optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
   out = list()

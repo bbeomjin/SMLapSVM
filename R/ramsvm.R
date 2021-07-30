@@ -93,8 +93,11 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   W_c0vec = drop(t(c0vec) %*% W)
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n, ncol = n_class, byrow = T) + Kcmat)
-  fit_class = apply(fit, 1, which.max)
-  # table(y, fit_class)
+  fit_class = levs[apply(fit, 1, which.max)]
+
+  if (attr(levs, "type") == "factor") {fit_class = factor(fit_class, levels = levs)}
+  if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
+  if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
 
   # Return the output
   out$alpha = alpha_mat
@@ -210,23 +213,22 @@ cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds =
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
 
-  # if (scale) {
-  #   x = scale(x)
-  #   if (!is.null(valid_x)) {
-  #     means = attr(x, "scaled:center")
-  #     stds = attr(x, "scaled:scale")
-  #     valid_x = (valid_x - matrix(means, NROW(x), NCOL(x), byrow = TRUE)) / matrix(stds, NROW(x), NCOL(x), byrow = TRUE)
-  #   }
-  # }
+  if (scale) {
+    x = scale(x)
+    if (!is.null(valid_x)) {
+      means = attr(x, "scaled:center")
+      stds = attr(x, "scaled:scale")
+      valid_x = (valid_x - matrix(means, NROW(valid_x), NCOL(valid_x), byrow = TRUE)) / matrix(stds, NROW(valid_x), NCOL(valid_x), byrow = TRUE)
+    }
+  }
 
   lambda_seq = as.numeric(lambda_seq)
   kparam = as.numeric(kparam)
+  lambda_seq = sort(lambda_seq, decreasing = FALSE)
+  kparam = sort(kparam, decreasing = TRUE)
 
   # The number of classes
   n_class = length(unique(y))
-
-  lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
   params = expand.grid(lambda = lambda_seq, kparam = kparam)
@@ -263,6 +265,44 @@ cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds =
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
     opt_valid_err = min(valid_err)
+  } else {
+    fold_list = data_split(y, nfolds)
+    valid_err = matrix(NA, nrow = nfolds, ncol = nrow(params), dimnames = list(paste0("Fold", 1:nfolds)))
+
+    for (i in 1:nfolds) {
+      cat(nfolds, "-fold CV : ", i / nfolds * 100, "%", "\r", sep = "")
+      # fold = fold_list[[i]]
+      fold = which(fold_list == i)
+      y_fold = y[-fold]
+      x_fold = x[-fold, , drop = FALSE]
+      y_valid = y[fold]
+      x_valid = x[fold, , drop = FALSE]
+
+      #  Parallel computation on the combination of hyper-parameters
+      fold_err = mclapply(1:nrow(params),
+                          function(j) {
+                            msvm_fit = ramsvm(x = x_fold, y = y_fold, gamma = gamma, lambda = params$lambda[j],
+                                              kernel = kernel, kparam = params$kparam[j], ...)
+                            pred_val = predict.ramsvm(msvm_fit, newx = x_valid)
+
+                            if (criterion == "0-1") {
+                              acc = sum(y_valid == pred_val$class) / length(y_valid)
+                              err = 1 - acc
+                            } else {
+                              err = ramsvm_hinge(y_valid, pred_val$pred_value, k = k, gamma = gamma)
+                            }
+                            # return(list(error = err, fit_model = msvm_fit))
+                            return(err)
+                          }, mc.cores = nCores)
+      # valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
+      valid_err[i, ] = unlist(fold_err)
+      # model_list[[i]] = lapply(fold_err, "[[", "fit_model")
+    }
+    mean_valid_err = colMeans(valid_err)
+    opt_ind = max(which(mean_valid_err == min(mean_valid_err)))
+    # opt_ind = min(which(valid_err == min(valid_err)))
+    opt_param = params[opt_ind, ]
+    opt_valid_err = min(mean_valid_err)
   }
 
   out$opt_param = c(lambda = opt_param$lambda, kparam = opt_param$kparam)
@@ -276,7 +316,8 @@ cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds =
   out$kernel = kernel
   out$scale = scale
   if (optModel) {
-    opt_model = ramsvm(x = x, y = y, gamma = gamma, lambda = opt_param$lambda, kernel = kernel, kparam = opt_param$kparam, scale = scale, ...)
+    opt_model = ramsvm(x = x, y = y, gamma = gamma, lambda = opt_param$lambda,
+                       kernel = kernel, kparam = opt_param$kparam, ...)
     out$opt_model = opt_model
   }
   out$call = call
