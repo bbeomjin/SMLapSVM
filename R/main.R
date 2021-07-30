@@ -91,7 +91,7 @@ predict.smlapsvm = function(object, newx = NULL)
                                  kernel = object$cstep_inform$kernel, object$cstep_inform$kparam)
   newK = combine_kernel(new_anova_K, object$opt_theta)
 
-  if (type == "rm") {
+  if (object$type == "rm") {
     pred = predict.rmlapsvm_compact(model, newK = newK)
   } else {
     pred = predict.ramlapsvm_compact(model, newK = newK)
@@ -195,7 +195,7 @@ predict.smsvm = function(object, newx = NULL)
                                  kernel = object$cstep_inform$kernel, object$cstep_inform$kparam)
   newK = combine_kernel(new_anova_K, object$opt_theta)
 
-  if (type == "rm") {
+  if (object$type == "rm") {
     pred = predict.rmsvm_compact(model, newK = newK)
   } else {
     pred = predict.ramsvm_compact(model, newK = newK)
