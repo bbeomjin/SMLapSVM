@@ -44,7 +44,8 @@ smlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, valid_x = NULL, valid_y
     thetastep_opt = TRUE
   }
 
-  thetastep_fit = thetastep_fun(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
+  thetastep_fit = thetastep_fun(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined,
+                                optModel = thetastep_opt, nCores = nCores, ...)
 
   if (verbose == 1) {
     cat("CV-error(cstep):", cstep_fit$opt_valid_err, "\n")

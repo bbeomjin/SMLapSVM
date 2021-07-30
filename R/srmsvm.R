@@ -190,10 +190,12 @@ thetastep.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.ou
 
   if (is.null(object$opt_model)) {
     K = combine_kernel(anova_K, theta)
-    init_model = rmsvm_compact(K = K, y = y, gamma = gamma, lambda = lambda, ...)
+    opt_model = rmsvm_compact(K = K, y = y, gamma = gamma, lambda = lambda, ...)
   } else {
-    init_model = object$opt_model
+    opt_model = object$opt_model
   }
+
+  init_model = opt_model
 
   fold_err = mclapply(1:length(lambda_theta_seq),
                       function(j) {
@@ -236,7 +238,7 @@ thetastep.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.ou
   out$opt_valid_err = opt_valid_err
   out$valid_err = valid_err
 
-  if (isCombined) {
+  if (optModel) {
     optK = combine_kernel(anova_K, opt_theta)
     opt_model = rmsvm_compact(K = optK, y = y, gamma = gamma, lambda = lambda, ...)
 
