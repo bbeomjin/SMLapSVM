@@ -75,6 +75,30 @@ smlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, valid_x = NULL, valid_y
   return(out)
 }
 
+predict.smlapsvm = function(object, newx = NULL)
+{
+  if (is.null(newx)) {
+    newx = object$cstep_inform$x
+  }
+
+  if (is.null(object$opt_model)) {
+    model = object$thetastep_inform$opt_model
+  } else {
+    model = object$opt_model
+  }
+
+  new_anova_K = make_anovaKernel(newx, rbind(object$cstep_inform$x, object$cstep_inform$ux),
+                                 kernel = object$cstep_inform$kernel, object$cstep_inform$kparam)
+  newK = combine_kernel(new_anova_K, object$opt_theta)
+
+  if (type == "rm") {
+    pred = predict.rmlapsvm_compact(model, newK = newK)
+  } else {
+    pred = predict.ramlapsvm_compact(model, newK = newK)
+  }
+  return(list(class = pred$class, pred_value = pred$pred_value))
+}
+
 
 
 smsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, type = c("rm", "ram"),
@@ -154,5 +178,29 @@ smsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
   return(out)
 }
 
+
+predict.smsvm = function(object, newx = NULL)
+{
+  if (is.null(newx)) {
+    newx = object$cstep_inform$x
+  }
+
+  if (is.null(object$opt_model)) {
+    model = object$thetastep_inform$opt_model
+  } else {
+    model = object$opt_model
+  }
+
+  new_anova_K = make_anovaKernel(newx, object$cstep_inform$x,
+                                 kernel = object$cstep_inform$kernel, object$cstep_inform$kparam)
+  newK = combine_kernel(new_anova_K, object$opt_theta)
+
+  if (type == "rm") {
+    pred = predict.rmsvm_compact(model, newK = newK)
+  } else {
+    pred = predict.ramsvm_compact(model, newK = newK)
+  }
+  return(list(class = pred$class, pred_value = pred$pred_value))
+}
 
 

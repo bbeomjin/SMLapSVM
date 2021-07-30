@@ -601,4 +601,3 @@ smlapsvm_compact = function(anova_K, L, theta, y, lambda, lambda_I, epsilon = 1e
 
 
 
-
