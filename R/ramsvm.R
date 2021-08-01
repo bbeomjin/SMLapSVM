@@ -7,7 +7,7 @@ ramsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D =
   attr(levs, "type") = class(y)
   y_int = as.integer(y_temp)
 
-  n_class = length(y_int)
+  n_class = length(levs)
   n = length(y_int)
   qp_dim = n * n_class
 
