@@ -268,7 +268,8 @@ find_theta.smsvm = function(y, anova_kernel, cmat, c0vec, lambda, lambda_theta, 
   levs = levels(y_temp)
   attr(levs, "type") = class(y)
   y_int = as.integer(y_temp)
-  n_class = length(levels)
+  n_class = length(levs)
+
   # standard LP form :
   # min a^T x , subject to A1x <= a1
   n = length(y_int)
