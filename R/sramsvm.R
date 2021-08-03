@@ -16,14 +16,9 @@ sramsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfo
 
   cat("Fit theta-step \n")
 
-  if (optModel) {
-    thetastep_opt = FALSE
-  } else {
-    thetastep_opt = TRUE
-  }
 
   thetastep_fit = thetastep.sramsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined,
-                                    optModel = thetastep_opt, nCores = nCores, ...)
+                                    optModel = FALSE, nCores = nCores, ...)
 
   if (verbose == 1)
 
