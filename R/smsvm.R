@@ -128,7 +128,7 @@ cstep.smsvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
                                 # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
                               }
                             } else {
-                              smsvm_fit = NULL
+                              msvm_fit = NULL
                               err = Inf
                             }
                             return(list(error = err, fit_model = msvm_fit))
