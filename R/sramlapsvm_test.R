@@ -427,7 +427,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   n_class = length(levs)
   
   # max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
-  anova_K$K = lapply(1:anova_K$numK, function(i) {
+  anova_K$K = lapply(anova_K$K, function(x) {
     diag(x) = diag(x) + max(abs(x)) * epsilon_I
     return(x)
   })
