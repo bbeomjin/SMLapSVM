@@ -137,6 +137,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfo
       # graph = W
       graph = make_knn_graph_mat(rx, k = adjacency_k)
       L = make_L_mat(rx, kernel = kernel, kparam = par, graph = graph, weightType = weightType, normalized = normalized)
+      diag(L) = diag(L) + max(abs(L)) * 1e-8
       # L = fixit(L, epsilon = 0)
       
       valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel, kparam = par)
@@ -348,9 +349,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
     # temp_A = NULL
     for (q in 1:(n_class - 1)) {
       cvec = cmat[, q]
-      KLK_temp = anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]]
-      diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
-      temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% KLK_temp %*% cvec
+      temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
       temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
     }
     Dmat[j] = temp_D
@@ -428,7 +427,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   n_class = length(levs)
   
   # max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
-  anova_K$K = lapply(anova_K$K, function(x) {
+  anova_K$K = lapply(1:anova_K$numK, function(i) {
     diag(x) = diag(x) + max(abs(x)) * epsilon_I
     return(x)
   })
@@ -456,11 +455,10 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   
   KLK = 0
   for (i in 1:anova_K$numK) {
-    KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-    diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
-    KLK = KLK + theta[i]^2 * KLK_temp
+    KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
   
+  # max_K = sum(theta * max_K_vec)
   # max_K = max(abs(K))
   # diag(K) = diag(K) + max_K * epsilon_I
   
@@ -470,7 +468,6 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   max_K_KLK = max(lambda_K + lambda_KLK)
   K_KLK = lambda_K + lambda_KLK
   inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
-  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I, K %*% t(J))
   
   Q = J %*% K %*% inv_K_KLK
   # Q = J %*% K %*% inv_KLK
@@ -659,6 +656,3 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   out$levels = levs
   return(out)
 }
-
-
-
