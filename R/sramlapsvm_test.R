@@ -151,7 +151,7 @@ cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
       fold_err = mclapply(1:nrow(params),
                           function(j) {
                             error = try({
-                              msvm_fit = 2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma, ...)
+                              msvm_fit = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma, ...)
                               # msvm_fit = angle_lapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma)
                             })
                             
@@ -201,7 +201,7 @@ cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
   out$criterion = criterion
   if (optModel) {
     anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = opt_param["kparam"])
-    opt_model = 2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = opt_param["lambda"], lambda_I = opt_param["lambda_I"], gamma = gamma, ...)
+    opt_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = opt_param["lambda"], lambda_I = opt_param["lambda_I"], gamma = gamma, ...)
     # opt_model = angle_lapsvm_core(K = K, L = L, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, gamma = gamma)
     out$opt_model = opt_model
   }
