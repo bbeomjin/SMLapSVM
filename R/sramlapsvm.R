@@ -348,7 +348,9 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
     # temp_A = NULL
     for (q in 1:(n_class - 1)) {
       cvec = cmat[, q]
-      temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
+      KLK_temp = anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]]
+      diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
+      temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% KLK_temp %*% cvec
       temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
     }
     Dmat[j] = temp_D
@@ -425,10 +427,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   n_class = length(levs)
 
-  max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
-  anova_K$K = lapply(1:anova_K$numK, function(i) {
-    x = anova_K$K[[i]]
-    diag(x) = diag(x) + max_K_vec[i] * epsilon_I
+  # max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
+  anova_kernel$K = lapply(anova_kernel$K, function(x) {
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
     return(x)
   })
 
@@ -455,10 +456,11 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   KLK = 0
   for (i in 1:anova_K$numK) {
-    KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+    KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+    diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
+    KLK = KLK + theta[i]^2 * KLK_temp
   }
 
-  max_K = sum(theta * max_K_vec)
   # max_K = max(abs(K))
   # diag(K) = diag(K) + max_K * epsilon_I
 
@@ -466,9 +468,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   lambda_KLK = n_l * lambda_I / n^2 * KLK
 
   max_K_KLK = max(lambda_K + lambda_KLK)
-  K_KLK = lambda_K + lambda_KLK + diag((max_K_KLK - n_l * lambda * max_K) * epsilon_I, n)
-  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I, K %*% t(J))
+  K_KLK = lambda_K + lambda_KLK
+  inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I, K %*% t(J))
 
   Q = J %*% K %*% inv_K_KLK
   # Q = J %*% K %*% inv_KLK
