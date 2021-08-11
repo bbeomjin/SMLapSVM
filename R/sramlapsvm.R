@@ -1,25 +1,25 @@
 sramlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
-                    lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
-                    lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
-                    gamma = 0.5, adjacency_k = 6, normalized = FALSE, weightType = "Binary",
-                    kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                    scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
+                      lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
+                      lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
+                      gamma = 0.5, adjacency_k = 6, normalized = FALSE, weightType = "Binary",
+                      kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
+                      scale = TRUE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
 {
   out = list()
   cat("Fit c-step \n")
   cstep_fit = cstep.sramlapsvm(x = x, y = y, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                    lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = NULL,
-                    gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
-                    kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
+                               lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = NULL,
+                               gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
+                               kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
 
   cat("Fit theta-step \n")
   thetastep_fit = thetastep.sramlapsvm(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
 
   cat("Fit c-step \n")
   opt_cstep_fit = cstep.sramlapsvm(x = x, y = y, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                        lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = thetastep_fit$opt_theta,
-                        gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
-                        kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
+                                   lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = thetastep_fit$opt_theta,
+                                   gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
+                                   kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
 
   if (verbose == 1) {
     cat("CV-error(cstep):", cstep_fit$opt_valid_err, "\n")
@@ -78,10 +78,10 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
 
 
 cstep.sramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
-                 lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)}, gamma = 0.5,
-                 theta = NULL, adjacency_k = 6, normalized = FALSE, weightType = "Binary",
-                 kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                 scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+                            lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)}, gamma = 0.5,
+                            theta = NULL, adjacency_k = 6, normalized = FALSE, weightType = "Binary",
+                            kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
+                            scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
   kernel = match.arg(kernel)
@@ -255,7 +255,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                           if (isCombined) {
                             # subK = combine_kernel(anova_K, theta)
                             init_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I,
-                                                         gamma = gamma, ...)
+                                                            gamma = gamma, ...)
                             # init_model = angle_lapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma)
                           }
                         })
@@ -348,9 +348,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
     # temp_A = NULL
     for (q in 1:(n_class - 1)) {
       cvec = cmat[, q]
-      KLK_temp = anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]]
-      diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
-      temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% KLK_temp %*% cvec
+      temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
       temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
     }
     Dmat[j] = temp_D
@@ -427,9 +425,10 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   n_class = length(levs)
 
-  # max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
-  anova_K$K = lapply(anova_K$K, function(x) {
-    diag(x) = diag(x) + max(abs(x)) * epsilon_I
+  max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
+  anova_K$K = lapply(1:anova_K$numK, function(i) {
+    x = anova_K$K[[i]]
+    diag(x) = diag(x) + max_K_vec[i] * epsilon_I
     return(x)
   })
 
@@ -456,11 +455,10 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   KLK = 0
   for (i in 1:anova_K$numK) {
-    KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-    diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
-    KLK = KLK + theta[i]^2 * KLK_temp
+    KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
+  max_K = sum(theta * max_K_vec)
   # max_K = max(abs(K))
   # diag(K) = diag(K) + max_K * epsilon_I
 
@@ -468,9 +466,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   lambda_KLK = n_l * lambda_I / n^2 * KLK
 
   max_K_KLK = max(lambda_K + lambda_KLK)
-  K_KLK = lambda_K + lambda_KLK
+  K_KLK = lambda_K + lambda_KLK + diag((max_K_KLK - n_l * lambda * max_K) * epsilon_I, n)
   inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
-  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I, K %*% t(J))
 
   Q = J %*% K %*% inv_K_KLK
   # Q = J %*% K %*% inv_KLK
@@ -659,6 +656,3 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   out$levels = levs
   return(out)
 }
-
-
-
