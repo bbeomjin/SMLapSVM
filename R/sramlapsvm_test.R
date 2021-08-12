@@ -475,9 +475,12 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   K_KLK = lambda_K + lambda_KLK
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
   # inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
-  inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
-  inv_K_KLK = inv_K_KLK %*% K %*% t(J)
+
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
+  # inv_K_KLK = inv_K_KLK %*% K %*% t(J)
+
+  inv_K_KLK = fixit(solve(K_KLK, tol = eig_tol_I), 0) %*% K %*% t(J)
 
   Q = J %*% K %*% inv_K_KLK
   # Q = J %*% K %*% inv_KLK
@@ -492,12 +495,12 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
     D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
     Amat[, j] = -Lmatj[[j]]
   }
-
-  # D = fixit(D, epsilon = eig_tol_D)
+  D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   # D = D / max_D
   # diag(D) = diag(D) + epsilon_D
   diag(D) = diag(D) + max_D * epsilon_D
+
   #################################### for test #######################################
   # alpha_mat = matrix(rnorm(n_l * n_class), n_l, n_class)
   # temp_vec = 0
