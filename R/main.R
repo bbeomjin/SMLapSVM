@@ -66,6 +66,7 @@ smlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, valid_x = NULL, valid_y
       cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
     }
 
+    out$opt_param = opt_cstep_fit$opt_param
     out$opt_model = opt_cstep_fit$opt_model
     out$opt_valid_err = opt_cstep_fit$opt_valid_err
     out$valid_err = opt_cstep_fit$valid_err
@@ -169,6 +170,7 @@ smsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
       cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
     }
 
+    out$opt_param = opt_cstep_fit$opt_param
     out$opt_model = opt_cstep_fit$opt_model
     out$opt_valid_err = opt_cstep_fit$opt_valid_err
     out$valid_err = opt_cstep_fit$valid_err

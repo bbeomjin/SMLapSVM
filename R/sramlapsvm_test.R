@@ -11,22 +11,22 @@ sramlapsvm2 = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, n
                                lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = NULL,
                                gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                                kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
-  
+
   cat("Fit theta-step \n")
   thetastep_fit = thetastep.sramlapsvm2(cstep_fit, lambda_theta_seq = lambda_theta_seq, isCombined = isCombined, nCores = nCores, ...)
-  
+
   cat("Fit c-step \n")
   opt_cstep_fit = cstep.sramlapsvm2(x = x, y = y, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
                                    lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq, theta = thetastep_fit$opt_theta,
                                    gamma = gamma, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                                    kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
-  
+
   if (verbose == 1) {
     cat("CV-error(cstep):", cstep_fit$opt_valid_err, "\n")
     cat("CV-error(theta-step):", thetastep_fit$opt_valid_err, "\n")
     cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
   }
-  
+
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$cstep_valid_err = opt_cstep_fit$valid_err
@@ -50,29 +50,29 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
   beta = model$beta
   beta0 = model$beta0
   levs = model$levels
-  
+
   # if (object$scale) {
   #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
   # }
-  
+
   if (is.null(newK)) {
     new_anova_K = make_anovaKernel(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     newK = combine_kernel(new_anova_K, theta = object$opt_theta)
     # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
-  
+
   W = XI_gen(model$n_class)
-  
+
   W_beta0 = drop(t(beta0) %*% W)
-  
+
   pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = model$n_class, byrow = T) + ((newK %*% beta) %*% W)
   pred_class = levs[apply(pred_y, 1, which.max)]
-  
+
   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
   if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
   if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
-  
+
   return(list(class = pred_class, pred_value = pred_y))
 }
 
@@ -86,37 +86,37 @@ cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
   call = match.call()
   kernel = match.arg(kernel)
   criterion = match.arg(criterion)
-  
+
   out = list()
   p = ncol(x)
-  
+
   lambda_seq = as.numeric(lambda_seq)
   lambda_I_seq = as.numeric(lambda_I_seq)
   kparam = as.numeric(kparam)
-  
+
   if (is.null(theta)) {
     theta = rep(1, p)
   }
-  
+
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
   kparam = sort(kparam, decreasing = FALSE)
-  
+
   # Combination of hyper-parameters
   params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq)
-  
+
   if (!is.null(valid_x) & !is.null(valid_y)) {
     model_list = vector("list", 1)
     fold_list = NULL
-    
+
     n_l = NROW(x)
     n_u = NROW(ux)
     n = n_l + n_u
     rx = rbind(x, ux)
-    
+
     center = rep(0, p)
     scaled = rep(1, p)
-    
+
     if (scale) {
       rx = scale(rx)
       center = attr(rx, "scaled:center")
@@ -124,41 +124,41 @@ cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
       x = (x - matrix(center, nrow = n_l, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_l, ncol = p, byrow = TRUE)
       ux = (ux - matrix(center, nrow = n_u, ncol = p, byrow = TRUE)) / matrix(scaled, nrow = n_u, ncol = p, byrow = TRUE)
     }
-    
+
     valid_err_mat = matrix(NA, nrow = length(kparam), ncol = nrow(params))
-    
+
     for (i in 1:length(kparam)) {
       par = kparam[i]
-      
+
       anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = par)
       # K = combine_kernel(anova_kernel = anova_K, theta = theta)
-      
+
       # W = adjacency_knn(rx, distance = "euclidean", k = adjacency_k)
       # graph = W
       graph = make_knn_graph_mat(rx, k = adjacency_k)
       L = make_L_mat(rx, kernel = kernel, kparam = par, graph = graph, weightType = weightType, normalized = normalized)
-      diag(L) = diag(L) + max(abs(L)) * 1e-12
+      # diag(L) = diag(L) + max(abs(L)) * 1e-12
       # L = fixit(L, epsilon = 0)
-      
+
       valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel, kparam = par)
       valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
       #  Parallel computation on the combination of hyper-parameters
-      
+
       # fit = angle_lapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], maxiter = 1e+4)
-      
+
       # predict.angle_lapsvm_core(fit, newK = K[1:30, ])[[2]]
       # table(predict.angle_lapsvm_core(fit, newK = K[1:30, ])[[1]], y)
-      
+
       fold_err = mclapply(1:nrow(params),
                           function(j) {
                             error = try({
                               msvm_fit = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma, ...)
                               # msvm_fit = angle_lapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma)
                             })
-                            
+
                             if (!inherits(error, "try-error")) {
                               pred_val = predict.ramlapsvm_compact(msvm_fit, newK = valid_K)$class
-                              
+
                               if (criterion == "0-1") {
                                 acc = sum(valid_y == pred_val) / length(valid_y)
                                 err = 1 - acc
@@ -232,27 +232,27 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
   valid_x = object$valid_x
   valid_y = object$valid_y
   L = object$L
-  
+
   # anova_K = object$anova_K
   # K = object$K
   # valid_anova_K = object$valid_anova_K
-  
+
   anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = kparam)
   valid_anova_K = make_anovaKernel(valid_x, rx, kernel = kernel, kparam = kparam)
-  
+
   if (is.null(object$opt_model)) {
     init_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
   } else {
     init_model = object$opt_model
   }
-  
+
   fold_err = mclapply(1:length(lambda_theta_seq),
                       function(j) {
                         error = try({
                           theta = find_theta.sramlapsvm2(y = y, anova_kernel = anova_K, L = L, cmat = init_model$beta, c0vec = init_model$beta0,
                                                         gamma = gamma, lambda = lambda, lambda_I = lambda_I,
                                                         lambda_theta = lambda_theta_seq[j], ...)
-                          
+
                           if (isCombined) {
                             # subK = combine_kernel(anova_K, theta)
                             init_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I,
@@ -260,11 +260,11 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
                             # init_model = angle_lapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma)
                           }
                         })
-                        
+
                         if (!inherits(error, "try-error")) {
                           valid_subK = combine_kernel(valid_anova_K, theta)
                           pred_val = predict.ramlapsvm_compact(init_model, newK = valid_subK)$class
-                          
+
                           if (criterion == "0-1") {
                             acc = sum(valid_y == pred_val) / length(valid_y)
                             err = 1 - acc
@@ -275,7 +275,7 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
                           err = Inf
                           theta = rep(0, anova_K$numK)
                         }
-                        
+
                         return(list(error = err, theta = theta))
                       }, mc.cores = nCores)
   valid_err = sapply(fold_err, "[[", "error")
@@ -284,14 +284,14 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
   opt_lambda_theta = lambda_theta_seq[opt_ind]
   opt_theta = theta_seq[, opt_ind]
   opt_valid_err = min(valid_err)
-  
+
   out$opt_lambda_theta = opt_lambda_theta
   out$opt_ind = opt_ind
   out$opt_theta = opt_theta
   out$theta_seq = theta_seq
   out$opt_valid_err = opt_valid_err
   out$valid_err = valid_err
-  
+
   if (optModel) {
     # subK = combine_kernel(anova_K, opt_theta)
     opt_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = opt_theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
@@ -309,39 +309,39 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
     theta = rep(1, anova_kernel$numK)
     return(theta)
   }
-  
+
   if (anova_kernel$numK == 1)
   {
     cat("Only one kernel", "\n")
     return(c(1))
   }
-  
-  # anova_kernel_orig = anova_kernel
+
+  anova_kernel_orig = anova_kernel
   anova_kernel$K = lapply(anova_kernel$K, function(x) {
     diag(x) = diag(x) + max(abs(x)) * epsilon_I
     return(x)
   })
-  
+
   y_temp = factor(y)
   levs = levels(y_temp)
   attr(levs, "type") = class(y)
   y_int = as.integer(y_temp)
   n_class = length(levs)
-  
+
   # Standard QP form :
   # min
   n = NROW(cmat)
   n_l = length(y_int)
   n_u = n - n_l
-  
+
   trans_Y = Y_matrix_gen(n_class, nobs = n_l, y = y_int)
   Y_code = XI_gen(n_class)
   # Y_code = Y_matrix_gen(n_class, nobs = n_class, y = 1:n_class)
   y_index = cbind(1:n_l, y_int)
-  
+
   cmat = as.matrix(cmat)
   c0vec = as.vector(c0vec)
-  
+
   Dmat = numeric(anova_kernel$numK)
   dvec = numeric(anova_kernel$numK)
   for (j in 1:anova_kernel$numK) {
@@ -351,14 +351,14 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
     for (q in 1:(n_class - 1)) {
       cvec = cmat[, q]
       KLK_temp = anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]]
-      # diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
+      diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
       temp_D = temp_D + n_l * lambda_I / n^2 * t(cvec) %*% KLK_temp %*% cvec
       temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
     }
     Dmat[j] = temp_D
     dvec[j] = temp_d
   }
-  
+
   A_mat = NULL
   for (j in 1:anova_kernel$numK) {
     temp_A = NULL
@@ -368,18 +368,18 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
     }
     A_mat = cbind(A_mat, temp_A)
   }
-  
+
   max_D = max(abs(Dmat))
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
   diag(Dmat) = diag(Dmat) + max_D * epsilon_D
   # Dmat = fixit(Dmat, epsilon = eig_tocl_D, is_diag = TRUE)
-  
-  
+
+
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   # diag(Dmat) = diag(Dmat) + 1e-8
   # Dmat = Dmat / max_D
-  
+
   dvec_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   dvec_temp[y_index] = gamma
   # dvec_temp = as.vector(Y)
@@ -389,7 +389,7 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
   # dvec = dvec / max_D
   # solve QP
   # diag(Dmat) = diag(Dmat) + epsilon
-  
+
   m_index = matrix(1:(n_l * n_class), ncol = n_class)[y_index]
   A_mat[m_index, ] = -A_mat[m_index, ]
   A_mat = cbind(-A_mat, diag(1, n_l * n_class))
@@ -397,13 +397,13 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
   A_theta = cbind(diag(-1, anova_kernel$numK), matrix(0, anova_kernel$numK, (ncol(A_mat) - anova_kernel$numK)))
   A_mat = rbind(A_mat, A_theta)
   #    print(ncol(A.mat))
-  
+
   bb = rowSums(sapply(1:(n_class - 1), function(x) trans_Y[, x] * c0vec[x]))
   bb_yi = (n_class - 1) - bb
   bb_j = 1 + matrix(rowSums(t(Y_code) * matrix(c0vec, nrow = ncol(Y_code), ncol = nrow(Y_code), byrow = TRUE)), nrow = n_l, ncol = n_class, byrow = TRUE)
   bb_j[y_index] = bb_yi
   bvec = c(as.vector(bb_j), rep(0, anova_kernel$numK + n_l * n_class), rep(-1, anova_kernel$numK))
-  
+
   #    print(A.mat)
   #    print(bvec)
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
@@ -419,68 +419,69 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
 sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
                               eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
 {
-  
+
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
   y_temp = factor(y)
   levs = levels(y_temp)
   attr(levs, "type") = class(y)
   y_int = as.integer(y_temp)
-  
+
   n_class = length(levs)
-  
-  # anova_K_orig = anova_K
+
+  anova_K_orig = anova_K
   # max_K_vec = sapply(anova_K$K, function(x) {return(max(abs(x)))})
   anova_K$K = lapply(anova_K$K, function(x) {
     diag(x) = diag(x) + max(abs(x)) * epsilon_I
     return(x)
   })
-  
+
   K = combine_kernel(anova_K, theta = theta)
   # K = (K + t(K)) / 2
-  
+
   if (sum(K) == 0) {
     diag(K) = 1
   }
-  
+
   n = nrow(K)
   n_l = length(y_int)
   n_u = n - n_l
   qp_dim = n_l * n_class
-  
+
   code_mat = code_ramsvm(y_int)
   yyi = code_mat$yyi
   W = code_mat$W
   y_index = code_mat$y_index
   Hmatj = code_mat$Hmatj
   Lmatj = code_mat$Lmatj
-  
+
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
-  
+
   KLK = 0
   for (i in 1:anova_K$numK) {
-    KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-    # diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
+    KLK_temp = anova_K_orig$K[[i]] %*% L %*% anova_K_orig$K[[i]]
+    diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
     KLK = KLK + theta[i]^2 * KLK_temp
   }
-  
+
   # max_K = sum(theta * max_K_vec)
   # max_K = max(abs(K))
   # diag(K) = diag(K) + max_K * epsilon_I
-  
+
   lambda_K = n_l * lambda * K
   lambda_KLK = n_l * lambda_I / n^2 * KLK
-  
+
   max_K_KLK = max(lambda_K + lambda_KLK)
   K_KLK = lambda_K + lambda_KLK
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
-  
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
+  inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
+
   Q = J %*% K %*% inv_K_KLK
   # Q = J %*% K %*% inv_KLK
-  
+
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
-  
+
   # Compute Q = K x inv_LK
   D = 0
   Amat = matrix(0, n_l * n_class, n_class - 1)
@@ -488,8 +489,8 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
     D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
     Amat[, j] = -Lmatj[[j]]
   }
-  
-  D = fixit(D, epsilon = eig_tol_D)
+
+  # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   # D = D / max_D
   # diag(D) = diag(D) + epsilon_D
@@ -503,24 +504,24 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   # }
   # temp = as.vector(alpha_mat) %*% Hmatj[[1]] %*% J %*% K
   #################################### for test #######################################
-  
-  
+
+
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
-  
+
   dvec = -g
   # dvec = -g / max_D
-  
+
   # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
   Amat = cbind(Amat, diag(-1, n_l * n_class), diag(1, n_l * n_class))
-  
+
   # (3) compute Ama
-  
+
   # (4) compute bvec
   # bvec = rep(0, (2 * qp_dim + n_class))
-  
+
   bvec_temp = matrix(gamma - 1, nrow = n_l, ncol = n_class)
   bvec_temp[y_index] = -gamma
   if (gamma == 0 | gamma == 1) {
@@ -528,7 +529,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   }
   # bvec = c(rep(0, qp_dim + n_class), as.vector(bvec_temp))
   bvec = c(rep(0, n_class - 1), as.vector(bvec_temp), rep(0, n_l * n_class))
-  
+
   # for (j in 1:n_class) {
   #   for (i in 1:n_l) {
   #     flag = 0
@@ -542,30 +543,30 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   #     }
   #   }
   # }
-  
+
   # remove one redudant constraint
   # Amat1 = Amat[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class)), ]
   # bvec1 = bvec[c(1:(n_class - 1), (n_class + 1):(2 * qp_dim + n_class))]
-  
+
   # (5) find solution by solve.QP
-  
+
   nonzero = find_nonzero(Amat)
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
-  
+
   dual = solve.QP.compact(D, dvec, Amat, Aind, bvec, meq = (n_class - 1))
   # dual_temp = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
-  
+
   alpha = dual$solution
   alpha[alpha < 0] = 0
-  
+
   alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
   # alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
-  
+
   # for (j in 1:n_class) {
   #   alpha_mat[y != j, j][alpha_mat[y != j, j] > (1 - gamma)] = (1 - gamma)
   # }
-  
+
   # for (j in 1:n_class) {
   #   for (i in 1:n_l) {
   #     if (y[i] == j & (alpha[(j - 1) * n_l + i] > gamma)) {
@@ -576,30 +577,30 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   #     }
   #   }
   # }
-  
+
   # alpha_vec = as.vector(alpha_mat)
-  
+
   # cmat = matrix(0, n, n_class - 1)
   # for (k in 1:(n_class - 1)) {
   #   cmat[, k] = inv_KLK %*% K %*% t(J) %*% t(Hmatj[[k]]) %*% alpha_vec
   # }
-  
+
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
     cmat[, k] = inv_K_KLK %*% t(Hmatj[[k]]) %*% alpha
   }
-  
+
   # find b vector using LP
   Kcmat = (J %*% K %*% cmat) %*% W
-  
+
   # table(y, apply(Kcmat, 1, which.max))
-  
-  
+
+
   alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   alp_temp[y_index] = gamma
-  
+
   alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
-  
+
   # alp = rep((1 - gamma), (qp_dim + 2 * n_class))
   # for (j in 1:n_class) {
   #   for (i in 1:n_l) {
@@ -609,29 +610,29 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   #   }
   # }
   # alp[(qp_dim + 1):(qp_dim + 2 * n_class)] = 0
-  
+
   # constraint matrix and vector
   # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
   Alp1 = diag(qp_dim)
   Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
-  
+
   for (i in 1:(n_class - 1)) {
     Alp2[, (2 * i - 1)] = Lmatj[[i]]
     Alp2[, (2 * i)] = -Lmatj[[i]]
   }
-  
+
   Alp = cbind(Alp1, Alp2)
-  
+
   blp_temp = Kcmat + 1
   blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
   blp = as.vector(blp_temp)
-  
-  
+
+
   # print(dim(Alp))
   # print(length(blp))
-  
+
   ############################################################################
-  
+
   # constraint directions
   const_dir = rep(">=", qp_dim)
   # const_dir[1] = "="
@@ -640,7 +641,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   for(j in 1:(n_class - 1)) {
     c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
   }
-  
+
   W_c0vec = drop(t(c0vec) %*% W)
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
@@ -649,7 +650,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
   if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
   # table(y, fit_class)
-  
+
   # Return the output
   out$alpha = alpha_mat
   out$beta = cmat
