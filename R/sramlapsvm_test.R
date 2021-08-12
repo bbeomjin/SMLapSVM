@@ -471,7 +471,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   lambda_K = n_l * lambda * K
   lambda_KLK = n_l * lambda_I / n^2 * KLK
 
-  max_K_KLK = max(lambda_K + lambda_KLK)
+  # max_K_KLK = max(lambda_K + lambda_KLK)
   K_KLK = lambda_K + lambda_KLK
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
   inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
