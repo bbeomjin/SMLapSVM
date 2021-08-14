@@ -470,13 +470,13 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
   # inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
   inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
-  inv_temp = matrix(0, nrow = nrow(inv_K_KLK), ncol = ncol(inv_K_KLK))
+  # inv_temp = matrix(0, nrow = nrow(inv_K_KLK), ncol = ncol(inv_K_KLK))
   # inv_temp[lower.tri(inv_temp)] = inv_K_KLK[lower.tri(inv_K_KLK)]
-  inv_temp[lower.tri(inv_temp)] = inv_K_KLK[lower.tri(inv_K_KLK)]
-  inv_temp = inv_temp + t(inv_temp)
-  diag(inv_temp) = diag(inv_K_KLK)
-  inv_K_KLK = inv_temp
-  # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
+  # inv_temp[lower.tri(inv_temp)] = inv_K_KLK[lower.tri(inv_K_KLK)]
+  # inv_temp = inv_temp + t(inv_temp)
+  # diag(inv_temp) = diag(inv_K_KLK)
+  # inv_K_KLK = inv_temp
+  inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   inv_K_KLK = inv_K_KLK %*% K %*% t(J)
 
   Q = J %*% K %*% inv_K_KLK
