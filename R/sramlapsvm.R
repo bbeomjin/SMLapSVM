@@ -460,7 +460,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   }
   KLK = (KLK + t(KLK)) / 2
 
-  max_K = sum(theta * max_K_vec)
+  # max_K = sum(theta * max_K_vec)
   # max_K = max(abs(K))
   # diag(K) = diag(K) + max_K * epsilon_I
 
