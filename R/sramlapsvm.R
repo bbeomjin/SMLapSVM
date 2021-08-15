@@ -433,7 +433,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   })
 
   K = combine_kernel(anova_K, theta = theta)
-  K = (K + t(K)) / 2
+  # K = (K + t(K)) / 2
   # diag(K) = diag(K) + epsilon_I
 
   if (sum(K) == 0) {
@@ -458,7 +458,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   for (i in 1:anova_K$numK) {
     KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
-  KLK = (KLK + t(KLK)) / 2
+  # KLK = (KLK + t(KLK)) / 2
 
   max_K = sum(theta * max_K_vec)
   # max_K = max(abs(K))

@@ -437,7 +437,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   })
 
   K = combine_kernel(anova_K, theta = theta)
-  K = (K + t(K)) / 2
+  # K = (K + t(K)) / 2
 
   if (sum(K) == 0) {
     diag(K) = 1
@@ -463,7 +463,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
     diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
     KLK = KLK + theta[i]^2 * KLK_temp
   }
-  KLK = (KLK + t(KLK)) / 2
+  # KLK = (KLK + t(KLK)) / 2
 
   # max_K = sum(theta * max_K_vec)
   # max_K = max(abs(K))
@@ -477,8 +477,8 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I) %*% K %*% t(J)
   # inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
-  inv_K_KLK = chol2inv(chol(K_KLK))
-  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  # inv_K_KLK = chol2inv(chol(K_KLK))
+  inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   inv_K_KLK = inv_K_KLK %*% K %*% t(J)
 
