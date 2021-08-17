@@ -101,7 +101,7 @@ sim_gen = function(n, p, seed = NULL, type = c("bayes", "poly", "cosso", "neural
 
   if (type == "poly") {
     r = 2
-    X_tmp = matrix(rnorm(n * r, 0, 1), n, r)
+    X_tmp = matrix(rnorm(n * r, 0, 0.8), n, r)
     x1 = X_tmp[, 1]; x2 = X_tmp[, 2]
     c = 1
     X_kern = data.matrix(data.frame(x1^3, x2^3, sqrt(3) * x1^2 * x2, sqrt(3) * x1 * x2^2,
