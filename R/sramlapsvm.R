@@ -56,7 +56,8 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
   # }
 
   if (is.null(newK)) {
-    new_anova_K = make_anovaKernel(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+    new_anova_K = make_anovaKernel(newx, rbind(object$cstep_inform$x, object$cstep_inform$ux),
+                                   kernel = object$cstep_inform$kernel, kparam = object$cstep_inform$kparam)
     newK = combine_kernel(new_anova_K, theta = object$opt_theta)
     # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
