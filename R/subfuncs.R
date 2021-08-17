@@ -103,10 +103,10 @@ beta_kernel = function(y, k, my, warm, lambda, inv_LK){
 
 make_knn_graph_mat = function(X, k = 6)
 {
-  distance = fields::rdist(X, X)
+  distance = as.matrix(dist(X, method = "euclidean"))
   #    distance = sv.kernel(X.mat, X.mat, kernel = list(type="rbf", par=2))
   #    distance = 1/distance
-  distance[distance < 1e-6] = 0
+  # distance[distance < 1e-6] = 0
   knn_mat = matrix(0, nrow(X), nrow(X))
   order_mat = apply(distance, 2, order)
   for(i in 1:ncol(knn_mat)) {
