@@ -176,7 +176,11 @@ cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
     opt_valid_err = min(valid_err)
   } else {
     fold_list_l = data_split(y, nfolds = nfolds)
-    fold_list_ul = sample(rep_len(1:nfolds, length.out = nrow(ux)))
+    if (!is.null(ux)) {
+      fold_list_ul = sample(rep_len(1:nfolds, length.out = nrow(ux)))
+    } else {
+      fold_list_ul = NULL
+    }
 
     fold_list = list(labeled = fold_list_l, unlabeled = fold_list_ul)
 

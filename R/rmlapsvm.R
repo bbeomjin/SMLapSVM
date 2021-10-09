@@ -379,7 +379,11 @@ cv.rmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = N
     opt_valid_err = min(valid_err)
   } else {
     fold_list_l = data_split(y, nfolds = nfolds)
-    fold_list_ul = sample(rep_len(1:nfolds, length.out = nrow(ux)))
+    if (!is.null(ux)) {
+      fold_list_ul = sample(rep_len(1:nfolds, length.out = nrow(ux)))
+    } else {
+      fold_list_ul = NULL
+    }
     valid_err_mat = matrix(NA, nrow = nfolds, ncol = nrow(params), dimnames = list(paste0("Fold", 1:nfolds)))
 
     for (i in 1:nfolds) {
