@@ -290,11 +290,11 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
 }
 
 
-cv.ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 10,
-                         lambda_seq = 2^{seq(-10, 15, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
-                         scale = FALSE, adjacency_k = 6, weightType = "Heatmap", normalized = TRUE,
-                         gamma = 0.5, kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                         criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 10,
+                        lambda_seq = 2^{seq(-10, 15, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
+                        kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
+                        scale = FALSE, adjacency_k = 6, weightType = "Heatmap", normalized = TRUE,
+                        criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   out = list()
   call = match.call()
@@ -316,11 +316,12 @@ cv.ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds 
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
   lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
-  kparam = sort(kparam, decreasing = TRUE)
+  # kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
   # params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq[order(lambda_I_seq, decreasing = TRUE)], kparam = kparam)
-  params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq, kparam = kparam)
+  # params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq, kparam = kparam)
+  params = expand.grid(lambda = lambda_seq, lambda_I = lambda_I_seq)
 
   if (!is.null(valid_x) & !is.null(valid_y)) {
     model_list = vector("list", 1)
@@ -331,8 +332,9 @@ cv.ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds 
                         function(j) {
                           error = try({
                             msvm_fit = ramlapsvm(x = x, y = y, ux = ux, gamma = gamma, lambda = params$lambda[j], lambda_I = params$lambda_I[j],
-                                                 kernel = kernel, kparam = params$kparam[j], scale = scale, adjacency_k = adjacency_k,
-                                                 weightType = weightType, normalized = normalized, ...)
+                                                 kernel = kernel, kparam = kparam, scale = scale,
+                                                 adjacency_k = adjacency_k, weightType = weightType,
+                                                 normalized = normalized, ...)
                           })
 
                           if (!inherits(error, "try-error")) {
@@ -355,50 +357,63 @@ cv.ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds 
     model_list[[1]] = lapply(fold_err, "[[", "fit_model")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
+    # opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I)
+    opt_valid_err = min(valid_err)
+  } else {
+  #   # set.seed(y[1])
+    fold_list_l = data_split(y, nfolds = nfolds)
+    # fold_list_ul = sample(1:nfolds, size = nrow(ux), prob = rep(1 / nfolds, nfolds), replace = TRUE)
+    fold_list_ul = sample(rep_len(1:nfolds, length.out = nrow(ux)))
+    valid_err_mat = matrix(NA, nrow = nfolds, ncol = nrow(params), dimnames = list(paste0("Fold", 1:nfolds)))
+  #   model_list = vector("list", nfolds)
+
+    for (i in 1:nfolds) {
+      cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
+  #     # fold = fold_list[[i]]
+      fold_l = which(fold_list_l == i)
+      fold_ul = which(fold_list_ul == i)
+      y_fold = y[-fold_l]
+      x_fold = x[-fold_l, , drop = FALSE]
+      y_valid = y[fold_l]
+      x_valid = x[fold_l, , drop = FALSE]
+      ux_fold = ux[-fold_ul, , drop = FALSE]
+
+      #  Parallel computation on the combination of hyper-parameters
+      fold_err = mclapply(1:nrow(params),
+                          function(j) {
+                            error = try({
+                              msvm_fit = ramlapsvm(x = x_fold, y = y_fold, ux = ux_fold, gamma = gamma,
+                                                   lambda = params$lambda[j], lambda_I = params$lambda_I[j],
+                                                   kernel = kernel, kparam = kparam, scale = scale,
+                                                   adjacency_k = adjacency_k, weightType = weightType,
+                                                   normalized = normalized, ...)
+                            })
+
+                            if (!inherits(error, "try-error")) {
+                              pred_val = predict.ramlapsvm(msvm_fit, newx = x_valid)
+                              if (criterion == "0-1") {
+                                acc = sum(y_valid == pred_val$class) / length(y_valid)
+                                err = 1 - acc
+                              } else {
+                                # err = ramsvm_hinge(y_valid, pred_val$inner_prod, k = k, gamma = gamma)
+                              }
+                            } else {
+                              msvm_fit = NULL
+                              err = Inf
+                            }
+                            return(list(error = err, fit_model = msvm_fit))
+                          }, mc.cores = nCores)
+      valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
+      # model_list[[i]] = lapply(fold_err, "[[", "fit_model")
+    }
+    valid_err = colMeans(valid_err_mat)
+    opt_ind = max(which(valid_err == min(valid_err)))
+    opt_param = params[opt_ind, ]
+    # opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I)
     opt_valid_err = min(valid_err)
   }
-  # } else {
-  #   # set.seed(y[1])
-  #   # fold_list = createFolds(y, k = nfolds, list = TRUE)
-  #   fold_list = data_split(y, nfolds, k = k)
-  #   valid_err_mat = matrix(NA, nrow = nfolds, ncol = nrow(params))
-  #   model_list = vector("list", nfolds)
-  #
-  #   for (i in 1:nfolds) {
-  #     cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
-  #     # fold = fold_list[[i]]
-  #     fold = which(fold_list == i)
-  #     y_fold = y[-fold]
-  #     x_fold = x[-fold, , drop = FALSE]
-  #     y_valid = y[fold]
-  #     x_valid = x[fold, , drop = FALSE]
-  #
-  #     #  Parallel computation on the combination of hyper-parameters
-  #     fold_err = mclapply(1:nrow(params),
-  #                         function(j) {
-  #                           msvm_fit = SRAMSVM_solve(x = x_fold, y = y_fold, gamma = gamma,
-  #                                                    lambda = params$lambda[j], kernel = kernel,
-  #                                                    kparam = params$kparam[j], ...)
-  #                           pred_val = predict(msvm_fit, newx = x_valid)
-  #
-  #                           if (criterion == "0-1") {
-  #                             acc = sum(y_valid == pred_val[[1]][[1]]) / length(y_valid)
-  #                             err = 1 - acc
-  #                           } else {
-  #                             err = ramsvm_hinge(y_valid, pred_val$inner_prod, k = k, gamma = gamma)
-  #                           }
-  #                           return(list(error = err, fit_model = msvm_fit))
-  #                         }, mc.cores = nCores)
-  #     valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
-  #     model_list[[i]] = lapply(fold_err, "[[", "fit_model")
-  #   }
-  #   valid_err = colMeans(valid_err_mat, na.rm = TRUE)
-  #   opt_ind = max(which(valid_err == min(valid_err)))
-  #   opt_param = params[opt_ind, ]
-  #   opt_valid_err = min(valid_err)
-  # }
 
-  out$opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, kparam = opt_param$kparam)
+  out$opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I)
   out$opt_valid_err = opt_valid_err
   out$opt_ind = opt_ind
   out$valid_err = valid_err
@@ -409,12 +424,14 @@ cv.ramlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds 
   out$valid_x = valid_x
   out$valid_y = valid_y
   out$kernel = kernel
+  out$kparam = kparam
   out$gamma = gamma
   out$scale = scale
   if (optModel) {
-    opt_model = ramlapsvm(x = x, y = y, ux = ux, gamma = gamma, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I,
-                        kernel = kernel, kparam = opt_param$kparam, scale = scale, adjacency_k = adjacency_k,
-                        weightType = weightType, normalized = normalized, ...)
+    opt_model = ramlapsvm(x = x, y = y, ux = ux, gamma = gamma,
+                          lambda = opt_param$lambda, lambda_I = opt_param$lambda_I,
+                          kernel = kernel, kparam = kparam, scale = scale,
+                          adjacency_k = adjacency_k, weightType = weightType, normalized = normalized, ...)
     out$opt_model = opt_model
   }
   out$call = call
