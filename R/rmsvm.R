@@ -31,7 +31,7 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
   diag(D) = diag(D) + max_D * epsilon_D
 
   g_temp = matrix(-1, n, n_class)
-  g_temp[y_index] = -n_class + 1
+  g_temp[y_index] = 1 - n_class
   g = as.vector(g_temp)
 
   dvec = -g * n * lambda
