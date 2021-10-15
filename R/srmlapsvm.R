@@ -250,7 +250,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
   out$opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I)
   out$opt_valid_err = opt_valid_err
   out$opt_ind = opt_ind
-  out$valid_err = valid_err_mat
+  out$valid_err = valid_err
   out$x = x
   out$ux = ux
   out$y = y
