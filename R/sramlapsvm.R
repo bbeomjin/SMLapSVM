@@ -190,12 +190,14 @@ cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
       cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
       #     # fold = fold_list[[i]]
       fold_l = which(fold_list_l == i)
-      fold_ul = which(fold_list_ul == i)
+      # fold_ul = which(fold_list_ul == i)
+      fold_ul = NULL
       y_train = y[-fold_l]
       x_train = x[-fold_l, , drop = FALSE]
       y_valid = y[fold_l]
       x_valid = x[fold_l, , drop = FALSE]
-      ux_train = ux[-fold_ul, , drop = FALSE]
+      # ux_train = ux[-fold_ul, , drop = FALSE]
+      ux_train = ux
       rx_train = rbind(x_train, ux_train)
 
       subanova_K = make_anovaKernel(rx_train, rx_train, kernel, kparam)
@@ -366,12 +368,14 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
       cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
       #     # fold = fold_list[[i]]
       fold_l = which(fold_list_l == i)
-      fold_ul = which(fold_list_ul == i)
+      # fold_ul = which(fold_list_ul == i)
+      fold_ul = NULL
       y_train = y[-fold_l]
       x_train = x[-fold_l, , drop = FALSE]
       y_valid = y[fold_l]
       x_valid = x[fold_l, , drop = FALSE]
-      ux_train = ux[-fold_ul, , drop = FALSE]
+      # ux_train = ux[-fold_ul, , drop = FALSE]
+      ux_train = ux
       rx_train = rbind(x_train, ux_train)
 
       subanova_K = make_anovaKernel(rx_train, rx_train, kernel, kparam)

@@ -389,12 +389,14 @@ cv.rmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = N
     for (i in 1:nfolds) {
       cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
       fold_l = which(fold_list_l == i)
-      fold_ul = which(fold_list_ul == i)
+      # fold_ul = which(fold_list_ul == i)
+      fold_ul = NULL
       y_fold = y[-fold_l]
       x_fold = x[-fold_l, , drop = FALSE]
       y_valid = y[fold_l]
       x_valid = x[fold_l, , drop = FALSE]
-      ux_fold = ux[-fold_ul, , drop = FALSE]
+      # ux_fold = ux[-fold_ul, , drop = FALSE]
+      ux_fold = ux
       fold_err = mclapply(1:nrow(params),
                           function(j) {
                             error = try({
