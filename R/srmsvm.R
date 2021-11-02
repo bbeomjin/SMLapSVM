@@ -129,7 +129,7 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
     valid_err = sapply(fold_err, "[[", "error")
     # model_list[[1]] = lapply(fold_err, "[[", "fit_model")
 
-    opt_ind = which(valid_err == min(valid_err))
+    opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = c(lambda = lambda_seq[opt_ind])
     opt_valid_err = min(valid_err)
   } else {
