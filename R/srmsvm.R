@@ -100,6 +100,7 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
   if (!is.null(valid_x) & !is.null(valid_y)) {
     model_list = vector("list", 1)
     fold_list = NULL
+    ran = NULL
 
     valid_anova_K = make_anovaKernel(valid_x, x, kernel = kernel, kparam = kparam)
     valid_K = combine_kernel(anova_kernel = valid_anova_K, theta = theta)
