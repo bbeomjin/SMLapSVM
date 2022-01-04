@@ -331,7 +331,7 @@ find_theta.smsvm = function(y, anova_kernel, cmat, c0vec, lambda, lambda_theta, 
   # find the theta vector only from the solution
   theta = cbind(matrix(0, anova_kernel$numK, n_nonzeroIndex),
                  diag(1, anova_kernel$numK)) %*% matrix(lp, ncol = 1)
-  return(as.vector(theta))
+  return(round(as.vector(theta), 6))
 }
 
 
