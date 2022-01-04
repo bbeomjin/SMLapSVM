@@ -284,6 +284,18 @@ thetastep.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
     # ran = data_split(y, nfolds)
     valid_err_mat = matrix(NA, nrow = nfolds, ncol = length(lambda_theta_seq), dimnames = list(paste0("Fold", 1:nfolds)))
 
+    theta_seq_list = mclapply(1:length(lambda_theta_seq),
+                              function(j) {
+                                error = try({
+                                  theta = findtheta.sramsvm(y = y, anova_kernel = anova_K, gamma = gamma, cmat = opt_model$cmat, c0vec = opt_model$c0vec,
+                                                            lambda = lambda, lambda_theta = lambda_theta_seq[j])
+                                })
+                                if (inherits(error, "try-error")) {
+                                  theta = rep(0, anova_K$numK)
+                                }
+                                return(theta)
+                              }, mc.cores = nCores)
+
     for (i_cv in 1:nfolds) {
       cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
       omit = fold_list == i_cv
@@ -297,14 +309,22 @@ thetastep.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
       subanova_K_valid = make_anovaKernel(x_valid, x_train, kernel, kparam)
 
       init_model = ramsvm_compact(K = subK, y = y_train, gamma = gamma, lambda = lambda, ...)
-      cmat = init_model$cmat
-      c0vec = init_model$c0vec
+      # cmat = init_model$cmat
+      # c0vec = init_model$c0vec
 
       fold_err = mclapply(1:length(lambda_theta_seq),
                           function(j) {
+                            # error = try({
+                            #   theta = findtheta.sramsvm(y = y_train, anova_kernel = subanova_K, gamma = gamma, cmat = cmat, c0vec = c0vec,
+                            #                             lambda = lambda, lambda_theta = lambda_theta_seq[j])
+                            #   if (isCombined) {
+                            #     subK = combine_kernel(subanova_K, theta)
+                            #     init_model = ramsvm_compact(K = subK, y = y_train, gamma = gamma, lambda = lambda, ...)
+                            #   }
+                            # })
+
                             error = try({
-                              theta = findtheta.sramsvm(y = y_train, anova_kernel = subanova_K, gamma = gamma, cmat = cmat, c0vec = c0vec,
-                                                        lambda = lambda, lambda_theta = lambda_theta_seq[j])
+                              theta = theta_seq_list[[j]]
                               if (isCombined) {
                                 subK = combine_kernel(subanova_K, theta)
                                 init_model = ramsvm_compact(K = subK, y = y_train, gamma = gamma, lambda = lambda, ...)
@@ -335,17 +355,6 @@ thetastep.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
     opt_lambda_theta = lambda_theta_seq[opt_ind]
     opt_valid_err = min(valid_err)
 
-    theta_seq_list = mclapply(1:length(lambda_theta_seq),
-                              function(j) {
-                                error = try({
-                                  theta = findtheta.sramsvm(y = y, anova_kernel = anova_K, gamma = gamma, cmat = opt_model$cmat, c0vec = opt_model$c0vec,
-                                                            lambda = lambda, lambda_theta = lambda_theta_seq[j])
-                                })
-                                if (inherits(error, "try-error")) {
-                                  theta = rep(0, anova_K$numK)
-                                }
-                                return(theta)
-                              }, mc.cores = nCores)
     theta_seq = do.call(cbind, theta_seq_list)
     opt_theta = theta_seq[, opt_ind]
   }
