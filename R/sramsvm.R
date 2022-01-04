@@ -461,7 +461,7 @@ findtheta.sramsvm = function(y, anova_kernel, gamma, cmat, c0vec, lambda, lambda
   # find the theta vector only from the solution
   theta = cbind(matrix(0, anova_kernel$numK, n * n_class),
                 diag(1, anova_kernel$numK)) %*% matrix(lp, ncol = 1)
-  return(as.vector(theta))
+  return(round(as.vector(theta), 6))
 }
 
 
