@@ -493,6 +493,3 @@ findtheta.sramsvm = function(y, anova_kernel, gamma, cmat, c0vec, lambda, lambda
 
 
 
-
-
-
