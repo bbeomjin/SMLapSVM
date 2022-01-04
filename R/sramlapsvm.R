@@ -364,6 +364,18 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
     valid_err_mat = matrix(NA, nrow = nfolds, ncol = length(lambda_theta_seq), dimnames = list(paste0("Fold", 1:nfolds)))
 
+    theta_seq_list = mclapply(1:length(lambda_theta_seq),
+                              function(j) {
+                                error = try({
+                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$beta, c0vec = opt_model$beta0,
+                                                                gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
+                                })
+                                if (inherits(error, "try-error")) {
+                                  theta = rep(0, anova_K$numK)
+                                }
+                                return(theta)
+                              }, mc.cores = nCores)
+
     for (i in 1:nfolds) {
       cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
       #     # fold = fold_list[[i]]
@@ -389,15 +401,23 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
       init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
                                       lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
-      cmat = init_model$beta
-      c0vec = init_model$beta0
+      # cmat = init_model$beta
+      # c0vec = init_model$beta0
 
       fold_err = mclapply(1:length(lambda_theta_seq),
                           function(j) {
-                            error = try({
-                              theta = find_theta.sramlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, c0vec = c0vec,
-                                                            gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
+                            # error = try({
+                            #   theta = find_theta.sramlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, c0vec = c0vec,
+                            #                                 gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
+                            #
+                            #   if (isCombined) {
+                            #     init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
+                            #                                     lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
+                            #   }
+                            # })
 
+                            error = try({
+                              theta = theta_seq_list[[j]]
                               if (isCombined) {
                                 init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
                                                                 lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
@@ -427,19 +447,8 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     opt_lambda_theta = lambda_theta_seq[opt_ind]
     opt_valid_err = min(valid_err)
 
-    theta_seq_list = mclapply(1:length(lambda_theta_seq),
-                              function(j) {
-                                error = try({
-                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$beta, c0vec = opt_model$beta0,
-                                                                gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
-                                })
-                                if (inherits(error, "try-error")) {
-                                  theta = rep(0, anova_K$numK)
-                                }
-                                return(theta)
-                              }, mc.cores = nCores)
-  theta_seq = do.call(cbind, theta_seq_list)
-  opt_theta = theta_seq[, opt_ind]
+    theta_seq = do.call(cbind, theta_seq_list)
+    opt_theta = theta_seq[, opt_ind]
   }
 
   out$opt_lambda_theta = opt_lambda_theta
