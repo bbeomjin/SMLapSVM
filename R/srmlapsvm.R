@@ -122,7 +122,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
   }
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
   # kparam = sort(kparam, decreasing = FALSE)
 
   # Combination of hyper-parameters
@@ -446,7 +446,7 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                               err = Inf
                               theta = rep(0, subanova_K$numK)
                             }
-                            return(list(error = err, theta = theta))
+                            return(list(error = err))
                           }, mc.cores = nCores)
       valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
     }
