@@ -355,7 +355,7 @@ cv.mlapsvm = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
-    valid_err = sapply(fold_err, "[[", "error")
+    valid_err = round(sapply(fold_err, "[[", "error"), 8)
     model_list[[1]] = lapply(fold_err, "[[", "fit_model")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]

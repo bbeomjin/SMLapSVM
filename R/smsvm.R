@@ -133,7 +133,7 @@ cstep.smsvm = function(x, y, valid_x = NULL, valid_y = NULL, nfolds = 5,
                             }
                             return(list(error = err, fit_model = msvm_fit))
                           }, mc.cores = nCores)
-      valid_err = sapply(fold_err, "[[", "error")
+      valid_err = round(sapply(fold_err, "[[", "error"), 8)
       # model_list[[1]] = lapply(fold_err, "[[", "fit_model")
       valid_err_mat[i, ] = valid_err
     }
@@ -223,7 +223,7 @@ thetastep.smsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.out
                         }
                         return(list(error = err, theta = theta))
                       }, mc.cores = nCores)
-  valid_err = sapply(fold_err, "[[", "error")
+  valid_err = round(sapply(fold_err, "[[", "error"), 8)
   theta_seq = sapply(fold_err, "[[", "theta")
   opt_ind = max(which(valid_err == min(valid_err)))
   opt_lambda_theta = lambda_theta_seq[opt_ind]

@@ -353,7 +353,7 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
 
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
-    valid_err = sapply(fold_err, "[[", "error")
+    valid_err = round(sapply(fold_err, "[[", "error"), 8)
     model_list[[1]] = lapply(fold_err, "[[", "fit_model")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
@@ -412,7 +412,7 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
       valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
       # model_list[[i]] = lapply(fold_err, "[[", "fit_model")
     }
-    valid_err = colMeans(valid_err_mat)
+    valid_err = round(colMeans(valid_err_mat), 8)
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
     # opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I)

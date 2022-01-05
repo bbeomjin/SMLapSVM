@@ -169,7 +169,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
-    valid_err = sapply(fold_err, "[[", "error")
+    valid_err = round(sapply(fold_err, "[[", "error"), 8)
     # model_list[[1]] = lapply(fold_err, "[[", "fit_model")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
@@ -234,7 +234,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                           }, mc.cores = nCores)
       valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
     }
-    valid_err = colMeans(valid_err_mat)
+    valid_err = round(colMeans(valid_err_mat), 8)
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
     opt_valid_err = min(valid_err)
@@ -352,7 +352,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
                           return(list(error = err, theta = theta))
                         }, mc.cores = nCores)
-    valid_err = sapply(fold_err, "[[", "error")
+    valid_err = round(sapply(fold_err, "[[", "error"), 8)
     theta_seq = sapply(fold_err, "[[", "theta")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_lambda_theta = lambda_theta_seq[opt_ind]
@@ -442,7 +442,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                           }, mc.cores = nCores)
       valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
     }
-    valid_err = colMeans(valid_err_mat)
+    valid_err = round(colMeans(valid_err_mat), 8)
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_lambda_theta = lambda_theta_seq[opt_ind]
     opt_valid_err = min(valid_err)

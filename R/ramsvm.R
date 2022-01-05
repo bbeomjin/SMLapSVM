@@ -260,7 +260,7 @@ cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds =
 
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
-    valid_err = sapply(fold_err, "[[", "error")
+    valid_err = round(sapply(fold_err, "[[", "error"), 8)
     model_list[[1]] = lapply(fold_err, "[[", "fit_model")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
@@ -298,7 +298,7 @@ cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds =
       valid_err[i, ] = unlist(fold_err)
       # model_list[[i]] = lapply(fold_err, "[[", "fit_model")
     }
-    mean_valid_err = colMeans(valid_err)
+    mean_valid_err = round(colMeans(valid_err), 8)
     opt_ind = max(which(mean_valid_err == min(mean_valid_err)))
     # opt_ind = min(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
