@@ -644,7 +644,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
 
-  diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_D
+  # diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_D
   inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   inv_K_KLK = inv_K_KLK %*% K %*% t(J)
@@ -662,7 +662,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
     D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
     Amat[, j] = -Lmatj[[j]]
   }
-  D = fixit(D, epsilon = eig_tol_D)
+  # D = fixit(D, epsilon = eig_tol_D)
+  D = (t(D) + D) / 2
   max_D = max(abs(D))
   # D = D / max_D
   # diag(D) = diag(D) + epsilon_D
