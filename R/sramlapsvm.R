@@ -630,7 +630,6 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
     diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
     KLK = KLK + theta[i]^2 * KLK_temp
   }
-
   # KLK = 0
   # for (i in 1:anova_K$numK) {
   #   KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
@@ -643,12 +642,13 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
-  diag(K_KLK) = diag(K_KLK) + epsilon_D
+  # K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
+  # diag(K_KLK) = diag(K_KLK) + max(diag(K_KLK)) * epsilon_I
 
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
-  inv_K_KLK = inv_K_KLK %*% K %*% t(J)
+  # inv_K_KLK = inv_K_KLK %*% K %*% t(J)
+  inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
   Q = J %*% K %*% inv_K_KLK
   # Q = J %*% K %*% inv_KLK
