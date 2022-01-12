@@ -621,11 +621,12 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   lambda_KLK = n_l * lambda_I / n^2 * KLK
 
   K_KLK = lambda_K + lambda_KLK
-  K_KLK = (K_KLK + t(K_KLK)) / 2
+  # K_KLK = (K_KLK + t(K_KLK)) / 2
 
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
-  inv_K_KLK = inv_K_KLK %*% K %*% t(J)
+  # inv_K_KLK = inv_K_KLK %*% K %*% t(J)
+  inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
   Q = J %*% K %*% inv_K_KLK
   # Q = fixit(Q, epsilon = eig_tol_D)
