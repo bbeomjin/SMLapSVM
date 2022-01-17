@@ -27,19 +27,15 @@ sramlapsvm2 = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, n
     cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
   }
 
-  out$opt_param = opt_cstep_fit$opt_param
-  out$opt_valid_err = opt_cstep_fit$opt_valid_err
-  out$cstep_valid_err = opt_cstep_fit$valid_err
-  out$theta_valid_err = thetastep_fit$valid_err
-  out$opt_model = opt_cstep_fit$opt_model
-  out$kernel = kernel
-  out$kparam = opt_cstep_fit$opt_param["kparam"]
   out$opt_theta = thetastep_fit$opt_theta
-  out$theta = thetastep_fit$theta
-  out$x = x
-  out$y = y
-  out$ux = ux
-  out$n_class = opt_cstep_fit$n_class
+  out$cstep_inform = cstep_fit
+  out$thetastep_inform = thetastep_fit
+  out$opt_param = opt_cstep_fit$opt_param
+  out$opt_model = opt_cstep_fit$opt_model
+  out$opt_valid_err = opt_cstep_fit$opt_valid_err
+  out$valid_err = opt_cstep_fit$valid_err
+  out$type = type
+  out$call = call
   class(out) = "sramlapsvm"
   return(out)
 }
