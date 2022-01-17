@@ -145,7 +145,7 @@ cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
     fold_err = mclapply(1:nrow(params),
                         function(j) {
                           error = try({
-                            msvm_fit = sramlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
+                            msvm_fit = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
                                                           lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
                             # msvm_fit = angle_lapsvm_core(K = K, L = L, y = y, lambda = params$lambda[j], lambda_I = params$lambda_I[j], gamma = gamma)
                           })
@@ -209,7 +209,7 @@ cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
       fold_err = mclapply(1:nrow(params),
                           function(j) {
                             error = try({
-                              msvm_fit = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train, gamma = gamma,
+                              msvm_fit = sramlapsvm_compact2(anova_K = subanova_K, L = L_train, theta = theta, y = y_train, gamma = gamma,
                                                             lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
                             })
 
@@ -262,7 +262,7 @@ cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
   out$criterion = criterion
   if (optModel) {
     anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = kparam)
-    opt_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
+    opt_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
                                    lambda = out$opt_param["lambda"], lambda_I = out$opt_param["lambda_I"], ...)
     # opt_model = angle_lapsvm_core(K = K, L = L, y = y, lambda = opt_param$lambda, lambda_I = opt_param$lambda_I, gamma = gamma)
     out$opt_model = opt_model
@@ -305,7 +305,7 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
   anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = kparam)
 
   if (is.null(object$opt_model)) {
-    opt_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
+    opt_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
   } else {
     opt_model = object$opt_model
   }
@@ -319,13 +319,13 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
     fold_err = mclapply(1:length(lambda_theta_seq),
                         function(j) {
                           error = try({
-                            theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = init_model$beta, c0vec = init_model$beta0,
+                            theta = find_theta.sramlapsvm2(y = y, anova_kernel = anova_K, L = L, cmat = init_model$beta, c0vec = init_model$beta0,
                                                           gamma = gamma, lambda = lambda, lambda_I = lambda_I,
                                                           lambda_theta = lambda_theta_seq[j], ...)
 
                             if (isCombined) {
                               # subK = combine_kernel(anova_K, theta)
-                              init_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I,
+                              init_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I,
                                                               gamma = gamma, ...)
                               # init_model = angle_lapsvm_core(K = subK, L = L, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma)
                             }
@@ -363,7 +363,7 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
     theta_seq_list = mclapply(1:length(lambda_theta_seq),
                               function(j) {
                                 error = try({
-                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$beta, c0vec = opt_model$beta0,
+                                  theta = find_theta.sramlapsvm2(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$beta, c0vec = opt_model$beta0,
                                                                 gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
                                 })
                                 if (inherits(error, "try-error")) {
@@ -395,7 +395,7 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
       graph_train = make_knn_graph_mat(rx_train, k = adjacency_k)
       L_train = make_L_mat(rx_train, kernel = kernel, kparam = kparam, graph = graph_train, weightType = weightType, normalized = normalized)
 
-      init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
+      init_model = sramlapsvm_compact2(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
                                       lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
       # cmat = init_model$beta
       # c0vec = init_model$beta0
@@ -415,7 +415,7 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
                             error = try({
                               theta = theta_seq_list[[j]]
                               if (isCombined) {
-                                init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
+                                init_model = sramlapsvm_compact2(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
                                                                 lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
                               }
                             })
@@ -456,7 +456,7 @@ thetastep.sramlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, leng
 
   if (optModel) {
     # subK = combine_kernel(anova_K, opt_theta)
-    opt_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = opt_theta, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, ...)
+    opt_model = sramlapsvm_compact2(anova_K = anova_K, L = L, theta = opt_theta, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, ...)
     out$opt_model = opt_model
   }
   class(out) = "sramlapsvm"
