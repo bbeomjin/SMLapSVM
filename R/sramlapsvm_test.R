@@ -44,38 +44,38 @@ sramlapsvm2 = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, n
   return(out)
 }
 
-predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
-{
-  model = object$opt_model
-  beta = model$beta
-  beta0 = model$beta0
-  levs = model$levels
-
-  # if (object$scale) {
-  #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
-  # }
-
-  if (is.null(newK)) {
-    new_anova_K = make_anovaKernel(newx, rbind(object$cstep_inform$x, object$cstep_inform$ux),
-                                   kernel = object$cstep_inform$kernel, kparam = object$cstep_inform$kparam)
-    newK = combine_kernel(new_anova_K, theta = object$opt_theta)
-    # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
-    # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
-  }
-
-  W = XI_gen(model$n_class)
-
-  W_beta0 = drop(t(beta0) %*% W)
-
-  pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = model$n_class, byrow = T) + ((newK %*% beta) %*% W)
-  pred_class = levs[apply(pred_y, 1, which.max)]
-
-  if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
-  if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
-  if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
-
-  return(list(class = pred_class, pred_value = pred_y))
-}
+# predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
+# {
+#   model = object$opt_model
+#   beta = model$beta
+#   beta0 = model$beta0
+#   levs = model$levels
+#
+#   # if (object$scale) {
+#   #   newx = (newx - matrix(object$center, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)) / matrix(object$scaled, nrow = nrow(newx), ncol = ncol(newx), byrow = TRUE)
+#   # }
+#
+#   if (is.null(newK)) {
+#     new_anova_K = make_anovaKernel(newx, rbind(object$cstep_inform$x, object$cstep_inform$ux),
+#                                    kernel = object$cstep_inform$kernel, kparam = object$cstep_inform$kparam)
+#     newK = combine_kernel(new_anova_K, theta = object$opt_theta)
+#     # newK = kernelMatrix(newx, rbind(object$x, object$ux), kernel = object$kernel, kparam = object$kparam)
+#     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
+#   }
+#
+#   W = XI_gen(model$n_class)
+#
+#   W_beta0 = drop(t(beta0) %*% W)
+#
+#   pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = model$n_class, byrow = T) + ((newK %*% beta) %*% W)
+#   pred_class = levs[apply(pred_y, 1, which.max)]
+#
+#   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
+#   if (attr(levs, "type") == "numeric") {pred_class = as.numeric(pred_class)}
+#   if (attr(levs, "type") == "integer") {pred_class = as.integer(pred_class)}
+#
+#   return(list(class = pred_class, pred_value = pred_y))
+# }
 
 
 cstep.sramlapsvm2 = function(x, y, ux = NULL, valid_x = NULL, valid_y = NULL, nfolds = 5,
