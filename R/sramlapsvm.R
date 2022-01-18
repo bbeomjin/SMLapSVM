@@ -573,8 +573,8 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
   #    print(bvec)
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  theta[theta < 1e-6] = 0
-  theta = round(theta, 6)
+  theta[theta < 1e-8] = 0
+  # theta = round(theta, 6)
   # theta_sol[theta_sol < 1e-6] = 0
   #    print(beta)
   return(theta)
@@ -641,7 +641,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # K_KLK = fixit(K_KLK, epsilon = epsilon_I)
   # diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
 
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   inv_K_KLK = inv_K_KLK %*% K %*% t(J)
   # inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
