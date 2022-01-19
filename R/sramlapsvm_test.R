@@ -595,7 +595,8 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   y_int = as.integer(y_temp)
 
   n_class = length(levs)
-  n = nrow(K)
+  # n = nrow(K)
+  n = nrow(anova_K$K[[1]])
 
   anova_K_orig = anova_K
   anova_K$K = lapply(anova_K$K, function(x) {
