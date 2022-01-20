@@ -484,11 +484,11 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
     return(theta)
   }
 
-  # anova_kernel_orig = anova_kernel
-  # anova_kernel$K = lapply(anova_kernel$K, function(x) {
-  #   diag(x) = diag(x) + max(abs(x)) * epsilon_I
-  #   return(x)
-  # })
+  anova_kernel_orig = anova_kernel
+  anova_kernel$K = lapply(anova_kernel$K, function(x) {
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
+    return(x)
+  })
 
   y_temp = factor(y)
   levs = levels(y_temp)
@@ -513,10 +513,10 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
     temp_A = NULL
     for (q in 1:ncol(cmat)) {
       cvec = cmat[, q]
-      # KLK_temp = anova_kernel_orig$K[[j]] %*% L %*% anova_kernel_orig$K[[j]]
-      # diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
+      KLK_temp = anova_kernel_orig$K[[j]] %*% L %*% anova_kernel_orig$K[[j]]
+      diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
 
-      KLK_temp = anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]]
+      # KLK_temp = anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]]
 
       temp_D = temp_D + n_l * lambda_I / (2 * n^2) * t(cvec) %*% KLK_temp %*% cvec
       temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
@@ -566,7 +566,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  # theta[theta < 1e-6] = 0
+  theta[theta < 1e-8] = 0
   # theta = round(theta, 6)
 
   return(theta)
@@ -586,11 +586,11 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   n_class = length(levs)
 
-  # anova_K_orig = anova_K
-  # anova_K$K = lapply(anova_K$K, function(x) {
-  #   diag(x) = diag(x) + max(abs(x)) * epsilon_I
-  #   return(x)
-  # })
+  anova_K_orig = anova_K
+  anova_K$K = lapply(anova_K$K, function(x) {
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
+    return(x)
+  })
 
   K = combine_kernel(anova_K, theta = theta)
   # K = (K + t(K)) / 2
@@ -613,30 +613,30 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
 
-  # KLK = 0
-  # for (i in 1:anova_K$numK) {
-  #   KLK_temp = anova_K_orig$K[[i]] %*% L %*% anova_K_orig$K[[i]]
-  #   diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
-  #   KLK = KLK + theta[i]^2 * KLK_temp
-  # }
   KLK = 0
   for (i in 1:anova_K$numK) {
-    KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+    KLK_temp = anova_K_orig$K[[i]] %*% L %*% anova_K_orig$K[[i]]
+    diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
     KLK = KLK + theta[i]^2 * KLK_temp
   }
+  # KLK = 0
+  # for (i in 1:anova_K$numK) {
+  #   KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
+  #   KLK = KLK + theta[i]^2 * KLK_temp
+  # }
 
   lambda_K = n_l * lambda * K
   lambda_KLK = n_l * lambda_I / n^2 * KLK
 
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  diag(K_KLK) = diag(K_KLK) + n * max(abs(K_KLK)) * epsilon_I
+  # diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
 
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   # inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
-  inv_K_KLK = inv_K_KLK %*% K %*% t(J)
-  # inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
+  # inv_K_KLK = inv_K_KLK %*% K %*% t(J)
+  inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
   Q = J %*% K %*% inv_K_KLK
   # Q = fixit(Q, epsilon = eig_tol_D)
