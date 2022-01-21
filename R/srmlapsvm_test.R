@@ -52,10 +52,9 @@ srmlapsvm2 = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid
     cat("CV-error(cstep):", opt_cstep_fit$opt_valid_err, "\n")
   }
   
-  out$opt_param = opt_cstep_fit$opt_param
+  out$opt_theta = thetastep_fit$opt_theta
   out$cstep_inform = cstep_fit
   out$thetastep_inform = thetastep_fit
-  
   out$opt_param = opt_cstep_fit$opt_param
   out$opt_model = opt_cstep_fit$opt_model
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
