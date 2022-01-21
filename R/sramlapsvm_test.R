@@ -629,7 +629,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   #   diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
   #   KLK = KLK + theta[i]^2 * KLK_temp
   # }
-  # KLK = 0
+  KLK = 0
   for (i in 1:anova_K$numK) {
     KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
     KLK = KLK + theta[i]^2 * KLK_temp
