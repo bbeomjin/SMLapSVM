@@ -642,7 +642,7 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
   # K_KLK = fixit(K_KLK, epsilon = 0)
-  diag(K_KLK) = diag(K_KLK) + n * max(abs(K_KLK)) * epsilon_I
+  diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
 
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   # inv_K_KLK = inverse(K_KLK, epsilon = eig_tol_I)
