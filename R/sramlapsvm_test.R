@@ -649,7 +649,8 @@ sramlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda
   # inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = inv_K_KLK %*% K %*% t(J)
-  inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
+  # inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
+  inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
   Q = J %*% K %*% inv_K_KLK
   # Q = (Q + t(Q)) / 2
