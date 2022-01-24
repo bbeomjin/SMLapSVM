@@ -477,7 +477,8 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = .Machine$double.eps)
+                                eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8,
+                                epsilon_I = NROW(anova_kernel$K[[1]]) * .Machine$double.eps)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -577,7 +578,8 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = .Machine$double.eps)
+                             eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8,
+                             epsilon_I = NROW(anova_K$K[[1]]) * .Machine$double.eps)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -636,14 +638,16 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # K_KLK = (K_KLK + t(K_KLK)) / 2
   # diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
 
+  JK = J %*% K
+
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   # inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = inv_K_KLK %*% K %*% t(J)
-  # inv_K_KLK = solve(K_KLK, K %*% t(J), tol = eig_tol_I)
-  inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
+  inv_K_KLK = solve(K_KLK, t(JK), tol = eig_tol_I)
+  # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
-  Q = J %*% K %*% inv_K_KLK
+  Q = JK %*% inv_K_KLK
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
@@ -711,7 +715,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
 
   # find b vector using LP
-  Kcmat = J %*% K %*% cmat
+  Kcmat = JK %*% cmat
 
   alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   alp_temp[y_index] = gamma

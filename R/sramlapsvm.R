@@ -465,7 +465,8 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda, lambda_I, lambda_theta = 1,
-                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = .Machine$double.eps)
+                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8,
+                                 epsilon_I = NROW(anova_kernel$K[[1]]) * .Machine$double.eps)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -584,7 +585,8 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
 
 
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                              eig_tol_D = 0, eig_tol_I = 1e-20, epsilon_D = 1e-8, epsilon_I = .Machine$double.eps)
+                              eig_tol_D = 0, eig_tol_I = 1e-20, epsilon_D = 1e-8,
+                              epsilon_I = NROW(anova_K$K[[1]]) * .Machine$double.eps)
 {
 
   out = list()
@@ -645,13 +647,16 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # K_KLK = fixit(K_KLK, epsilon = 0)
   # diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
 
+  JK = J %*% K
+
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
   # inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = inv_K_KLK %*% K %*% t(J)
-  inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
+  inv_K_KLK = solve(K_KLK, t(JK), tol = eig_tol_I)
+  # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
-  Q = J %*% K %*% inv_K_KLK
+  Q = JK %*% inv_K_KLK
   # Q = (Q + t(Q)) / 2
   # Q = J %*% K %*% inv_KLK
 
@@ -767,7 +772,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   }
 
   # find b vector using LP
-  Kcmat = (J %*% K %*% cmat) %*% W
+  Kcmat = (JK %*% cmat) %*% W
 
   # table(y, apply(Kcmat, 1, which.max))
 
