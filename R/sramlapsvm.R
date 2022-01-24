@@ -465,7 +465,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda, lambda_I, lambda_theta = 1,
-                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 1e-12)
+                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = .Machine$double.eps)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -482,7 +482,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
 
   anova_kernel_orig = anova_kernel
   anova_kernel$K = lapply(anova_kernel$K, function(x) {
-    diag(x) = diag(x) + n * max(abs(x)) * epsilon_I
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
     return(x)
   })
 
@@ -515,7 +515,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
     for (q in 1:(n_class - 1)) {
       cvec = cmat[, q]
       KLK_temp = anova_kernel_orig$K[[j]] %*% L %*% anova_kernel_orig$K[[j]]
-      diag(KLK_temp) = diag(KLK_temp) + n * max(abs(KLK_temp)) * epsilon_I
+      diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
 
       # KLK_temp = anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]]
 
@@ -584,7 +584,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
 
 
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                              eig_tol_D = 0, eig_tol_I = 1e-20, epsilon_D = 1e-8, epsilon_I = 1e-12)
+                              eig_tol_D = 0, eig_tol_I = 1e-20, epsilon_D = 1e-8, epsilon_I = .Machine$double.eps)
 {
 
   out = list()
@@ -600,7 +600,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   anova_K_orig = anova_K
   anova_K$K = lapply(anova_K$K, function(x) {
-    diag(x) = diag(x) + n * max(abs(x)) * epsilon_I
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
     return(x)
   })
 
@@ -627,7 +627,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   KLK = 0
   for (i in 1:anova_K$numK) {
     KLK_temp = anova_K_orig$K[[i]] %*% L %*% anova_K_orig$K[[i]]
-    diag(KLK_temp) = diag(KLK_temp) + n * max(abs(KLK_temp)) * epsilon_I
+    diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
     KLK = KLK + theta[i]^2 * KLK_temp
   }
   # KLK = 0
