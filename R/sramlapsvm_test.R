@@ -537,9 +537,10 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
     A_mat = cbind(A_mat, temp_A)
   }
 
-  max_D = max(abs(Dmat))
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
+  Dmat = fixit(Dmat, epsilon = eig_tol_D)
+  max_D = max(abs(Dmat))
   diag(Dmat) = diag(Dmat) + max_D * epsilon_D
   # Dmat = fixit(Dmat, epsilon = eig_tocl_D, is_diag = TRUE)
 
