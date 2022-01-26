@@ -525,7 +525,7 @@ find_theta.srmlapsvm2 = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda,
 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
-  Dmat = fixit(Dmat, epsilon = eig_tol_D)
+  # Dmat = fixit(Dmat, epsilon = eig_tol_D)
   max_D = max(abs(Dmat))
   diag(Dmat) = diag(Dmat) + max_D * epsilon_D
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
@@ -628,8 +628,8 @@ srmlapsvm_compact2 = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = epsilon_I)
-  # diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
+  K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
+  diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
 
   JK = J %*% K
   # inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
