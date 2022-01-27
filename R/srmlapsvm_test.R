@@ -516,6 +516,7 @@ find_theta.srmlapsvm2 = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda,
       if (temp_DD < 0) {temp_DD = 0}
       temp_dd = n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
       if (temp_dd < 0) {temp_dd = 0}
+
       temp_D = temp_D + temp_DD
       temp_d = temp_d + temp_dd
 
