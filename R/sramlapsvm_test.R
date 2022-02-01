@@ -517,9 +517,9 @@ find_theta.sramlapsvm2 = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda
       cvec = cmat[, q]
       # KLK_temp = anova_kernel_orig$K[[j]] %*% L %*% anova_kernel_orig$K[[j]]
       # diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
-      temp_DD = n_l * lambda_I / (2 * n^2) * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
+      temp_DD = n_l * lambda_I / (1 * n^2) * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
       if (temp_DD < 0) {temp_DD = 0}
-      temp_dd = n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
+      temp_dd = n_l * lambda / 1 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
       if (temp_dd < 0) {temp_dd = 0}
 
       temp_D = temp_D + temp_DD
