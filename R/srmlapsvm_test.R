@@ -349,6 +349,7 @@ thetastep.srmlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                               # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
                             }
                           } else {
+                            stop("error")
                             err = Inf
                             theta = rep(0, anova_K$numK)
                           }
@@ -438,7 +439,6 @@ thetastep.srmlapsvm2 = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
                               }
                             } else {
-                              stop("error")
                               err = Inf
                               theta = rep(0, subanova_K$numK)
                             }
