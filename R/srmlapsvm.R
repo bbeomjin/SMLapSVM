@@ -625,8 +625,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # }
   KLK = 0
   for (i in 1:anova_K$numK) {
-    KLK_temp = anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
-    KLK = KLK + theta[i]^2 * KLK_temp
+    KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
   lambda_K = n_l * lambda * K
@@ -634,7 +633,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
+  # K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
   diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
 
   JK = J %*% K
