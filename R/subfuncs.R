@@ -465,10 +465,11 @@ inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   eig = eigen(A, symmetric = TRUE)
   # n = length(eig$values)
   # tol = n * epsilon
-  tol = nrow(A) * epsilon
+  tol = epsilon
   eps = max(tol * abs(eig$values[1]), 0)
   positive = eig$values > eps
-  Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
+  eig$values[!positive] = eps
+  Q = eig$vectors %*% ((1 / eig$values) * t(eig$vectors))
   return(Q)
 }
 
