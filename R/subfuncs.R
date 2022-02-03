@@ -460,7 +460,7 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   return(A)
 }
 
-inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+inverse = function(A, epsilon = .Machine$double.eps)
 {
   eig = eigen(A, symmetric = TRUE)
   # n = length(eig$values)
