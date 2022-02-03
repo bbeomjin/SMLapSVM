@@ -469,6 +469,7 @@ inverse = function(A, epsilon = .Machine$double.eps)
   eps = max(tol * abs(eig$values[1]), 0)
   positive = eig$values > eps
   eig$values[!positive] = eps
+  # eig$values = eig$values + eps
   Q = eig$vectors %*% ((1 / eig$values) * t(eig$vectors))
   return(Q)
 }
