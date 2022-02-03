@@ -460,23 +460,22 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
   return(A)
 }
 
-# inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-# {
-#   eig = eigen(A, symmetric = TRUE)
-#   # n = length(eig$values)
-#   # tol = n * epsilon
-#   tol = nrow(A) * epsilon
-#   eps = max(tol * abs(eig$values[1]), 0)
-#   positive = eig$values > eps
-#   Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
-#   return(Q)
-# }
+inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+{
+  eig = eigen(A, symmetric = TRUE)
+  # n = length(eig$values)
+  # tol = n * epsilon
+  tol = nrow(A) * epsilon
+  eps = max(tol * abs(eig$values[1]), 0)
+  positive = eig$values > eps
+  Q = eig$vectors[, positive, drop = FALSE] %*% ((1 / eig$values[positive]) * t(eig$vectors[, positive, drop = FALSE]))
+  return(Q)
+}
 
 
 # inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 # {
 #   eig = eigen(A, symmetric = TRUE)
-#   # tol = epsilon
 #   tol = epsilon
 #   eps = max(tol * eig$values[1], 0)
 #   positive = eig$values > eps
@@ -484,17 +483,17 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 #   return(Q)
 # }
 
-inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-{
-  d = dim(A)
-  svds = La.svd(A, d[1], d[1])
-  # tol = epsilon
-  tol = d[1] * epsilon
-  eps = tol * max(svds$d)
-  positive = svds$d > eps
-  Q = svds$u[, positive, drop = FALSE] %*% diag(1 / svds$d[positive]) %*% svds$vt[positive, , drop = FALSE]
-  return(Q)
-}
+# inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+# {
+#   d = dim(A)
+#   svds = La.svd(A, d[1], d[1])
+#   # tol = epsilon
+#   tol = d[1] * epsilon
+#   eps = tol * max(svds$d)
+#   positive = svds$d > eps
+#   Q = svds$u[, positive, drop = FALSE] %*% diag(1 / svds$d[positive], sum(positive)) %*% svds$vt[positive, , drop = FALSE]
+#   return(Q)
+# }
 
 
 # fixit = function(A, epsilon)
