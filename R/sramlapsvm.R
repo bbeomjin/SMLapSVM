@@ -539,8 +539,8 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
-  # diag(Dmat) = diag(Dmat) + max_D * epsilon_D
-  diag(Dmat) = diag(Dmat) + epsilon_D
+  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
+  # diag(Dmat) = diag(Dmat) + epsilon_D
 
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
   # diag(Dmat) = diag(Dmat) + 1e-8
@@ -641,9 +641,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
-  # diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
-  diag(K_KLK) = diag(K_KLK) + epsilon_I
+  # K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
+  diag(K_KLK) = diag(K_KLK) + max(abs(K_KLK)) * epsilon_I
+  # diag(K_KLK) = diag(K_KLK) + epsilon_I
 
   JK = J %*% K
 
@@ -673,8 +673,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   max_D = max(abs(D))
   # D = D / max_D
   # diag(D) = diag(D) + epsilon_D
-  # diag(D) = diag(D) + max_D * epsilon_D
-  diag(D) = diag(D) + epsilon_D
+  diag(D) = diag(D) + max_D * epsilon_D
+  # diag(D) = diag(D) + epsilon_D
   #################################### for test #######################################
   # alpha_mat = matrix(rnorm(n_l * n_class), n_l, n_class)
   # temp_vec = 0
