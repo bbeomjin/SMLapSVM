@@ -487,11 +487,11 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
   n = NROW(cmat)
 
-  # anova_kernel_orig = anova_kernel
-  # anova_kernel$K = lapply(anova_kernel$K, function(x) {
-  #   diag(x) = diag(x) + max(abs(x)) * epsilon_I
-  #   return(x)
-  # })
+  anova_kernel_orig = anova_kernel
+  anova_kernel$K = lapply(anova_kernel$K, function(x) {
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
+    return(x)
+  })
 
   y_temp = factor(y)
   levs = levels(y_temp)
@@ -591,11 +591,11 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   n = nrow(anova_K$K[[1]])
 
-  # anova_K_orig = anova_K
-  # anova_K$K = lapply(anova_K$K, function(x) {
-  #   diag(x) = diag(x) + max(abs(x)) * epsilon_I
-  #   return(x)
-  # })
+  anova_K_orig = anova_K
+  anova_K$K = lapply(anova_K$K, function(x) {
+    diag(x) = diag(x) + max(abs(x)) * epsilon_I
+    return(x)
+  })
 
   K = combine_kernel(anova_K, theta = theta)
   # K = (K + t(K)) / 2
@@ -630,7 +630,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
 
   lambda_K = n_l * lambda * K
-  diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
+  # diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
   lambda_KLK = n_l * lambda_I / n^2 * KLK
 
   K_KLK = lambda_K + lambda_KLK
