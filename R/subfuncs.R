@@ -415,26 +415,6 @@ data_split = function(y, nfolds, seed = length(y))
   return(ran)
 }
 
-# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-# {
-#   if (is_diag) {
-#     d = diag(A)
-#     tol = epsilon
-#     eps = max(tol * max(d), 0)
-#     d[d < eps] = eps
-#     Q = diag(d)
-#   } else {
-#     eig = eigen(A, symmetric = TRUE)
-#     tol = epsilon
-#     eps = max(tol * abs(eig$values[1]), 0)
-#     eig$values[eig$values < eps] = eps
-#     Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
-#     # positive = eig$values > eps
-#     # Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
-#   }
-#   return(Q)
-# }
-
 fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 {
   if (is_diag) {
@@ -442,23 +422,43 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
     tol = epsilon
     eps = max(tol * max(d), 0)
     d[d < eps] = eps
-    A = diag(d)
+    Q = diag(d)
   } else {
     eig = eigen(A, symmetric = TRUE)
-    d = eig$values
     tol = epsilon
-    eps = max(tol * abs(d[1]), 0)
-    d[d < eps] = eps
-    Q = eig$vectors
-    o_diag = diag(A)
-    A = Q %*% (d * t(Q))
-    D = sqrt(pmax(eps, o_diag) / diag(A))
-    A[] = D * A * rep(D, each = ncol(A))
+    eps = max(tol * abs(eig$values[1]), 0)
+    eig$values[eig$values < eps] = eps
+    Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
     # positive = eig$values > eps
     # Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
   }
-  return(A)
+  return(Q)
 }
+
+# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+# {
+#   if (is_diag) {
+#     d = diag(A)
+#     tol = epsilon
+#     eps = max(tol * max(d), 0)
+#     d[d < eps] = eps
+#     A = diag(d)
+#   } else {
+#     eig = eigen(A, symmetric = TRUE)
+#     d = eig$values
+#     tol = epsilon
+#     eps = max(tol * abs(d[1]), 0)
+#     d[d < eps] = eps
+#     Q = eig$vectors
+#     o_diag = diag(A)
+#     A = Q %*% (d * t(Q))
+#     D = sqrt(pmax(eps, o_diag) / diag(A))
+#     A[] = D * A * rep(D, each = ncol(A))
+#     # positive = eig$values > eps
+#     # Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
+#   }
+#   return(A)
+# }
 
 # inverse = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 # {
