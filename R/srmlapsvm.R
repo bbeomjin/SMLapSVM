@@ -630,6 +630,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
 
   lambda_K = n_l * lambda * K
+  diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
   lambda_KLK = n_l * lambda_I / n^2 * KLK
 
   K_KLK = lambda_K + lambda_KLK
