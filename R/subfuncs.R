@@ -467,7 +467,7 @@ fixit = function(A, epsilon) {
   }
 
   d = dim(A)
-  eig = eigen(A)
+  eig = eigen(A, symmetric = TRUE)
   v = eig$values
 
   if (missing(epsilon)) {
