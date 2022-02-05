@@ -470,6 +470,7 @@ fixit = function(A, epsilon) {
 
   if (missing(epsilon)) {
     epsilon = d[1] * max(abs(v)) * .Machine$double.eps
+    # epsilon = 100 * max(abs(v)) * .Machine$double.eps
   }
   delta = 2 * epsilon
 
