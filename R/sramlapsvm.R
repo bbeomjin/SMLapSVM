@@ -678,9 +678,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   D = fixit(D)
   # D = fixit2(D, epsilon = 0)
   max_D = max(abs(diag(D)))
-  D = D / max_D
-  # diag(D) = diag(D) + max_D * epsilon_D
-  diag(D) = diag(D) + epsilon_D
+  # D = D / max_D
+  diag(D) = diag(D) + max_D * epsilon_D
+  # diag(D) = diag(D) + epsilon_D
   #################################### for test #######################################
   # alpha_mat = matrix(rnorm(n_l * n_class), n_l, n_class)
   # temp_vec = 0
@@ -697,7 +697,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   g = as.vector(g_temp)
 
   dvec = -g
-  dvec = -g / max_D
+  # dvec = -g / max_D
 
   # diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   # diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
