@@ -477,8 +477,10 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8,
-                                epsilon_I = NROW(anova_kernel$K[[1]]) * .Machine$double.eps)
+                                eig_tol_D = 100 * .Machine$double.eps,
+                                eig_tol_I = .Machine$double.eps,
+                                epsilon_D = 1e-8,
+                                epsilon_I = .Machine$double.eps)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -577,8 +579,10 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8,
-                             epsilon_I = NROW(anova_K$K[[1]]) * .Machine$double.eps)
+                             eig_tol_D = 100 * .Machine$double.eps,
+                             eig_tol_I = .Machine$double.eps,
+                             epsilon_D = 1e-8,
+                             epsilon_I = .Machine$double.eps)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -635,8 +639,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # K_KLK = lambda_K + lambda_KLK
   K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  # K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
-  K_KLK = fixit(K_KLK)
+  K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
+  # K_KLK = fixit(K_KLK)
   diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
 
   JK = J %*% K
@@ -661,8 +665,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
   # D = (D + t(D)) / 2
-  # D = fixit(D, epsilon = eig_tol_D)
-  D = fixit(D)
+  D = fixit(D, epsilon = eig_tol_D)
+  # D = fixit(D)
   # D = fixit2(D, epsilon = 0)
   max_D = max(abs(diag(D)))
   # D = D / max_D

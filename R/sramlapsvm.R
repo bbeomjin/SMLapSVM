@@ -465,8 +465,10 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 
 find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda, lambda_I, lambda_theta = 1,
-                                 eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8,
-                                 epsilon_I = NROW(anova_kernel$K[[1]]) * .Machine$double.eps)
+                                 eig_tol_D = 100 * .Machine$double.eps,
+                                 eig_tol_I = .Machine$double.eps,
+                                 epsilon_D = 1e-8,
+                                 epsilon_I = .Machine$double.eps)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -583,8 +585,10 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
 
 
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                              eig_tol_D = 0, eig_tol_I = 1e-20, epsilon_D = 1e-8,
-                              epsilon_I = NROW(anova_K$K[[1]]) * .Machine$double.eps)
+                              eig_tol_D = 100 * .Machine$double.eps,
+                              eig_tol_I = .Machine$double.eps,
+                              epsilon_D = 1e-8,
+                              epsilon_I = .Machine$double.eps)
 {
 
   out = list()
@@ -644,8 +648,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # K_KLK = lambda_K + lambda_KLK
   K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  # K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
-  K_KLK = fixit(K_KLK)
+  K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
   diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
   # diag(K_KLK) = diag(K_KLK) + epsilon_I
 
@@ -674,8 +677,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
     Amat[, j] = -Lmatj[[j]]
   }
   # D = (D + t(D)) / 2
-  # D = fixit(D, epsilon = eig_tol_D)
-  D = fixit(D)
+  D = fixit(D, epsilon = eig_tol_D)
   # D = fixit2(D, epsilon = 0)
   max_D = max(abs(diag(D)))
   # D = D / max_D

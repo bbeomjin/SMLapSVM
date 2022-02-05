@@ -481,7 +481,7 @@ fixit3 = function(A, epsilon) {
   return(A + dm)
 }
 
-fixit = function(A, epsilon) {
+fixit = function(A, epsilon = 100 *.Machine$double.eps) {
 
   if (!is.matrix(A)) {
     A = as.matrix(A)
@@ -492,11 +492,7 @@ fixit = function(A, epsilon) {
   # eig = eigen(A)
   v = eig$values
 
-  if (missing(epsilon)) {
-    epsilon = d[1] * max(abs(v)) * .Machine$double.eps
-    # epsilon = 100 * max(abs(v)) * .Machine$double.eps
-  }
-  delta = 2 * epsilon
+  delta = max(abs(v)) * epsilon
 
   tau = pmax(0, delta - v)
   A = eig$vectors %*% diag(v + tau, d[1]) %*% t(eig$vectors)
