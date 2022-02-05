@@ -662,8 +662,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
   # D = (D + t(D)) / 2
   # D = fixit(D, epsilon = eig_tol_D)
-  # D = fixit(D)
-  D = fixit2(D, epsilon = 0)
+  D = fixit(D)
+  # D = fixit2(D, epsilon = 0)
   max_D = max(abs(diag(D)))
   # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
