@@ -481,7 +481,7 @@ fixit3 = function(A, epsilon) {
   return(A + dm)
 }
 
-fixit = function(A, epsilon = 100 *.Machine$double.eps) {
+fixit = function(A, epsilon = .Machine$double.eps) {
 
   if (!is.matrix(A)) {
     A = as.matrix(A)
