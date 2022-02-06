@@ -435,28 +435,28 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(Q)
 # }
 
-fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-{
-  if (is_diag) {
-    d = diag(A)
-    tol = epsilon
-    eps = max(tol * max(d), 0)
-    d[d < eps] = eps
-    A = diag(d)
-  } else {
-    eig = eigen(A, symmetric = TRUE)
-    d = eig$values
-    tol = epsilon
-    eps = max(tol * abs(d[1]), 0)
-    d[d < eps] = eps
-    Q = eig$vectors
-    o_diag = diag(A)
-    A = Q %*% (d * t(Q))
-    D = sqrt(pmax(eps, o_diag) / diag(A))
-    A[] = D * A * rep(D, each = ncol(A))
-  }
-  return(A)
-}
+# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+# {
+#   if (is_diag) {
+#     d = diag(A)
+#     tol = epsilon
+#     eps = max(tol * max(d), 0)
+#     d[d < eps] = eps
+#     A = diag(d)
+#   } else {
+#     eig = eigen(A, symmetric = TRUE)
+#     d = eig$values
+#     tol = epsilon
+#     eps = max(tol * abs(d[1]), 0)
+#     d[d < eps] = eps
+#     Q = eig$vectors
+#     o_diag = diag(A)
+#     A = Q %*% (d * t(Q))
+#     D = sqrt(pmax(eps, o_diag) / diag(A))
+#     A[] = D * A * rep(D, each = ncol(A))
+#   }
+#   return(A)
+# }
 
 # fixit = function(A, epsilon = .Machine$double.eps) {
 #
@@ -475,24 +475,24 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 #   A = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
 #   return(A)
 # }
-#
-# fixit = function(A, epsilon = .Machine$double.eps) {
-#
-#   if (!is.matrix(A)) {
-#     A = as.matrix(A)
-#   }
-#
-#   d = dim(A)
-#   eig = eigen(A, symmetric = TRUE)
-#   # eig = eigen(A)
-#   v = eig$values
-#
-#   delta = max(abs(v)) * epsilon
-#
-#   tau = pmax(0, delta - v)
-#   A = eig$vectors %*% diag(v + tau, d[1]) %*% t(eig$vectors)
-#   return(A)
-# }
+
+fixit = function(A, epsilon = .Machine$double.eps) {
+
+  if (!is.matrix(A)) {
+    A = as.matrix(A)
+  }
+
+  d = dim(A)
+  eig = eigen(A, symmetric = TRUE)
+  # eig = eigen(A)
+  v = eig$values
+
+  delta = max(abs(v)) * epsilon
+
+  tau = pmax(0, delta - v)
+  A = eig$vectors %*% diag(v + tau, d[1]) %*% t(eig$vectors)
+  return(A)
+}
 
 
 
