@@ -477,10 +477,11 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, lambda_I, lambda_theta = 1,
-                                eig_tol_D = 100 * .Machine$double.eps,
+                                eig_tol_D = .Machine$double.eps,
                                 eig_tol_I = .Machine$double.eps,
                                 epsilon_D = 1e-8,
-                                epsilon_I = .Machine$double.eps)
+                                epsilon_I = .Machine$double.eps,
+                                inv_tol = 1e-25)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -570,8 +571,8 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  # theta[theta < 1e-6] = 0
-  theta = round(theta, 6)
+  theta[theta < 1e-6] = 0
+  # theta = round(theta, 6)
 
   return(theta)
 }
@@ -579,10 +580,11 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
-                             eig_tol_D = 100 * .Machine$double.eps,
+                             eig_tol_D = .Machine$double.eps,
                              eig_tol_I = .Machine$double.eps,
                              epsilon_D = 1e-8,
-                             epsilon_I = .Machine$double.eps)
+                             epsilon_I = .Machine$double.eps,
+                             inv_tol = 1e-25)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -639,7 +641,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # K_KLK = lambda_K + lambda_KLK
   K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = eig_tol_D)
+  K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   # K_KLK = fixit(K_KLK)
   diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
 
@@ -650,7 +652,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_K_KLK = inverse(K_KLK)
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = inv_K_KLK %*% t(JK)
-  inv_K_KLK = solve(K_KLK, t(JK), tol = eig_tol_I)
+  inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
   # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
   Q = JK %*% inv_K_KLK
@@ -669,9 +671,9 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # D = fixit(D)
   # D = fixit2(D, epsilon = 0)
   max_D = max(abs(diag(D)))
-  D = D / max_D
-  # diag(D) = diag(D) + max_D * epsilon_D
-  diag(D) = diag(D) + epsilon_D
+  # D = D / max_D
+  diag(D) = diag(D) + max_D * epsilon_D
+  # diag(D) = diag(D) + epsilon_D
 
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D
@@ -680,8 +682,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   g_temp[y_index] = -n_class + 1
   g = as.vector(g_temp)
 
-  # dvec = -g
-  dvec = -g / max_D
+  dvec = -g
+  # dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
