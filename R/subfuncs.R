@@ -520,7 +520,8 @@ fixit = function(A, epsilon = .Machine$double.eps) {
   v = eig$values
   tol = max(abs(v)) * epsilon
   # tau = pmax(0, tol - v)
-  tau = max(0, tol - v)
+  tau = pmax(0, tol - v)
+
   # if (symm) {
   #   A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
   # }
