@@ -510,7 +510,7 @@ fixit = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
     A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
   }
   eps_mat = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
-  return(A)
+  return(A + eps_mat)
 }
 
 
