@@ -597,6 +597,7 @@ fixit = function(A, epsilon = .Machine$double.eps)
   delta = 2 * d * max(abs(esv)) * epsilon
   tau = pmax(0, delta - esv)
   dm = es$vectors %*% diag(tau, d) %*% t(es$vectors)
+  A = es$vectors %*% diag(esv, d) %*% t(es$vectors)
   return(A + dm)
 }
 
