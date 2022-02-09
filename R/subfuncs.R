@@ -494,7 +494,7 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(A)
 # }
 
-fixit = function(A, epsilon = .Machine$double.eps) {
+fixit = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
 
   if (!is.matrix(A)) {
     A = as.matrix(A)
@@ -504,11 +504,12 @@ fixit = function(A, epsilon = .Machine$double.eps) {
   eig = eigen(A, symmetric = TRUE)
   # eig = eigen(A)
   v = eig$values
-
   tol = max(abs(v)) * epsilon
-
-  v[v < tol] = tol
-  A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
+  tau = pmax(0, tol - v)
+  if (symm) {
+    A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
+  }
+  eps_mat = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
   return(A)
 }
 
