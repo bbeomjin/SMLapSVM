@@ -510,24 +510,24 @@ data_split = function(y, nfolds, seed = length(y))
 # }
 
 
-# fixit = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
-#
-#   if (!is.matrix(A)) {
-#     A = as.matrix(A)
-#   }
-#
-#   d = dim(A)
-#   eig = eigen(A, symmetric = TRUE)
-#   # eig = eigen(A)
-#   v = eig$values
-#   tol = max(abs(v)) * epsilon
-#   tau = pmax(0, tol - v)
-#   if (symm) {
-#     A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
-#   }
-#   eps_mat = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
-#   return(A + eps_mat)
-# }
+fixit = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
+
+  if (!is.matrix(A)) {
+    A = as.matrix(A)
+  }
+
+  d = dim(A)
+  eig = eigen(A, symmetric = TRUE)
+  # eig = eigen(A)
+  v = eig$values
+  tol = max(abs(v)) * epsilon
+  tau = pmax(0, tol - v)
+  if (symm) {
+    A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
+  }
+  eps_mat = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
+  return(A + eps_mat)
+}
 
 
 
@@ -584,22 +584,22 @@ inverse = function(A, epsilon = .Machine$double.eps)
 #   return(eig$vectors %*% diag(eig$values) %*% t(eig$vectors))
 # }
 
-fixit = function(A, epsilon = .Machine$double.eps)
-{
-  d = dim(A)[1]
-  if (dim(A)[2] != d)
-    stop("Input matrix is not square!")
-  es = eigen(A, symmetric = TRUE)
-  esv = es$values
-  # if (missing(epsilon)) {
-    epsilon = d * max(abs(esv)) * epsilon
-  # }
-  delta = 2 * d * max(abs(esv)) * epsilon
-  tau = pmax(0, delta - esv)
-  dm = es$vectors %*% diag(tau, d) %*% t(es$vectors)
-  A = es$vectors %*% diag(esv, d) %*% t(es$vectors)
-  return(A + dm)
-}
+# fixit = function(A, epsilon = .Machine$double.eps)
+# {
+#   d = dim(A)[1]
+#   if (dim(A)[2] != d)
+#     stop("Input matrix is not square!")
+#   es = eigen(A, symmetric = TRUE)
+#   esv = es$values
+#   # if (missing(epsilon)) {
+#     epsilon = d * max(abs(esv)) * epsilon
+#   # }
+#   delta = 2 * d * max(abs(esv)) * epsilon
+#   tau = pmax(0, delta - esv)
+#   dm = es$vectors %*% diag(tau, d) %*% t(es$vectors)
+#   A = es$vectors %*% diag(esv, d) %*% t(es$vectors)
+#   return(A + dm)
+# }
 
 
 
