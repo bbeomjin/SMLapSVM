@@ -521,11 +521,13 @@ fixit = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
   # eig = eigen(A)
   v = eig$values
   tol = max(abs(v)) * epsilon
-  tau = pmax(0, tol - v)
+  # tau = pmax(0, tol - v)
+  tau = max(0, tol - v)
   if (symm) {
     A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
   }
-  eps_mat = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
+  # eps_mat = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
+  eps_mat = diag(tau, d[1])
   return(A + eps_mat)
 }
 
