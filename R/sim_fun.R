@@ -35,13 +35,13 @@ generateMultiMoon = function(each_n = 100, sigma = 1, noise_p = 4, noise_sd = 3,
   set.seed(seed)
   x = runif(each_n, 0, pi)
   c1 = cbind(5 * cos(x) - 3.5 + rnorm(each_n) * sigma, 10 * sin(x) -
-               2.5 + rnorm(each_n) * sigma)
+               0.5 + rnorm(each_n) * sigma)
   x = runif(each_n, pi, 2 * pi)
   c2 = cbind(5 * cos(x) + 3.5 + rnorm(each_n) * sigma, 10 * sin(x) +
-               2.5 + rnorm(each_n) * sigma)
+               0.5 + rnorm(each_n) * sigma)
   x = runif(each_n, 0, pi)
   c3 = cbind(5 * cos(x) + 10.5 + rnorm(each_n) * sigma, 10 * sin(x) -
-               2.5 + rnorm(each_n) * sigma)
+               0.5 + rnorm(each_n) * sigma)
   X = rbind(c1, c2, c3)
   noise_X = matrix(rnorm(3 * each_n * noise_p, 0, noise_sd), nrow = 3 * each_n, ncol = noise_p)
   X = cbind(X, noise_X)
