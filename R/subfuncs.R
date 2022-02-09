@@ -20,7 +20,7 @@ kernelMatrix = function(x, y, kernel = "gaussian", kparam = 1.0) {
     temp = x %*% t(y)
     temp = (-2.0 * temp) + outer(normx, rep(1.0, nrow(y)), "*") + outer(rep(1.0, nrow(x)), normy, "*")
     K = exp(-temp * kparam)
-    # obj = kernelMatrix(rbfdot(sigma = kparam), x, y)
+    obj = kernlab:::kernelMatrix(rbfdot(sigma = kparam), x, y)
   } else if (kernel == "spline") {
     K = 0
     for (d in 1:p) {
