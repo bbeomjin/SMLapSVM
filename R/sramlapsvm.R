@@ -669,7 +669,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   JK = J %*% K
 
-  inv_K_KLK = solve(K_KLK, tol = eig_tol_I)
+  inv_K_KLK = solve(K_KLK, tol = inv_tol)
   # inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = inverse(K_KLK)
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
