@@ -584,7 +584,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
   theta[theta < 1e-6] = 0
-  theta = round(theta, 6)
+  # theta = round(theta, 6)
 
   return(theta)
 }
@@ -659,12 +659,12 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   JK = J %*% K
 
-  # inv_K_KLK = solve(K_KLK, tol = inv_tol)
+  inv_K_KLK = solve(K_KLK, tol = inv_tol)
   # inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = inverse(K_KLK)
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
-  # inv_K_KLK = inv_K_KLK %*% t(JK)
-  inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  inv_K_KLK = inv_K_KLK %*% t(JK)
+  # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
   # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
   Q = JK %*% inv_K_KLK
