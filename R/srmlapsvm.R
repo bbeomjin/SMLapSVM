@@ -659,8 +659,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   JK = J %*% K
 
-  # inv_K_KLK = solve(K_KLK, tol = inv_tol)
-  inv_K_KLK = chol2inv(chol(K_KLK))
+  inv_K_KLK = solve(K_KLK, tol = inv_tol)
+  # inv_K_KLK = chol2inv(chol(K_KLK))
   # inv_K_KLK = inverse(K_KLK)
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   inv_K_KLK = tcrossprod(inv_K_KLK, JK)
