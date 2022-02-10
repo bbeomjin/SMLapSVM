@@ -40,7 +40,7 @@ kernelMatrix = function(x, y, kernel = "gaussian", kparam = 1.0) {
   } else {
     K = NULL
   }
-  return((K + t(K)) / 2)
+  return(K)
 }
 
 XI_gen = function(k) {
