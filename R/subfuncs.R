@@ -40,7 +40,7 @@ kernelMatrix = function(x, y, kernel = "gaussian", kparam = 1.0) {
   } else {
     K = NULL
   }
-  return(K)
+  return((K + t(K)) / 2)
 }
 
 XI_gen = function(k) {
@@ -139,7 +139,7 @@ make_L_mat = function(X, kernel = "gaussian", kparam = 1, graph, weightType = c(
   }
 
   # binary matrix
-  return(L_mat)
+  return((L_mat + t(L_mat)) / 2)
 }
 
 
