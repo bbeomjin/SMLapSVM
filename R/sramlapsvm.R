@@ -496,11 +496,11 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
 
   n = NROW(cmat)
 
-  anova_kernel_orig = anova_kernel
-  anova_kernel$K = lapply(anova_kernel$K, function(x) {
-    diag(x) = diag(x) + max(abs(x)) * epsilon_D
-    return(x)
-  })
+  # anova_kernel_orig = anova_kernel
+  # anova_kernel$K = lapply(anova_kernel$K, function(x) {
+  #   diag(x) = diag(x) + max(abs(x)) * epsilon_D
+  #   return(x)
+  # })
 
   y_temp = factor(y)
   levs = levels(y_temp)
@@ -617,11 +617,11 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   # n = nrow(anova_K$K[[1]])
 
-  anova_K_orig = anova_K
-  anova_K$K = lapply(anova_K$K, function(x) {
-    diag(x) = diag(x) + max(abs(x)) * epsilon_D
-    return(x)
-  })
+  # anova_K_orig = anova_K
+  # anova_K$K = lapply(anova_K$K, function(x) {
+  #   diag(x) = diag(x) + max(abs(x)) * epsilon_D
+  #   return(x)
+  # })
 
   K = combine_kernel(anova_K, theta = theta)
   n = nrow(K)
