@@ -524,11 +524,11 @@ fixit = function(A, epsilon = .Machine$double.eps) {
     A = as.matrix(A)
   }
 
-  d = dim(A)
+  n = dim(A)[1]
   eig = eigen(A, symmetric = TRUE)
   # eig = eigen(A)
   v = eig$values
-  tol = max(abs(v)) * epsilon
+  tol = n * max(abs(v)) * epsilon
   # tau = pmax(0, tol - v)
   diag(A) = diag(A) + tol
   return(A)
