@@ -458,23 +458,41 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(A)
 # }
 
+
+fixit = function(A, epsilon = .Machine$double.eps) {
+
+  if (!is.matrix(A)) {
+    A = as.matrix(A)
+  }
+
+  n = dim(A)[1]
+  eig = eigen(A, symmetric = TRUE)
+  # eig = eigen(A)
+  v = eig$values
+  tol = max(abs(v)) * epsilon
+  diag(A) = diag(A) + tol
+  return(A)
+}
+
+
 # fixit = function(A, epsilon = .Machine$double.eps) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
 #   }
 #
-#   d = dim(A)
+#   n = dim(A)[1]
 #   eig = eigen(A, symmetric = TRUE)
 #   # eig = eigen(A)
 #   v = eig$values
-#
-#   delta = max(abs(v)) * epsilon
-#
-#   tau = pmax(0, delta + v)
-#   A = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
+#   # tol = n * max(abs(v)) * epsilon
+#   tol = max(abs(v)) * epsilon
+#   positive = v > tol
+#   A = eig$vectors[, positive, drop = FALSE] %*% diag(v[positive], sum(positive)) %*% t(eig$vectors[, positive, drop = FALSE])
+#   diag(A) = diag(A) + tol
 #   return(A)
 # }
+
 
 # fixit2 = function(A, epsilon = .Machine$double.eps) {
 #
@@ -517,39 +535,23 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(A)
 # }
 
-
 # fixit = function(A, epsilon = .Machine$double.eps) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
 #   }
 #
-#   n = dim(A)[1]
+#   d = dim(A)
 #   eig = eigen(A, symmetric = TRUE)
 #   # eig = eigen(A)
 #   v = eig$values
-#   tol = n * max(abs(v)) * epsilon
-#   diag(A) = diag(A) + tol
+#
+#   delta = max(abs(v)) * epsilon
+#
+#   tau = pmax(0, delta + v)
+#   A = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
 #   return(A)
 # }
-
-fixit = function(A, epsilon = .Machine$double.eps) {
-
-  if (!is.matrix(A)) {
-    A = as.matrix(A)
-  }
-
-  n = dim(A)[1]
-  eig = eigen(A, symmetric = TRUE)
-  # eig = eigen(A)
-  v = eig$values
-  # tol = n * max(abs(v)) * epsilon
-  tol = max(abs(v)) * epsilon
-  positive = v > tol
-  A = eig$vectors[, positive, drop = FALSE] %*% diag(v[positive], sum(positive)) %*% t(eig$vectors[, positive, drop = FALSE])
-  diag(A) = diag(A) + tol
-  return(A)
-}
 
 
 # fixit2 = function(A, epsilon = .Machine$double.eps) {
