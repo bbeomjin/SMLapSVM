@@ -435,28 +435,28 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(Q)
 # }
 
-fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-{
-  if (is_diag) {
-    d = diag(A)
-    tol = epsilon
-    eps = max(tol * max(d), 0)
-    d[d < eps] = eps
-    A = diag(d)
-  } else {
-    eig = eigen(A, symmetric = TRUE)
-    d = eig$values
-    tol = epsilon
-    eps = max(tol * abs(d[1]), 0)
-    d[d < eps] = eps
-    Q = eig$vectors
-    o_diag = diag(A)
-    A = Q %*% (d * t(Q))
-    D = sqrt(pmax(eps, o_diag) / diag(A))
-    A[] = D * A * rep(D, each = ncol(A))
-  }
-  return(A)
-}
+# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+# {
+#   if (is_diag) {
+#     d = diag(A)
+#     tol = epsilon
+#     eps = max(tol * max(d), 0)
+#     d[d < eps] = eps
+#     A = diag(d)
+#   } else {
+#     eig = eigen(A, symmetric = TRUE)
+#     d = eig$values
+#     tol = epsilon
+#     eps = max(tol * abs(d[1]), 0)
+#     d[d < eps] = eps
+#     Q = eig$vectors
+#     o_diag = diag(A)
+#     A = Q %*% (d * t(Q))
+#     D = sqrt(pmax(eps, o_diag) / diag(A))
+#     A[] = D * A * rep(D, each = ncol(A))
+#   }
+#   return(A)
+# }
 
 # fixit = function(A, epsilon = .Machine$double.eps) {
 #
@@ -533,23 +533,23 @@ fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 #   return(A)
 # }
 
-# fixit = function(A, epsilon = .Machine$double.eps) {
-#
-#   if (!is.matrix(A)) {
-#     A = as.matrix(A)
-#   }
-#
-#   n = dim(A)[1]
-#   eig = eigen(A, symmetric = TRUE)
-#   # eig = eigen(A)
-#   v = eig$values
-#   # tol = n * max(abs(v)) * epsilon
-#   tol = max(abs(v)) * epsilon
-#   positive = v > tol
-#   A = eig$vectors[, positive, drop = FALSE] %*% diag(v[positive], sum(positive)) %*% t(eig$vectors[, positive, drop = FALSE])
-#   diag(A) = diag(A) + tol
-#   return(A)
-# }
+fixit = function(A, epsilon = .Machine$double.eps) {
+
+  if (!is.matrix(A)) {
+    A = as.matrix(A)
+  }
+
+  n = dim(A)[1]
+  eig = eigen(A, symmetric = TRUE)
+  # eig = eigen(A)
+  v = eig$values
+  # tol = n * max(abs(v)) * epsilon
+  tol = max(abs(v)) * epsilon
+  positive = v > tol
+  A = eig$vectors[, positive, drop = FALSE] %*% diag(v[positive], sum(positive)) %*% t(eig$vectors[, positive, drop = FALSE])
+  diag(A) = diag(A) + tol
+  return(A)
+}
 
 
 # fixit2 = function(A, epsilon = .Machine$double.eps) {
