@@ -459,20 +459,20 @@ data_split = function(y, nfolds, seed = length(y))
 # }
 
 
-fixit = function(A, epsilon = .Machine$double.eps) {
-
-  if (!is.matrix(A)) {
-    A = as.matrix(A)
-  }
-
-  n = dim(A)[1]
-  eig = eigen(A, symmetric = TRUE)
-  # eig = eigen(A)
-  v = eig$values
-  tol = max(abs(v)) * epsilon
-  diag(A) = diag(A) + tol
-  return(A)
-}
+# fixit = function(A, epsilon = .Machine$double.eps) {
+#
+#   if (!is.matrix(A)) {
+#     A = as.matrix(A)
+#   }
+#
+#   n = dim(A)[1]
+#   eig = eigen(A, symmetric = TRUE)
+#   # eig = eigen(A)
+#   v = eig$values
+#   tol = max(abs(v)) * epsilon
+#   diag(A) = diag(A) + tol
+#   return(A)
+# }
 
 
 # fixit = function(A, epsilon = .Machine$double.eps) {
@@ -492,6 +492,22 @@ fixit = function(A, epsilon = .Machine$double.eps) {
 #   diag(A) = diag(A) + tol
 #   return(A)
 # }
+
+fixit = function(A, epsilon = .Machine$double.eps) {
+
+  if (!is.matrix(A)) {
+    A = as.matrix(A)
+  }
+  d = dim(A)
+  eig = eigen(A, symmetric = TRUE)
+  # eig = eigen(A)
+  v = eig$values
+  tol = max(abs(v)) * epsilon
+  v[v < tol] = tol
+  A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
+  return(A)
+}
+
 
 
 # fixit2 = function(A, epsilon = .Machine$double.eps) {
@@ -568,21 +584,6 @@ fixit = function(A, epsilon = .Machine$double.eps) {
 #   # tau = pmax(0, tol - v)
 #   eps_mat = eig$vector %*% diag(tol, n) %*% t(eig$vector)
 #   return(A + eps_mat)
-# }
-
-# fixit = function(A, epsilon = .Machine$double.eps) {
-#
-#   if (!is.matrix(A)) {
-#     A = as.matrix(A)
-#   }
-#   d = dim(A)
-#   eig = eigen(A, symmetric = TRUE)
-#   # eig = eigen(A)
-#   v = eig$values
-#   tol = max(abs(v)) * epsilon
-#   v[v < tol] = tol
-#   A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
-#   return(A)
 # }
 
 # fixit = function(A, epsilon = .Machine$double.eps) {
