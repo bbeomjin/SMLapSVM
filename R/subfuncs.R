@@ -415,48 +415,46 @@ data_split = function(y, nfolds, seed = length(y))
   return(ran)
 }
 
-# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-# {
-#   if (is_diag) {
-#     d = diag(A)
-#     tol = epsilon
-#     eps = max(tol * max(d), 0)
-#     d[d < eps] = eps
-#     Q = diag(d)
-#   } else {
-#     eig = eigen(A, symmetric = TRUE)
-#     tol = epsilon
-#     eps = max(tol * abs(eig$values[1]), 0)
-#     eig$values[eig$values < eps] = eps
-#     Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
-#     # positive = eig$values > eps
-#     # Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
-#   }
-#   return(Q)
-# }
 
-# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-# {
-#   if (is_diag) {
-#     d = diag(A)
-#     tol = epsilon
-#     eps = max(tol * max(d), 0)
-#     d[d < eps] = eps
-#     A = diag(d)
-#   } else {
-#     eig = eigen(A, symmetric = TRUE)
-#     d = eig$values
-#     tol = epsilon
-#     eps = max(tol * abs(d[1]), 0)
-#     d[d < eps] = eps
-#     Q = eig$vectors
-#     o_diag = diag(A)
-#     A = Q %*% (d * t(Q))
-#     D = sqrt(pmax(eps, o_diag) / diag(A))
-#     A[] = D * A * rep(D, each = ncol(A))
+
+
+# fixit = function(A, epsilon = .Machine$double.eps) {
+#
+#   if (!is.matrix(A)) {
+#     A = as.matrix(A)
 #   }
+#   d = dim(A)
+#   eig = eigen(A, symmetric = TRUE)
+#   # eig = eigen(A)
+#   v = eig$values
+#   tol = max(abs(v)) * epsilon
+#   v[v < tol] = tol
+#   A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
 #   return(A)
 # }
+
+fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+{
+  if (is_diag) {
+    d = diag(A)
+    tol = epsilon
+    eps = max(tol * max(d), 0)
+    d[d < eps] = eps
+    A = diag(d)
+  } else {
+    eig = eigen(A, symmetric = TRUE)
+    d = eig$values
+    tol = epsilon
+    eps = max(tol * abs(d[1]), 0)
+    d[d < eps] = eps
+    Q = eig$vectors
+    o_diag = diag(A)
+    A = Q %*% (d * t(Q))
+    D = sqrt(pmax(eps, o_diag) / diag(A))
+    A[] = D * A * rep(D, each = ncol(A))
+  }
+  return(A)
+}
 
 
 # fixit = function(A, epsilon = .Machine$double.eps) {
@@ -493,24 +491,7 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(A)
 # }
 
-fixit = function(A, epsilon = .Machine$double.eps) {
-
-  if (!is.matrix(A)) {
-    A = as.matrix(A)
-  }
-  d = dim(A)
-  eig = eigen(A, symmetric = TRUE)
-  # eig = eigen(A)
-  v = eig$values
-  tol = max(abs(v)) * epsilon
-  v[v < tol] = tol
-  A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
-  return(A)
-}
-
-
-
-# fixit2 = function(A, epsilon = .Machine$double.eps) {
+# fixit = function(A, epsilon = .Machine$double.eps) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
@@ -528,6 +509,32 @@ fixit = function(A, epsilon = .Machine$double.eps) {
 #   A = eig$vectors %*% diag(v + tau, d[1]) %*% t(eig$vectors)
 #   return(A)
 # }
+
+##############################################################################################################################################
+
+# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+# {
+#   if (is_diag) {
+#     d = diag(A)
+#     tol = epsilon
+#     eps = max(tol * max(d), 0)
+#     d[d < eps] = eps
+#     Q = diag(d)
+#   } else {
+#     eig = eigen(A, symmetric = TRUE)
+#     tol = epsilon
+#     eps = max(tol * abs(eig$values[1]), 0)
+#     eig$values[eig$values < eps] = eps
+#     Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+#     # positive = eig$values > eps
+#     # Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
+#   }
+#   return(Q)
+# }
+
+
+
+
 
 # fixit2 = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
 #
