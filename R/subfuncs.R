@@ -417,7 +417,7 @@ data_split = function(y, nfolds, seed = length(y))
 
 
 
-# fixit4 = function(A, epsilon = .Machine$double.eps) {
+# fixit3 = function(A, epsilon = .Machine$double.eps) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
@@ -433,7 +433,7 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(A)
 # }
 
-# fixit3 = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
+# fixit4 = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
 # {
 #   if (is_diag) {
 #     d = diag(A)
@@ -459,7 +459,7 @@ data_split = function(y, nfolds, seed = length(y))
 # }
 
 
-# fixit = function(A, epsilon = .Machine$double.eps) {
+# fixit5 = function(A, epsilon = .Machine$double.eps) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
@@ -475,7 +475,7 @@ data_split = function(y, nfolds, seed = length(y))
 # }
 
 
-# fixit = function(A, epsilon = .Machine$double.eps) {
+# fixit2 = function(A, epsilon = .Machine$double.eps) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
@@ -488,7 +488,7 @@ data_split = function(y, nfolds, seed = length(y))
 #   # tol = n * max(abs(v)) * epsilon
 #   tol = max(abs(v)) * epsilon
 #   positive = v > tol
-#   A = eig$vectors[, positive, drop = FALSE] %*% (v[positive] * t(eig$vectors[, positive, drop = FALSE]))
+#   A = eig$vectors[, positive, drop = FALSE] %*% diag(v[positive], sum(positive)) %*% t(eig$vectors[, positive, drop = FALSE])
 #   diag(A) = diag(A) + tol
 #   return(A)
 # }
