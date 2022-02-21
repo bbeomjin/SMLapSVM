@@ -101,21 +101,31 @@ beta_kernel = function(y, k, my, warm, lambda, inv_LK){
 }
 
 
-make_knn_graph_mat = function(X, k = 6)
+# make_knn_graph_mat = function(X, k = 6)
+# {
+#   distance = as.matrix(dist(X, method = "euclidean"))
+#   #    distance = sv.kernel(X.mat, X.mat, kernel = list(type="rbf", par=2))
+#   #    distance = 1/distance
+#   # distance[distance < 1e-6] = 0
+#   knn_mat = matrix(0, nrow(X), nrow(X))
+#   order_mat = apply(distance, 2, order)
+#   for(i in 1:ncol(knn_mat)) {
+#     knn_mat[order_mat[1:k, i], i] = 1
+#   }
+#   graph_mat = matrix(0, nrow(X), nrow(X))
+#   graph_mat[(t(knn_mat) + knn_mat) != 0] = 1
+#   # diag(graph_mat) = 0
+#   return(graph_mat)
+# }
+
+# equal to adjacency_knn function in RSSL package
+make_knn_graph_mat = function(X, distance = "euclidean", k = 6)
 {
-  distance = as.matrix(dist(X, method = "euclidean"))
-  #    distance = sv.kernel(X.mat, X.mat, kernel = list(type="rbf", par=2))
-  #    distance = 1/distance
-  # distance[distance < 1e-6] = 0
-  knn_mat = matrix(0, nrow(X), nrow(X))
-  order_mat = apply(distance, 2, order)
-  for(i in 1:ncol(knn_mat)) {
-    knn_mat[order_mat[1:k, i], i] = 1
-  }
-  graph_mat = matrix(0, nrow(X), nrow(X))
-  graph_mat[(t(knn_mat) + knn_mat) != 0] = 1
-  # diag(graph_mat) = 0
-  return(graph_mat)
+  Ds <- as.matrix(dist(X, method = distance))
+  neighbours <- apply(Ds, 1, function(x) sort(x, index.return = TRUE)$ix[2:(k + 1)]) %>% as.integer
+  adj <- as.matrix(Matrix::sparseMatrix(i = rep(1:nrow(X), each = k), j = neighbours, x = 1, dims = c(nrow(X), nrow(X))))
+  adj <- (adj | t(adj)) * 1
+  return(adj)
 }
 
 make_L_mat = function(X, kernel = "gaussian", kparam = 1, graph, weightType = c("Heatmap", "Binary"), normalized = FALSE)
@@ -513,33 +523,8 @@ fixit = function(A, epsilon = .Machine$double.eps) {
   return(A)
 }
 
-##############################################################################################################################################
 
-# fixit = function(A, epsilon = .Machine$double.eps, is_diag = FALSE)
-# {
-#   if (is_diag) {
-#     d = diag(A)
-#     tol = epsilon
-#     eps = max(tol * max(d), 0)
-#     d[d < eps] = eps
-#     Q = diag(d)
-#   } else {
-#     eig = eigen(A, symmetric = TRUE)
-#     tol = epsilon
-#     eps = max(tol * abs(eig$values[1]), 0)
-#     eig$values[eig$values < eps] = eps
-#     Q = eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
-#     # positive = eig$values > eps
-#     # Q = eig$vectors[, positive, drop = FALSE] %*% diag(eig$values[positive]) %*% t(eig$vectors[, positive, drop = FALSE])
-#   }
-#   return(Q)
-# }
-
-
-
-
-
-# fixit2 = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
+# fixit6 = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
@@ -561,7 +546,24 @@ fixit = function(A, epsilon = .Machine$double.eps) {
 #   return(A)
 # }
 
-# fixit = function(A, epsilon = .Machine$double.eps) {
+# fixit7 = function(A, epsilon = .Machine$double.eps, symm = FALSE) {
+#
+#   if (!is.matrix(A)) {
+#     A = as.matrix(A)
+#   }
+#
+#   d = dim(A)
+#   eig = eigen(A, symmetric = TRUE)
+#   # eig = eigen(A)
+#   v = eig$values
+#   tol = max(abs(v)) * epsilon
+#   # tau = pmax(0, tol - v)
+#   tau = pmax(0, tol - v)
+#   A = eig$vectors %*% diag(v + tau, d[1]) %*% t(eig$vectors)
+#   return(A)
+# }
+
+# fixit8 = function(A, epsilon = .Machine$double.eps) {
 #
 #   if (!is.matrix(A)) {
 #     A = as.matrix(A)
@@ -580,44 +582,8 @@ fixit = function(A, epsilon = .Machine$double.eps) {
 # }
 
 
-# fixit2 = function(A, epsilon = .Machine$double.eps) {
-#
-#   if (!is.matrix(A)) {
-#     A = as.matrix(A)
-#   }
-#
-#   n = dim(A)[1]
-#   eig = eigen(A, symmetric = TRUE)
-#   # eig = eigen(A)
-#   v = eig$values
-#   tol = n * max(abs(v)) * epsilon
-#   # tau = pmax(0, tol - v)
-#   eps_mat = eig$vector %*% diag(tol, n) %*% t(eig$vector)
-#   return(A + eps_mat)
-# }
+##############################################################################################################################################
 
-# fixit = function(A, epsilon = .Machine$double.eps) {
-#
-#   if (!is.matrix(A)) {
-#     A = as.matrix(A)
-#   }
-#   d = dim(A)
-#   eig = eigen(A, symmetric = TRUE)
-#   # eig = eigen(A)
-#   v = eig$values
-#   tol = max(abs(v)) * epsilon
-#   # tau = pmax(0, tol - v)
-#   tau = pmax(0, tol - v)
-#
-#   # if (symm) {
-#   #   A = eig$vectors %*% diag(v, d[1]) %*% t(eig$vectors)
-#   # }
-#   A = eig$vectors %*% diag(v + tau, d[1]) %*% t(eig$vectors)
-#   # eps_mat = eig$vectors %*% diag(tau, d[1]) %*% t(eig$vectors)
-#   # eps_mat = diag(tau, d[1])
-#   # return(A + eps_mat)
-#   return(A)
-# }
 
 
 

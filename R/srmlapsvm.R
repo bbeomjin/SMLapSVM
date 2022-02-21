@@ -500,6 +500,12 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
     return(theta)
   }
 
+  if (anova_kernel$numK == 1)
+  {
+    cat("Only one kernel", "\n")
+    return(c(1))
+  }
+
   n = NROW(cmat)
 
   # anova_kernel_orig = anova_kernel
@@ -674,7 +680,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
-  D = matrix(0, qp_dim, qp_dim)
+  D = 0
   Amat = matrix(0, (2 * qp_dim + n_class), qp_dim)
   for (j in 1:n_class) {
     D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
