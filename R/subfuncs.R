@@ -122,7 +122,7 @@ beta_kernel = function(y, k, my, warm, lambda, inv_LK){
 make_knn_graph_mat = function(X, distance = "euclidean", k = 6)
 {
   Ds <- as.matrix(dist(X, method = distance))
-  neighbours <- apply(Ds, 1, function(x) sort(x, index.return = TRUE)$ix[2:(k + 1)]) %>% as.integer
+  neighbours <- as.integer(apply(Ds, 1, function(x) sort(x, index.return = TRUE)$ix[2:(k + 1)]))
   adj <- as.matrix(Matrix::sparseMatrix(i = rep(1:nrow(X), each = k), j = neighbours, x = 1, dims = c(nrow(X), nrow(X))))
   adj <- (adj | t(adj)) * 1
   return(adj)
