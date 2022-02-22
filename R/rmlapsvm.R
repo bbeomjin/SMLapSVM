@@ -32,7 +32,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
 
-  inv_LK = solve(LK + diag(max(abs(LK)) * epsilon_I, n), tol = eig_tol_I)
+  inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = eig_tol_I)
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
@@ -333,7 +333,7 @@ cv.rmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = N
   kparam = as.numeric(kparam)
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
   # kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
