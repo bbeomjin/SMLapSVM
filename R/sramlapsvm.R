@@ -286,7 +286,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
   gamma = object$gamma
   x = object$x
   y = object$y
-  theta = object$theta
+  init_theta = object$theta
   ux = object$ux
   rx = rbind(x, ux)
 
@@ -305,7 +305,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
   anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = kparam)
 
   if (is.null(object$opt_model)) {
-    opt_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
+    opt_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = init_theta, y = y, lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
   } else {
     opt_model = object$opt_model
   }
@@ -395,7 +395,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
       graph_train = make_knn_graph_mat(rx_train, k = adjacency_k)
       L_train = make_L_mat(rx_train, kernel = kernel, kparam = kparam, graph = graph_train, weightType = weightType, normalized = normalized)
 
-      init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
+      init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = init_theta, y = y_train,
                                       lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
       cmat = init_model$beta
       c0vec = init_model$beta0
