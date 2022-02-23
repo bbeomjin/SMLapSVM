@@ -581,7 +581,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
   A_theta = cbind(diag(-1, anova_kernel$numK), matrix(0, anova_kernel$numK, (ncol(A_mat) - anova_kernel$numK)))
   A_mat = rbind(A_mat, A_theta)
 
-  bb = c0vec[y]
+  bb = c0vec[y_int]
   bb_yi = (n_class - 1) - bb
   bb_j = 1 + matrix(c0vec, nrow = n_l, ncol = n_class, byrow = TRUE)
   bb_j[y_index] = bb_yi
