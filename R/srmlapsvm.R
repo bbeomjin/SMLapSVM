@@ -68,6 +68,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
   out$ux = ux
   out$gamma = gamma
   out$n_class = opt_cstep_fit$n_class
+  out$test = opt_cstep_fit$fold_theta
   class(out) = "srmlapsvm"
   return(out)
 }
