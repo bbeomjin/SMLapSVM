@@ -82,8 +82,9 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
 
   # 추후, 커널에 맞게 theta의 길이 조절
   if (is.null(theta)) {
-    theta = rep(1, anova_K$numK)
+    theta = rep(1, p)
   }
+
   if (is.null(fold_theta)) {
     fold_theta = rep(list(rep(1, p)), nfolds)
   }
