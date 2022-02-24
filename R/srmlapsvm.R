@@ -38,7 +38,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
   cat("Fit c-step \n")
   opt_cstep_args = list(x = x, y = y, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
                         lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq,
-                        theta = thetastep_fit$opt_theta, fold_theta = thetastep_fit$opt_theta_list,
+                        theta = thetastep_fit$opt_theta, fold_theta = thetastep_fit$fold_theta,
                         adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                         kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
   # opt_cstep_fit = cstep.srmlapsvm(x = x, y = y, ux = ux, gamma = gamma, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
