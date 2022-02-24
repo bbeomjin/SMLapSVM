@@ -38,7 +38,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
   cat("Fit c-step \n")
   opt_cstep_args = list(x = x, y = y, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
                         lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq,
-                        theta = thetastep_fit$opt_theta, fold_theta = thetastep_fit$fold_theta,
+                        theta = thetastep_fit$opt_theta, fold_theta = thetastep_fit$opt_fold_theta,
                         adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                         kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = TRUE, nCores = nCores, ...)
   # opt_cstep_fit = cstep.srmlapsvm(x = x, y = y, ux = ux, gamma = gamma, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
@@ -382,7 +382,7 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
     opt_lambda_theta = lambda_theta_seq[opt_ind]
     opt_theta = theta_seq[, opt_ind]
     opt_valid_err = min(valid_err)
-    fold_theta = init_fold_theta
+    opt_fold_theta = init_fold_theta
   } else {
     fold_list_l = fold_list$labeled
     fold_list_ul = fold_list$unlabeled
@@ -476,7 +476,7 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
     opt_lambda_theta = lambda_theta_seq[opt_ind]
     opt_valid_err = min(valid_err)
 
-    fold_theta = lapply(fold_theta, function(x) return(x[, opt_ind]))
+    opt_fold_theta = lapply(fold_theta, function(x) return(x[, opt_ind]))
 
     theta_seq_list = mclapply(1:length(lambda_theta_seq),
                               function(j) {
@@ -500,7 +500,7 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
   out$theta_seq = theta_seq
   out$opt_valid_err = opt_valid_err
   out$valid_err = valid_err
-  out$fold_theta = fold_theta
+  out$opt_fold_theta = opt_fold_theta
   if (optModel) {
     # subK = combine_kernel(anova_K, opt_theta)
     opt_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = opt_theta, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, ...)
