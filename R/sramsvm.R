@@ -79,7 +79,7 @@
 cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5,
                         lambda_seq = 2^{seq(-10, 10, length.out = 100)}, theta = NULL, fold_theta = NULL,
                         kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                        criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+                        scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
   kernel = match.arg(kernel)
