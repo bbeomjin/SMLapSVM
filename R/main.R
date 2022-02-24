@@ -60,7 +60,7 @@ smlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, valid_x = NULL, valid_y
   if (optModel) {
     cat("Fit c-step \n")
     cstep_args$theta = thetastep_fit$opt_theta
-    cstep_args$opt_fold_theta = thetastep_fit$opt_fold_theta
+    cstep_args$fold_theta = thetastep_fit$opt_fold_theta
     cstep_args$optModel = TRUE
     opt_cstep_fit = do.call(cstep_fun, cstep_args)
 
