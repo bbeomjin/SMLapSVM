@@ -27,7 +27,8 @@ smlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, valid_x = NULL, valid_y
   cat("Fit c-step \n")
   cstep_args = list(x = x, y = y, gamma = gamma, ux = ux, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
                     lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq,
-                    theta = NULL, adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
+                    theta = NULL, fold_theta = NULL,
+                    adjacency_k = adjacency_k, normalized = normalized, weightType = weightType,
                     kernel = kernel, kparam = kparam, scale = scale, criterion = criterion, optModel = FALSE, nCores = nCores, ...)
 
   if ((gamma == 0) & (type == "rm")) {
@@ -59,6 +60,7 @@ smlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, valid_x = NULL, valid_y
   if (optModel) {
     cat("Fit c-step \n")
     cstep_args$theta = thetastep_fit$opt_theta
+    cstep_args$opt_fold_theta = thetastep_fit$opt_fold_theta
     cstep_args$optModel = TRUE
     opt_cstep_fit = do.call(cstep_fun, cstep_args)
 
