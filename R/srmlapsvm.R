@@ -288,9 +288,6 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
   out$criterion = criterion
   if (optModel) {
     anova_K = make_anovaKernel(rx, rx, kernel = kernel, kparam = kparam)
-    if (is.null(theta)) {
-      theta = rep(1, anova_K$numK)
-    }
     opt_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
                                   lambda = out$opt_param["lambda"], lambda_I = out$opt_param["lambda_I"], ...)
     out$opt_model = opt_model
