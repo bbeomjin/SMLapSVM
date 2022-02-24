@@ -133,7 +133,8 @@ smsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
 
   cat("Fit c-step \n")
   cstep_args = list(x = x, y = y, gamma = gamma, valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
-                    lambda_seq = lambda_seq, theta = NULL, kernel = kernel, kparam = kparam,
+                    lambda_seq = lambda_seq, theta = NULL, fold_theta = NULL,
+                    kernel = kernel, kparam = kparam,
                     criterion = criterion, optModel = FALSE, nCores = nCores, ...)
 
   if ((gamma == 0) & (type == "rm")) {
@@ -165,6 +166,7 @@ smsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
   if (optModel) {
     cat("Fit c-step \n")
     cstep_args$theta = thetastep_fit$opt_theta
+    cstep_args$fold_theta = thetastep_fit$opt_fold_theta
     cstep_args$optModel = TRUE
     opt_cstep_fit = do.call(cstep_fun, cstep_args)
 
