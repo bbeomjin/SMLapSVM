@@ -149,7 +149,7 @@ make_L_mat = function(X, kernel = "gaussian", kparam = 1, graph, weightType = c(
   }
 
   # binary matrix
-  return((L_mat + t(L_mat)) / 2)
+  return(L_mat)
 }
 
 
