@@ -143,7 +143,7 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
     valid_err_mat = matrix(NA, nrow = nfolds, ncol = length(lambda_seq), dimnames = list(paste0("Fold", 1:nfolds)))
 
     for (i_cv in 1:nfolds) {
-      cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
+      cat(nfolds, "- fold CV :", i_cv / nfolds * 100, "%", "\r")
       omit = ran == i_cv
       x_train = x[!omit, ]
       y_train = y[!omit]
@@ -291,7 +291,7 @@ thetastep.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.ou
     names(fold_theta) = paste0("Fold", 1:nfolds)
 
     for (i_cv in 1:nfolds) {
-      cat(nfolds, "- fold CV :", i / nfolds * 100, "%", "\r")
+      cat(nfolds, "- fold CV :", i_cv / nfolds * 100, "%", "\r")
       omit = fold_list == i_cv
       x_train = x[!omit, ]
       y_train = y[!omit]

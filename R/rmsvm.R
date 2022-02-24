@@ -2,6 +2,10 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
 {
   out = list()
 
+  if (sum(K) == 0) {
+    diag(K) = 1
+  }
+
   y_temp = factor(y)
   levs = levels(y_temp)
   attr(levs, "type") = class(y)
