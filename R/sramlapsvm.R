@@ -675,12 +675,12 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   }
   # KLK = (KLK + t(KLK)) / 2
 
-  # lambda_K = n_l * lambda * K
-  # diag(lambda_K) = diag(lambda_K) + max(abs(lambda_K)) * epsilon_I
-  # lambda_KLK = n_l * lambda_I / n^2 * KLK
+  lambda_K = n_l * lambda * K
+  diag(lambda_K) = diag(lambda_K) + max(abs(diag(lambda_K))) * 1e-8
+  lambda_KLK = n_l * lambda_I / n^2 * KLK
 
-  # K_KLK = lambda_K + lambda_KLK
-  K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
+  K_KLK = lambda_K + lambda_KLK
+  # K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
   # K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
