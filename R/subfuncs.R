@@ -123,7 +123,7 @@ make_knn_graph_mat = function(X, distance = "euclidean", k = 6)
 {
   Ds <- as.matrix(dist(X, method = distance))
   neighbours <- as.integer(apply(Ds, 1, function(x) sort(x, index.return = TRUE)$ix[2:(k + 1)]))
-  adj <- as.matrix(Matrix::sparseMatrix(i = rep(1:nrow(X), each = k), j = neighbours, x = 1, dims = c(nrow(X), nrow(X))))
+  adj <- as.matrix(sparseMatrix(i = rep(1:nrow(X), each = k), j = neighbours, x = 1, dims = c(nrow(X), nrow(X))))
   adj <- (adj | t(adj)) * 1
   return(adj)
 }
@@ -139,7 +139,7 @@ make_L_mat = function(X, kernel = "gaussian", kparam = 1, graph, weightType = c(
     W_mat = graph
   }
   d = rowSums(W_mat)
-  D_mat = diag(d, nrow(W_mat), ncol(W_mat))
+  D_mat = diag(d)
   L_mat = D_mat - W_mat
 
   if (normalized) {
