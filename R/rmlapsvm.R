@@ -1,5 +1,5 @@
 rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-6, epsilon_I = 0)
+                            eig_tol_D = 0, inv_tol = 1e-25, epsilon_D = 1e-8, epsilon_I = 0)
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -24,24 +24,24 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
   J = cbind(diag(n_l), matrix(0, n_l, n_u))
   # inv_LK = solve(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K))
-  # LK = fixit(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), eig_tol_I)
+  # LK = fixit(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), inv_tol)
   # inv_LK = chol2inv(chol(LK))
   # K = fixit(K, eig_tol_D)
-  # inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = eig_tol_I)
+  # inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = inv_tol)
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
   # max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
 
-  inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = eig_tol_I)
+  inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), t(J), tol = inv_tol)
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
 
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
-  # inv_LK = inverse(LK, epsilon = eig_tol_I)
+  # inv_LK = inverse(LK, epsilon = inv_tol)
 
-  # Q = J %*% K %*% inv_LK
-  Q = J %*% K %*% inv_LK %*% t(J)
+  Q = J %*% K %*% inv_LK
+  # Q = J %*% K %*% inv_LK %*% t(J)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = J %*% t(inv_LK) %*% K %*% t(J)
@@ -134,7 +134,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
   cmat = matrix(0, n, n_class)
   for (k in 1:n_class) {
-    cmat[, k] = inv_LK %*% t(J) %*% Hmatj[[k]] %*% alpha
+    cmat[, k] = inv_LK %*% Hmatj[[k]] %*% alpha
   }
 
   # find b vector using LP
@@ -225,7 +225,7 @@ predict.rmlapsvm_compact = function(object, newK = NULL)
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                    eig_tol_D = 0, eig_tol_I = .Machine$double.eps, epsilon_D = 1e-8, epsilon_I = 0)
+                    eig_tol_D = 0, inv_tol = 1e-25, epsilon_D = 1e-8, epsilon_I = 0)
 {
   out = list()
   n_l = NROW(x)
@@ -253,7 +253,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
   solutions = rmlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon,
-                               eig_tol_D = eig_tol_D, eig_tol_I = eig_tol_I, epsilon_D = epsilon_D, epsilon_I = epsilon_I)
+                               eig_tol_D = eig_tol_D, inv_tol = inv_tol, epsilon_D = epsilon_D, epsilon_I = epsilon_I)
 
   out$x = x
   out$ux = ux
@@ -269,7 +269,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   out$alpha = solutions$alpha
   out$epsilon = epsilon
   out$eig_tol_D = eig_tol_D
-  out$eig_tol_I = eig_tol_I
+  out$inv_tol = inv_tol
   out$epsilon_D = epsilon_D
   out$epsilon_I = epsilon_I
   out$kernel = kernel
