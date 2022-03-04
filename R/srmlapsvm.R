@@ -719,8 +719,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # D = fixit2(D, epsilon = 0)
   max_D = max(abs(diag(D)))
   # D = D / max_D
-  diag(D) = diag(D) + max_D * epsilon_D
-  # diag(D) = diag(D) + epsilon_D
+  # diag(D) = diag(D) + max_D * epsilon_D
+  diag(D) = diag(D) + epsilon_D
 
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D

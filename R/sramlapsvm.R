@@ -682,6 +682,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   lambda_K = n_l * lambda * K
   lambda_K = fixit(lambda_K, epsilon = eig_tol_I)
   diag(lambda_K) = diag(lambda_K) + max(abs(diag(lambda_K))) * epsilon_I
+  # diag(lambda_K) = diag(lambda_K) + max(abs(diag(lambda_K))) * epsilon_I
 
   lambda_KLK = n_l * lambda_I / n^2 * KLK
   lambda_KLK = fixit(lambda_KLK, epsilon = .Machine$double.eps)
@@ -723,8 +724,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(diag(D)))
   # D = D / max_D
-  diag(D) = diag(D) + max_D * epsilon_D
-  # diag(D) = diag(D) + epsilon_D
+  # diag(D) = diag(D) + max_D * epsilon_D
+  diag(D) = diag(D) + epsilon_D
   #################################### for test #######################################
   # alpha_mat = matrix(rnorm(n_l * n_class), n_l, n_class)
   # temp_vec = 0
