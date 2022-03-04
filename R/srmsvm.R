@@ -132,7 +132,8 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
                           }
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
-    valid_err = round(sapply(fold_err, "[[", "error"), 8)
+    # valid_err = round(sapply(fold_err, "[[", "error"), 8)
+    valid_err = sapply(fold_err, "[[", "error")
     # model_list[[1]] = lapply(fold_err, "[[", "fit_model")
 
     opt_ind = max(which(valid_err == min(valid_err)))
@@ -182,7 +183,8 @@ cstep.srmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfold
 
       valid_err_mat[i_cv, ] = sapply(fold_err, "[[", "error")
     }
-    valid_err = round(colMeans(valid_err_mat), 8)
+    # valid_err = round(colMeans(valid_err_mat), 8)
+    valid_err = colMeans(valid_err_mat)
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = c(lambda = lambda_seq[opt_ind])
     opt_valid_err = min(valid_err)
@@ -277,7 +279,8 @@ thetastep.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.ou
                           }
                           return(list(error = err, theta = theta))
                         }, mc.cores = nCores)
-    valid_err = round(sapply(fold_err, "[[", "error"), 8)
+    # valid_err = round(sapply(fold_err, "[[", "error"), 8)
+    valid_err = sapply(fold_err, "[[", "error")
     theta_seq = sapply(fold_err, "[[", "theta")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_lambda_theta = lambda_theta_seq[opt_ind]
@@ -347,7 +350,8 @@ thetastep.srmsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.ou
       fold_theta[[i_cv]] = do.call(cbind, lapply(fold_err, "[[", "theta"))
       valid_err_mat[i_cv, ] = sapply(fold_err, "[[", "error")
     }
-    valid_err = round(colMeans(valid_err_mat), 8)
+    # valid_err = round(colMeans(valid_err_mat), 8)
+    valid_err = colMeans(valid_err_mat)
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_lambda_theta = lambda_theta_seq[opt_ind]
     opt_valid_err = min(valid_err)

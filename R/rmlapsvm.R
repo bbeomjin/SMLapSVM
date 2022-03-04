@@ -31,9 +31,10 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
   # max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
-
-  inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = inv_tol)
-  inv_LK = inv_LK %*% t(J)
+  # inv_LK = solve(LK, t(J), tol = inv_tol)
+  inv_LK = solve(LK, t(J))
+  # inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = inv_tol)
+  # inv_LK = inv_LK %*% t(J)
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
 
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
@@ -373,7 +374,8 @@ cv.rmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = N
 
                           return(list(error = err, fit_model = rmsvm_fit))
                         }, mc.cores = nCores)
-    valid_err = round(sapply(fold_err, "[[", "error"), 8)
+    # valid_err = round(sapply(fold_err, "[[", "error"), 8)
+    valid_err = sapply(fold_err, "[[", "error")
     model_list[[1]] = lapply(fold_err, "[[", "fit_model")
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
@@ -425,7 +427,8 @@ cv.rmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = N
       valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
       # model_list[[i]] = lapply(fold_err, "[[", "fit_model")
     }
-    valid_err = round(colMeans(valid_err_mat), 8)
+    # valid_err = round(colMeans(valid_err_mat), 8)
+    valid_err = colMeans(valid_err_mat)
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
     # opt_param = c(lambda = opt_param$lambda, lambda_I = opt_param$lambda_I)
