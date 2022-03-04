@@ -676,14 +676,18 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     KLK = KLK + theta[i]^2 * anova_K$K[[i]] %*% L %*% anova_K$K[[i]]
   }
 
+  K = fixit(K, epsilon = eig_tol_I)
+  KLK = fixit(KLK, epsilon = eig_tol_I)
+
   lambda_K = n_l * lambda * K
-  lambda_K = fixit(lambda_K, epsilon = eig_tol_I)
-  # diag(lambda_K) = diag(lambda_K) + max(abs(diag(lambda_K))) * epsilon_I
-  diag(lambda_K) = diag(lambda_K) + epsilon_I
+  # lambda_K = fixit(lambda_K, epsilon = eig_tol_I)
+  # diag(lambda_K) = diag(lambda_K) + epsilon_I
+  diag(lambda_K) = diag(lambda_K) + max(abs(diag(lambda_K))) * epsilon_I
 
   lambda_KLK = n_l * lambda_I / n^2 * KLK
-  lambda_KLK = fixit(lambda_KLK, epsilon = eig_tol_I)
-  diag(lambda_KLK) = diag(lambda_KLK) + epsilon_I
+  # lambda_KLK = fixit(lambda_KLK, epsilon = eig_tol_I)
+  # diag(lambda_KLK) = diag(lambda_KLK) + epsilon_I
+  diag(lambda_KLK) = diag(lambda_KLK) + max(abs(diag(lambda_KLK))) * epsilon_I
 
   K_KLK = lambda_K + lambda_KLK
   # K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
@@ -721,8 +725,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # D = fixit2(D, epsilon = 0)
   max_D = max(abs(diag(D)))
   # D = D / max_D
-  # diag(D) = diag(D) + max_D * epsilon_D
-  diag(D) = diag(D) + epsilon_D
+  diag(D) = diag(D) + max_D * epsilon_D
+  # diag(D) = diag(D) + epsilon_D
 
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D
