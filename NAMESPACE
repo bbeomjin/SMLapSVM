@@ -23,4 +23,8 @@ import("RSSL")
 import("Matrix")
 import(mlbench)
 # import("igraph")
-	   
+
+S3method(predict, rmlapsvm)
+S3method(predict, ramlapsvm)
+S3method(predict, srmlapsvm)
+S3method(predict. sramlapsvm)
