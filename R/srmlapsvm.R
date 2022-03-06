@@ -577,8 +577,8 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
-  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
-
+  # diag(Dmat) = diag(Dmat) + max_D * epsilon_D
+  diag(Dmat) = diag(Dmat) + max_D * 1e-8
 
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
 
