@@ -705,10 +705,11 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = tcrossprod(inv_K_KLK, JK)
   # inv_K_KLK = inv_K_KLK %*% t(JK)
-  inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  inv_K_KLK = solve(K_KLK, tol = inv_tol)
   # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
-  Q = JK %*% inv_K_KLK
+  Q = JK %*% inv_K_KLK %*% t(JK)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # diag(Q) = diag(Q) + epsilon_D
 
@@ -774,7 +775,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   cmat = matrix(0, n, n_class)
   for (k in 1:n_class) {
-    cmat[, k] = inv_K_KLK %*% Hmatj[[k]] %*% alpha
+    cmat[, k] = inv_K_KLK %*% t(JK) %*% Hmatj[[k]] %*% alpha
   }
 
   # find b vector using LP
