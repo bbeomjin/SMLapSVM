@@ -724,8 +724,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
     D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
     Amat[, j] = -Lmatj[[j]]
   }
-  # D = (D + t(D)) / 2
-  D = fixit(D, epsilon = eig_tol_D)
+  D = (D + t(D)) / 2
+  # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(diag(D)))
   # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
