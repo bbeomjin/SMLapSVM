@@ -707,10 +707,12 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = tcrossprod(inv_K_KLK, JK)
   # inv_K_KLK = inv_K_KLK %*% t(JK)
-  inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  inv_K_KLK = solve(K_KLK, tol = inv_tol)
   # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
-  Q = JK %*% inv_K_KLK
+  Q = JK %*% inv_K_KLK %*% t(JK)
+  # Q = JK %*% inv_K_KLK
   # Q = (Q + t(Q)) / 2
   # Q = J %*% K %*% inv_KLK
 
@@ -724,8 +726,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
     D = D + Hmatj[[j]] %*% Q %*% t(Hmatj[[j]])
     Amat[, j] = -Lmatj[[j]]
   }
-  D = (D + t(D)) / 2
-  # D = fixit(D, epsilon = eig_tol_D)
+  # D = (D + t(D)) / 2
+  D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(diag(D)))
   # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
@@ -822,7 +824,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   cmat = matrix(0, n, n_class - 1)
   for (k in 1:(n_class - 1)) {
-    cmat[, k] = inv_K_KLK %*% t(Hmatj[[k]]) %*% alpha
+    # cmat[, k] = inv_K_KLK %*% t(Hmatj[[k]]) %*% alpha
+    cmat[, k] = inv_K_KLK %*% t(JK) %*% t(Hmatj[[k]]) %*% alpha
   }
 
   # find b vector using LP
