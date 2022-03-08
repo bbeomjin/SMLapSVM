@@ -443,7 +443,7 @@ data_split = function(y, nfolds, seed = length(y))
 #   return(A)
 # }
 
-fixit1 = function(A, epsilon = .Machine$double.eps) {
+fixit = function(A, epsilon = .Machine$double.eps) {
 
   if (!is.matrix(A)) {
     A = as.matrix(A)
