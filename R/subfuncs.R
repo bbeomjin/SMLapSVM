@@ -453,8 +453,8 @@ fixit = function(A, epsilon = .Machine$double.eps) {
   eig = eigen(A, symmetric = TRUE)
   # eig = eigen(A)
   v = eig$values
-  # delta = max(abs(v)) * epsilon
-  delta = epsilon
+  delta = max(abs(v)) * epsilon
+  # delta = epsilon
   # delta = 2 * d[1] * max(abs(v)) * epsilon
   # tau = max(0, delta - v)
   tau = pmax(0, delta - v)
