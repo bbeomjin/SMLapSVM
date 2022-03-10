@@ -350,7 +350,8 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                           error = try({
                             theta = find_theta.srmlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
                                                          cmat = init_model$cmat, c0vec = init_model$c0vec,
-                                                         lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
+                                                         lambda = lambda, lambda_I = lambda_I,
+                                                         lambda_theta = lambda_theta_seq[j], ...)
                             if (isCombined) {
                               # subK = combine_kernel(anova_K, theta)
                               init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
@@ -679,21 +680,21 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # K = fixit(K, epsilon = eig_tol_I)
   # KLK = fixit(KLK, epsilon = eig_tol_I)
 
-  lambda_K = n_l * lambda * K
-  lambda_K = fixit(lambda_K, epsilon = eig_tol_I)
+  # lambda_K = n_l * lambda * K
+  # lambda_K = fixit(lambda_K, epsilon = eig_tol_I)
   # diag(lambda_K) = diag(lambda_K) + epsilon_I
   # diag(lambda_K) = diag(lambda_K) + max(abs(diag(lambda_K))) * epsilon_I
 
-  lambda_KLK = n_l * lambda_I / n^2 * KLK
-  lambda_KLK = fixit(lambda_KLK, epsilon = eig_tol_I)
+  # lambda_KLK = n_l * lambda_I / n^2 * KLK
+  # lambda_KLK = fixit(lambda_KLK, epsilon = eig_tol_I)
   # lambda_KLK = fixit(lambda_KLK)
   # diag(lambda_KLK) = diag(lambda_KLK) + epsilon_I
   # diag(lambda_KLK) = diag(lambda_KLK) + max(abs(diag(lambda_KLK))) * epsilon_I
 
-  K_KLK = lambda_K + lambda_KLK
-  # K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
+  # K_KLK = lambda_K + lambda_KLK
+  K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  # K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
+  K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   # K_KLK = fixit(K_KLK)
   # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
   # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
