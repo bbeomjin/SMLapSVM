@@ -680,21 +680,21 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # K = fixit(K, epsilon = eig_tol_I)
   # KLK = fixit(KLK, epsilon = eig_tol_I)
 
-  # lambda_K = n_l * lambda * K
-  # lambda_K = fixit(lambda_K, epsilon = eig_tol_I)
+  lambda_K = n_l * lambda * K
+  lambda_K = fixit(lambda_K, epsilon = eig_tol_I)
   # diag(lambda_K) = diag(lambda_K) + epsilon_I
   # diag(lambda_K) = diag(lambda_K) + max(abs(diag(lambda_K))) * epsilon_I
 
-  # lambda_KLK = n_l * lambda_I / n^2 * KLK
-  # lambda_KLK = fixit(lambda_KLK, epsilon = eig_tol_I)
+  lambda_KLK = n_l * lambda_I / n^2 * KLK
+  lambda_KLK = fixit(lambda_KLK, epsilon = eig_tol_I)
   # lambda_KLK = fixit(lambda_KLK)
   # diag(lambda_KLK) = diag(lambda_KLK) + epsilon_I
   # diag(lambda_KLK) = diag(lambda_KLK) + max(abs(diag(lambda_KLK))) * epsilon_I
 
   # K_KLK = lambda_K + lambda_KLK
-  K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
+  # K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
+  # K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   # K_KLK = fixit(K_KLK)
   # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
   # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
@@ -723,12 +723,12 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
-  # D = (D + t(D)) / 2
+  D = (D + t(D)) / 2
+  max_D = max(abs(diag(D)))
+  D = D / max_D
   D = fixit(D, epsilon = eig_tol_D)
   # D = fixit(D)
   # D = fixit2(D, epsilon = 0)
-  max_D = max(abs(diag(D)))
-  # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
   # diag(D) = diag(D) + epsilon_D
 
@@ -739,8 +739,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   g_temp[y_index] = -n_class + 1
   g = as.vector(g_temp)
 
-  dvec = -g
-  # dvec = -g / max_D
+  # dvec = -g
+  dvec = -g / max_D
 
   diag(Amat[(n_class + 1):(n_class + qp_dim), ]) = 1
   diag(Amat[(n_class + qp_dim + 1):(n_class + 2 * qp_dim), ]) = -1
