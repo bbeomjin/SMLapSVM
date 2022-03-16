@@ -696,7 +696,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # K_KLK = (K_KLK + t(K_KLK)) / 2
   K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   # K_KLK = fixit(K_KLK)
-  # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
+  diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
   # diag(K_KLK) = diag(K_KLK) + epsilon_I
 
   JK = J %*% K
@@ -727,7 +727,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(diag(D)))
   # D = D / max_D
-  # diag(D) = diag(D) + max_D * epsilon_D
+  diag(D) = diag(D) + max_D * epsilon_D
   # diag(D) = diag(D) + epsilon_D
 
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
