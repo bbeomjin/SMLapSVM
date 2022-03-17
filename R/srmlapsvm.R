@@ -555,7 +555,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
   Dmat = numeric(anova_kernel$numK)
   dvec = numeric(anova_kernel$numK)
   A_mat = NULL
-  ##
+  #
   for(j in 1:anova_kernel$numK) {
     temp_D = 0
     temp_d = 0
