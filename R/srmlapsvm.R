@@ -566,7 +566,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
       # diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
 
       temp_D = temp_D + n_l * lambda_I / (1 * n^2) * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
-      temp_d = temp_d +  n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
+      temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
       temp_A = rbind(temp_A, (anova_kernel$K[[j]][1:n_l, ] %*% cvec))
     }
     Dmat[j] = temp_D
@@ -614,7 +614,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
   theta_sol = solve.QP(Dmat, -dvec, t(A_mat), bvec, meq = 0, factorized = FALSE)$solution
   theta = theta_sol[1:anova_kernel$numK]
-  theta[theta < 1e-8] = 0
+  # theta[theta < 1e-8] = 0
   # theta = round(theta, 6)
 
   return(theta)
@@ -724,7 +724,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
   D = (D + t(D)) / 2
-  D = fixit(D, epsilon = eig_tol_D)
+  # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(diag(D)))
   # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
