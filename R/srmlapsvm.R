@@ -765,7 +765,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   nonzero = find_nonzero(t(Amat1))
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
-
+  ###
   # dual = solve.QP.compact(D, dvec, Amat, Aind, bvec1, meq = (n_class - 1))
   dual = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
   #
