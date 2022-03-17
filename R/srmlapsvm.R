@@ -767,7 +767,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   Aind = nonzero$Aind
 
   # dual = solve.QP.compact(D, dvec, Amat, Aind, bvec1, meq = (n_class - 1))
-  dual_temp = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
+  dual = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
   #
   alpha = dual$solution
   alpha[alpha < 0] = 0
