@@ -770,7 +770,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # dual_temp = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
 
   alpha = dual$solution
-  alpha[alpha < 1e-15] = 0
+  alpha[alpha < 0] = 0
 
   alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
 
@@ -804,7 +804,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   Alp = rbind(Alp1, cbind(Alp2, Alp3))
 
   blp_temp = Kcmat + 1
-  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
   blp = c(0, as.vector(blp_temp))
 
   ############################################################################

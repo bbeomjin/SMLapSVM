@@ -796,8 +796,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # dual_temp = solve.QP(D, dvec, Amat, bvec, meq = n_class - 1)
 
   alpha = dual$solution
-  alpha[alpha < 1e-15] = 0
-   #
+  alpha[alpha < 0] = 0
+
   alpha_mat = matrix(alpha, nrow = n_l, ncol = n_class)
   # alpha_mat[y_index][alpha_mat[y_index] > gamma] = gamma
 
