@@ -564,9 +564,13 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
       cvec = cmat[, q]
       # KLK_temp = anova_kernel_orig$K[[j]] %*% L %*% anova_kernel_orig$K[[j]]
       # diag(KLK_temp) = diag(KLK_temp) + max(abs(KLK_temp)) * epsilon_I
+      KLK_temp = n_l * lambda_I / (1 * n^2) * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
+      K_temp = n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec
+      if (KLK_temp < 0) {KLK_temp = 0}
+      if (K_temp < 0) {K_temp = 0}
 
-      temp_D = temp_D + n_l * lambda_I / (1 * n^2) * t(cvec) %*% anova_kernel$K[[j]] %*% L %*% anova_kernel$K[[j]] %*% cvec
-      temp_d = temp_d + n_l * lambda / 2 * t(cvec) %*% anova_kernel$K[[j]] %*% cvec + n_l * lambda_theta
+      temp_D = temp_D + KLK_temp
+      temp_d = temp_d + K_temp + n_l * lambda_theta
       temp_A = rbind(temp_A, (anova_kernel$K[[j]][1:n_l, ] %*% cvec))
     }
     Dmat[j] = temp_D
@@ -766,8 +770,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   Amat = nonzero$Amat_compact
   Aind = nonzero$Aind
   ###
-  # dual = solve.QP.compact(D, dvec, Amat, Aind, bvec1, meq = (n_class - 1))
-  dual = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
+  dual = solve.QP.compact(D, dvec, Amat, Aind, bvec1, meq = (n_class - 1))
+  # dual = solve.QP(D, dvec, t(Amat1), bvec1, meq = (n_class - 1))
   #
   alpha = dual$solution
   alpha[alpha < 0] = 0
