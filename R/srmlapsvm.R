@@ -714,7 +714,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # Q = JK %*% inv_K_KLK %*% t(JK)
   Q = JK %*% inv_K_KLK
   Q = (Q + t(Q)) / 2
-  Q = fixit2(Q)
+  # Q = fixit2(Q)
   # diag(Q) = diag(Q) + epsilon_D
 
   # Compute Q = K x inv_LK
@@ -726,6 +726,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   }
   # D = (D + t(D)) / 2
   # D = fixit(D, epsilon = eig_tol_D)
+  D = fixit2(D)
   max_D = max(abs(diag(D)))
   # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
