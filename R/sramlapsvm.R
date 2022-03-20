@@ -715,7 +715,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # Q = JK %*% inv_K_KLK %*% t(JK)
   Q = JK %*% inv_K_KLK
   Q = (Q + t(Q)) / 2
-  Q = fixit(Q, epsilon = eig_tol_D)
+  # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = J %*% K %*% inv_KLK
 
   # Q = fixit(Q, epsilon = eig_tol_D)
