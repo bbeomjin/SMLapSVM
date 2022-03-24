@@ -496,8 +496,8 @@ fixit = function(A, epsilon = .Machine$double.eps) {
   delta = max(abs(v)) * epsilon
   # delta = epsilon
   # delta = 2 * d[1] * max(abs(v)) * epsilon
-  # tau = max(0, delta - v)
-  tau = pmax(0, delta - v)
+  tau = max(0, delta - v)
+  # tau = pmax(0, delta - v)
   A = eig$vectors %*% diag(v + tau, d[1]) %*% t(eig$vectors)
   # A = eig$vectors %*% ((v + tau) * t(eig$vectors))
   return(A)
