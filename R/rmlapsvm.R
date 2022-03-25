@@ -230,7 +230,7 @@ predict.rmlapsvm_compact = function(object, newK = NULL)
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                    eig_tol_D = 0, inv_tol = 1e-25, epsilon_D = 1e-8, epsilon_I = 0)
+                    eig_tol_D = .Machine$double.eps, inv_tol = 1e-25, epsilon_D = 1e-8)
 {
   out = list()
   n_l = NROW(x)
@@ -258,7 +258,7 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   L = make_L_mat(rx, kernel = kernel, kparam = kparam, graph = graph, weightType = weightType, normalized = normalized)
 
   solutions = rmlapsvm_compact(K = K, L = L, y = y, gamma = gamma, lambda = lambda, lambda_I = lambda_I, epsilon = epsilon,
-                               eig_tol_D = eig_tol_D, inv_tol = inv_tol, epsilon_D = epsilon_D, epsilon_I = epsilon_I)
+                               eig_tol_D = eig_tol_D, inv_tol = inv_tol, epsilon_D = epsilon_D)
 
   out$x = x
   out$ux = ux
@@ -276,7 +276,6 @@ rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I
   out$eig_tol_D = eig_tol_D
   out$inv_tol = inv_tol
   out$epsilon_D = epsilon_D
-  out$epsilon_I = epsilon_I
   out$kernel = kernel
   out$scale = scale
   out$center = center
