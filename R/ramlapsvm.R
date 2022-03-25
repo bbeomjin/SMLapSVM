@@ -1,5 +1,6 @@
 ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                             eig_tol_D = 0, inv_tol = 1e-25, epsilon_D = 1e-8, epsilon_I = 0)
+                             eig_tol_D = .Machine$double.eps,
+                             inv_tol = 1e-25, epsilon_D = 1e-8)
 {
 
   out = list()
