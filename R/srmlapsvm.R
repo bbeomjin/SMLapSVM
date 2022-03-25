@@ -517,7 +517,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
                                 eig_tol_D = .Machine$double.eps,
                                 eig_tol_I = .Machine$double.eps,
                                 epsilon_D = 1e-6,
-                                epsilon_I = .Machine$double.eps,
+                                epsilon_I = 0,
                                 inv_tol = 1e-25)
 {
   if (lambda_theta <= 0) {
@@ -626,7 +626,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
                              eig_tol_D = .Machine$double.eps,
                              eig_tol_I = .Machine$double.eps,
                              epsilon_D = 1e-6,
-                             epsilon_I = .Machine$double.eps,
+                             epsilon_I = 0,
                              inv_tol = 1e-25)
 {
   out = list()
