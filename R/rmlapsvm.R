@@ -31,8 +31,11 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
   # max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
-  # inv_LK = solve(LK, t(J), tol = inv_tol)
-  inv_LK = solve(LK, t(J))
+
+  JK = J %*% K
+
+  inv_LK = solve(LK, t(J), tol = inv_tol)
+  # inv_LK = solve(LK, t(J))
   # inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = inv_tol)
   # inv_LK = inv_LK %*% t(J)
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
@@ -42,7 +45,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
   # inv_LK = inverse(LK, epsilon = inv_tol)
 
-  Q = J %*% K %*% inv_LK
+  Q = JK %*% inv_LK
   # Q = J %*% K %*% inv_LK %*% t(J)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
@@ -55,7 +58,6 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
-
   D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   # D = D / max_D
@@ -140,7 +142,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   }
 
   # find b vector using LP
-  Kcmat = J %*% K %*% cmat
+  Kcmat = JK %*% cmat
 
   alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
   alp_temp[y_index] = gamma
@@ -175,7 +177,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   Alp = rbind(Alp1, cbind(Alp2, Alp3))
 
   blp_temp = Kcmat + 1
-  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
   blp = c(0, as.vector(blp_temp))
 
   # constraint directions
