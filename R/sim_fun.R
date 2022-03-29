@@ -30,6 +30,39 @@ generateMultiorange = function(n, p = 2, seed = 1, with_noise = TRUE, noise_p = 
   return(list(x = X, y = y))
 }
 
+generateMultiorange2 = function(n, p = 2, seed = 1, with_noise = TRUE, noise_p = 1)
+{
+  set.seed(seed)
+  X = matrix(nrow = n, ncol = p)
+  y = numeric(n)
+  k = 1
+  while (k <= n) {
+    x = rnorm(p, sd = 2)
+    sx = sum(x^2)
+    if (sx <= 0.5) {
+      y[k] = 1
+      X[k, ] = x
+      k = k + 1
+    }
+    else if (1.5 < sx & sx <= 2.5) {
+      y[k] = 2
+      X[k, ] = x
+      k = k + 1
+    }
+    else if (5 < sx & sx <= 7) {
+      y[k] = 3
+      X[k, ] = x
+      k = k + 1
+    }
+  }
+  if (with_noise) {
+    noise_dat = matrix(rnorm(n * noise_p, sd = 1.5), n, noise_p)
+    X = cbind(X, noise_dat)
+  }
+  return(list(x = X, y = y))
+}
+
+
 generateMultiMoon = function(each_n = 100, sigma = 1, noise_p = 4, noise_sd = 3, seed = NULL)
 {
   set.seed(seed)
