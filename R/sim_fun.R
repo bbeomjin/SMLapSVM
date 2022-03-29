@@ -44,12 +44,12 @@ generateMultiorange2 = function(n, p = 2, seed = 1, with_noise = TRUE, noise_p =
       X[k, ] = x
       k = k + 1
     }
-    else if (1.5 < sx & sx <= 2.5) {
+    else if (2 < sx & sx <= 3) {
       y[k] = 2
       X[k, ] = x
       k = k + 1
     }
-    else if (5 < sx & sx <= 7) {
+    else if (6 < sx & sx <= 8) {
       y[k] = 3
       X[k, ] = x
       k = k + 1
