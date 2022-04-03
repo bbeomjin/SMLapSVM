@@ -713,7 +713,7 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   # Q = JK %*% inv_K_KLK %*% t(JK)
   Q = JK %*% inv_K_KLK
-  # Q = (Q + t(Q)) / 2
+  Q = (Q + t(Q)) / 2
   # Q = fixit2(Q)
   # diag(Q) = diag(Q) + epsilon_D
 
