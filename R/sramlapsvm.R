@@ -2,7 +2,7 @@ sramlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
                       lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                       lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
                       gamma = 0.5, adjacency_k = 6, normalized = TRUE, weightType = "Binary",
-                      kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
+                      kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = c(1),
                       scale = FALSE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
 {
   out = list()
@@ -79,7 +79,7 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
 cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5,
                             lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                             theta = NULL, fold_theta = NULL,
-                            kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
+                            kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = c(1),
                             scale = FALSE, adjacency_k = 6, normalized = TRUE, weightType = "Binary",
                             criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
