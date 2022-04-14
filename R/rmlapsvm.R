@@ -48,7 +48,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # inv_LK = inverse(LK, epsilon = inv_tol)
 
   Q = JK %*% inv_LK
-  Q = (Q + t(Q)) / 2
+  # Q = (Q + t(Q)) / 2
   # Q = J %*% K %*% inv_LK %*% t(J)
   # Q = fixit(Q, epsilon = eig_tol_D)
   # Q = fixit(Q, epsilon = eig_tol_D)
@@ -61,7 +61,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
-  D = fixit(D, epsilon = eig_tol_D)
+  # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
