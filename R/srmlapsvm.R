@@ -659,8 +659,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
 
   code_mat = code_rmsvm(y_int)
   In = code_mat$In
-  vmatj = code_mat$vmatj
-  umatj = code_mat$umatj
+  # vmatj = code_mat$vmatj
+  # umatj = code_mat$umatj
   Hmatj = code_mat$Hmatj
   y_index = code_mat$y_index
 
