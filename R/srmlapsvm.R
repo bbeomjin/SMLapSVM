@@ -515,7 +515,7 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
 
 find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, lambda_I, lambda_theta = 1,
                                 eig_tol_D = .Machine$double.eps,
-                                eig_tol_I = .Machine$double.eps,
+                                eig_tol_I = 1e-13,
                                 epsilon_D = 1e-6,
                                 epsilon_I = 0,
                                 inv_tol = 1e-25)
@@ -624,7 +624,7 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
 
 srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I,
                              eig_tol_D = .Machine$double.eps,
-                             eig_tol_I = .Machine$double.eps,
+                             eig_tol_I = 1e-13,
                              epsilon_D = 1e-6,
                              epsilon_I = 0,
                              inv_tol = 1e-25)
