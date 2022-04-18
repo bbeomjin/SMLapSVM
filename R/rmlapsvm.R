@@ -67,7 +67,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # D = D / max_D
   diag(D) = diag(D) + max_D * epsilon_D
 
-  diag(D) = diag(D) + epsilon_D
+  # diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = -n_class + 1
