@@ -123,13 +123,16 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   upper_mat[y_index] = gamma
   logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
   if (all(colSums(logic) > 0)) {
-    temp_mat = -Kcmat - 1
-    temp_mat[y_index] = (n_class - 1) - Kcmat[y_index]
-    c0mat = matrix(nrow = n_l, ncol = n_class - 1)
-    for (i in 1:n_l) {
-      c0mat[i, ] = solve(t(W[, -y_index[i, 2]]), temp_mat[i, -y_index[i, 2]])
-    }
-    c0vec = colMeans(c0mat)
+    W_c0mat = -Kcmat - 1
+    W_c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
+    W_c0vec = colMeans(W_c0mat)
+    # c0mat = matrix(nrow = n_l, ncol = n_class - 1)
+    # for (i in 1:n_l) {
+    #   c0mat[i, ] = solve(t(W[, -y_index[i, 2]]), temp_mat[i, -y_index[i, 2]])
+    # }
+    # c0vec = colMeans(c0mat)
+
+
   } else {
     alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
     alp_temp[y_index] = gamma
@@ -167,9 +170,9 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
     for(j in 1:(n_class - 1)) {
       c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
     }
+    W_c0vec = drop(t(c0vec) %*% W)
   }
 
-  W_c0vec = drop(t(c0vec) %*% W)
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
   fit_class = levs[apply(fit, 1, which.max)]
@@ -181,8 +184,8 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
 
   # Return the output
   out$alpha = alpha_mat
-  out$beta = cmat
-  out$beta0 = c0vec
+  out$cmat = cmat
+  out$W_c0vec = W_c0vec
   out$fit = fit
   out$fit_class = fit_class
   out$n_l = n_l
@@ -195,16 +198,14 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
 
 predict.ramlapsvm_compact = function(object, newK = NULL) {
 
-  beta = object$beta
-  beta0 = object$beta0
+  cmat = object$cmat
+  W_c0vec = object$W_c0vec
   n_class = object$n_class
   levs = object$levels
 
   W = XI_gen(n_class)
 
-  W_beta0 = drop(t(beta0) %*% W)
-
-  pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_y = matrix(W_c0vec, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% cmat) %*% W)
   pred_class = levs[apply(pred_y, 1, which.max)]
 
   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
@@ -264,8 +265,8 @@ ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kern
   out$lambda = lambda
   out$lambda_I = lambda_I
   out$kparam = kparam
-  out$beta = solutions$beta
-  out$beta0 = solutions$beta0
+  out$cmat = solutions$cmat
+  out$W_c0vec = solutions$W_c0vec
   out$epsilon = epsilon
   out$eig_tol_D = eig_tol_D
   out$inv_tol = inv_tol
@@ -287,16 +288,14 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
     # newK = kernelMatrix(rbfdot(sigma = object$kparam), newx, object$x)
   }
 
-  beta = object$beta
-  beta0 = object$beta0
+  cmat = object$cmat
+  W_c0vec = object$W_c0vec
   n_class = object$n_class
   levs = object$levels
 
   W = XI_gen(n_class)
 
-  W_beta0 = drop(t(beta0) %*% W)
-
-  pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_y = matrix(W_c0vec, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
   pred_class = levs[apply(pred_y, 1, which.max)]
 
   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
