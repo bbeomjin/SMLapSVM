@@ -62,12 +62,12 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     D = D + t(Hmatj[[j]]) %*% Q %*% Hmatj[[j]]
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
-  D = fixit(D, epsilon = eig_tol_D)
+  # D = fixit(D, epsilon = eig_tol_D)
   max_D = max(abs(D))
   # D = D / max_D
-  diag(D) = diag(D) + max_D * epsilon_D
+  # diag(D) = diag(D) + max_D * epsilon_D
 
-  # diag(D) = diag(D) + epsilon_D
+  diag(D) = diag(D) + epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = -n_class + 1
