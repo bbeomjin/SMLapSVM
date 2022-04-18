@@ -295,7 +295,7 @@ predict.ramlapsvm = function(object, newx = NULL, newK = NULL, ...) {
 
   W = XI_gen(n_class)
 
-  pred_y = matrix(W_c0vec, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_y = matrix(W_c0vec, nrow = nrow(newK), ncol = n_class, byrow = T) + ((newK %*% cmat) %*% W)
   pred_class = levs[apply(pred_y, 1, which.max)]
 
   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
