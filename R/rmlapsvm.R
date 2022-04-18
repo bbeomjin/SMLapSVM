@@ -154,7 +154,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   if (all(colSums(logic) > 0)) {
     c0mat = -Kcmat - 1
     c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
-    c0vec_temp = colMeans(c0mat)
+    c0vec = colMeans(c0mat)
   } else {
     alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
     alp_temp[y_index] = gamma
