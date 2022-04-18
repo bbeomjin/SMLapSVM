@@ -119,44 +119,54 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   # find b vector using LP
   Kcmat = (JK %*% cmat) %*% W
 
-  # table(y, apply(Kcmat, 1, which.max))
+  upper_mat = matrix(1 - gamma, nrow = nrow(alpha_mat), ncol = n_class)
+  upper_mat[y_index] = gamma
+  logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
+  if (all(colSums(logic) > 0)) {
+    temp_mat = -Kcmat - 1
+    temp_mat[y_index] = (n_class - 1) - Kcmat[y_index]
+    c0mat = matrix(nrow = n_l, ncol = n_class - 1)
+    for (i in 1:n_l) {
+      c0mat[i, ] = solve(t(W[, -y_index[i, 2]]), temp_mat[i, -y_index[i, 2]])
+    }
+    c0vec = colMeans(c0mat)
+  } else {
+    alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
+    alp_temp[y_index] = gamma
+
+    alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
 
 
-  alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
-  alp_temp[y_index] = gamma
+    # constraint matrix and vector
+    # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
+    Alp1 = diag(qp_dim)
+    Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
 
-  alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
+    for (i in 1:(n_class - 1)) {
+      Alp2[, (2 * i - 1)] = Lmatj[[i]]
+      Alp2[, (2 * i)] = -Lmatj[[i]]
+    }
 
+    Alp = cbind(Alp1, Alp2)
 
-  # constraint matrix and vector
-  # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
-  Alp1 = diag(qp_dim)
-  Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
-
-  for (i in 1:(n_class - 1)) {
-    Alp2[, (2 * i - 1)] = Lmatj[[i]]
-    Alp2[, (2 * i)] = -Lmatj[[i]]
-  }
-
-  Alp = cbind(Alp1, Alp2)
-
-  blp_temp = Kcmat + 1
-  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
-  blp = as.vector(blp_temp)
+    blp_temp = Kcmat + 1
+    blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
+    blp = as.vector(blp_temp)
 
 
-  # print(dim(Alp))
-  # print(length(blp))
+    # print(dim(Alp))
+    # print(length(blp))
 
-  ############################################################################
+    ############################################################################
 
-  # constraint directions
-  const_dir = rep(">=", qp_dim)
-  # const_dir[1] = "="
-  cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * (n_class - 1))]
-  c0vec = rep(0, n_class - 1)
-  for(j in 1:(n_class - 1)) {
-    c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+    # constraint directions
+    const_dir = rep(">=", qp_dim)
+    # const_dir[1] = "="
+    cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * (n_class - 1))]
+    c0vec = rep(0, n_class - 1)
+    for(j in 1:(n_class - 1)) {
+      c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+    }
   }
 
   W_c0vec = drop(t(c0vec) %*% W)
