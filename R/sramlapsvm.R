@@ -468,7 +468,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     theta_seq_list = mclapply(1:length(lambda_theta_seq),
                               function(j) {
                                 error = try({
-                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, c0vec = opt_model$W_c0vec,
+                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, W_c0vec = opt_model$W_c0vec,
                                                                 gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
                                 })
                                 if (inherits(error, "try-error")) {
@@ -891,7 +891,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # Return the output
   out$alpha = alpha_mat
   out$cmat = cmat
-  out$W_c0vec = c0vec
+  out$W_c0vec = W_c0vec
   out$fit = fit
   out$fit_class = fit_class
   out$n_l = n_l
