@@ -126,12 +126,6 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
     W_c0mat = -Kcmat - 1
     W_c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
     W_c0vec = colMeans(W_c0mat)
-    # c0mat = matrix(nrow = n_l, ncol = n_class - 1)
-    # for (i in 1:n_l) {
-    #   c0mat[i, ] = solve(t(W[, -y_index[i, 2]]), temp_mat[i, -y_index[i, 2]])
-    # }
-    # c0vec = colMeans(c0mat)
-
 
   } else {
     alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)

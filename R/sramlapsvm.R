@@ -45,8 +45,8 @@ sramlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
 predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
 {
   model = object$opt_model
-  beta = model$beta
-  beta0 = model$beta0
+  cmat = model$cmat
+  W_c0vec = model$W_c0vec
   levs = model$levels
 
   # if (object$scale) {
@@ -63,9 +63,7 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
 
   W = XI_gen(model$n_class)
 
-  W_beta0 = drop(t(beta0) %*% W)
-
-  pred_y = matrix(W_beta0, nrow = nrow(newK), ncol = model$n_class, byrow = T) + ((newK %*% beta) %*% W)
+  pred_y = matrix(W_c0vec, nrow = nrow(newK), ncol = model$n_class, byrow = T) + ((newK %*% cmat) %*% W)
   pred_class = levs[apply(pred_y, 1, which.max)]
 
   if (attr(levs, "type") == "factor") {pred_class = factor(pred_class, levels = levs)}
@@ -334,7 +332,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                         function(j) {
                           error = try({
                             theta = find_theta.sramlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
-                                                          cmat = init_model$beta, c0vec = init_model$beta0,
+                                                          cmat = init_model$cmat, W_c0vec = init_model$W_c0vec,
                                                           lambda = lambda, lambda_I = lambda_I,
                                                           lambda_theta = lambda_theta_seq[j], ...)
 
@@ -381,7 +379,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     # theta_seq_list = mclapply(1:length(lambda_theta_seq),
     #                           function(j) {
     #                             error = try({
-    #                               theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$beta, c0vec = opt_model$beta0,
+    #                               theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, c0vec = opt_model$W_c0vec,
     #                                                             gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
     #                             })
     #                             if (inherits(error, "try-error")) {
@@ -417,13 +415,13 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
       init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = init_theta_train, y = y_train,
                                       lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
-      cmat = init_model$beta
-      c0vec = init_model$beta0
+      cmat = init_model$cmat
+      W_c0vec = init_model$W_c0vec
 
       fold_err = mclapply(1:length(lambda_theta_seq),
                           function(j) {
                             error = try({
-                              theta = find_theta.sramlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, c0vec = c0vec,
+                              theta = find_theta.sramlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, W_c0vec = W_c0vec,
                                                             gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
 
                               if (isCombined) {
@@ -470,7 +468,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     theta_seq_list = mclapply(1:length(lambda_theta_seq),
                               function(j) {
                                 error = try({
-                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$beta, c0vec = opt_model$beta0,
+                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, c0vec = opt_model$W_c0vec,
                                                                 gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
                                 })
                                 if (inherits(error, "try-error")) {
@@ -500,7 +498,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 }
 
 
-find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda, lambda_I, lambda_theta = 1,
+find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, W_c0vec, gamma, lambda, lambda_I, lambda_theta = 1,
                                  eig_tol_D = .Machine$double.eps,
                                  eig_tol_I = 1e-13,
                                  epsilon_D = 1e-6,
@@ -539,12 +537,12 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
   n_u = n - n_l
 
   trans_Y = Y_matrix_gen(n_class, nobs = n_l, y = y_int)
-  Y_code = XI_gen(n_class)
-  # Y_code = Y_matrix_gen(n_class, nobs = n_class, y = 1:n_class)
+  W = XI_gen(n_class)
+  # W = Y_matrix_gen(n_class, nobs = n_class, y = 1:n_class)
   y_index = cbind(1:n_l, y_int)
 
   cmat = as.matrix(cmat)
-  c0vec = as.vector(c0vec)
+  W_c0vec = as.vector(W_c0vec)
 
   Dmat = numeric(anova_kernel$numK)
   dvec = numeric(anova_kernel$numK)
@@ -568,7 +566,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
   for (j in 1:anova_kernel$numK) {
     temp_A = NULL
     for (k in 1:n_class) {
-      inner_prod_A = matrix(rowSums((anova_kernel$K[[j]][1:n_l, ] %*% cmat) * matrix(Y_code[, k], nrow = n_l, ncol = n_class - 1, byrow = TRUE)))
+      inner_prod_A = matrix(rowSums((anova_kernel$K[[j]][1:n_l, ] %*% cmat) * matrix(W[, k], nrow = n_l, ncol = n_class - 1, byrow = TRUE)))
       temp_A = rbind(temp_A, inner_prod_A)
     }
     A_mat = cbind(A_mat, temp_A)
@@ -603,9 +601,11 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
   A_mat = rbind(A_mat, A_theta)
   #    print(ncol(A.mat))
 
-  bb = rowSums(sapply(1:(n_class - 1), function(x) trans_Y[, x] * c0vec[x]))
+  # bb = rowSums(sapply(1:(n_class - 1), function(x) trans_Y[, x] * c0vec[x]))
+  bb = W_c0vec[y_int]
   bb_yi = (n_class - 1) - bb
-  bb_j = 1 + matrix(rowSums(t(Y_code) * matrix(c0vec, nrow = ncol(Y_code), ncol = nrow(Y_code), byrow = TRUE)), nrow = n_l, ncol = n_class, byrow = TRUE)
+  # bb_j = 1 + matrix(rowSums(t(W) * matrix(c0vec, nrow = ncol(W), ncol = nrow(W), byrow = TRUE)), nrow = n_l, ncol = n_class, byrow = TRUE)
+  bb_j = 1 + matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = TRUE)
   bb_j[y_index] = bb_yi
   bvec = c(as.vector(bb_j), rep(0, anova_kernel$numK + n_l * n_class), rep(-1, anova_kernel$numK))
 
@@ -616,7 +616,6 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, c0vec, gamma, lambda,
   # theta[theta < 1e-6] = 0
   theta = round(theta, 6)
   # theta_sol[theta_sol < 1e-6] = 0
-  #    print(beta)
   return(theta)
 }
 
@@ -834,56 +833,53 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # find b vector using LP
   Kcmat = (JK %*% cmat) %*% W
 
-  # table(y, apply(Kcmat, 1, which.max))
+  upper_mat = matrix(1 - gamma, nrow = nrow(alpha_mat), ncol = n_class)
+  upper_mat[y_index] = gamma
+  logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
+  if (all(colSums(logic) > 0)) {
+    W_c0mat = -Kcmat - 1
+    W_c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
+    W_c0vec = colMeans(W_c0mat)
+
+  } else {
+    alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
+    alp_temp[y_index] = gamma
+
+    alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
 
 
-  alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
-  alp_temp[y_index] = gamma
+    # constraint matrix and vector
+    # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
+    Alp1 = diag(qp_dim)
+    Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
 
-  alp = c(as.vector(alp_temp), rep(0, 2 * (n_class - 1)))
+    for (i in 1:(n_class - 1)) {
+      Alp2[, (2 * i - 1)] = Lmatj[[i]]
+      Alp2[, (2 * i)] = -Lmatj[[i]]
+    }
 
-  # alp = rep((1 - gamma), (qp_dim + 2 * n_class))
-  # for (j in 1:n_class) {
-  #   for (i in 1:n_l) {
-  #     if (y[i] == j) {
-  #       alp[n_l * (j - 1) + i] = gamma
-  #     }
-  #   }
-  # }
-  # alp[(qp_dim + 1):(qp_dim + 2 * n_class)] = 0
+    Alp = cbind(Alp1, Alp2)
 
-  # constraint matrix and vector
-  # Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class - 1))
-  Alp1 = diag(qp_dim)
-  Alp2 = matrix(0, nrow = qp_dim, ncol = 2 * (n_class - 1))
+    blp_temp = Kcmat + 1
+    blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
+    blp = as.vector(blp_temp)
 
-  for (i in 1:(n_class - 1)) {
-    Alp2[, (2 * i - 1)] = Lmatj[[i]]
-    Alp2[, (2 * i)] = -Lmatj[[i]]
+
+    # print(dim(Alp))
+    # print(length(blp))
+
+    ############################################################################
+
+    # constraint directions
+    const_dir = rep(">=", qp_dim)
+    # const_dir[1] = "="
+    cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * (n_class - 1))]
+    c0vec = rep(0, n_class - 1)
+    for(j in 1:(n_class - 1)) {
+      c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+    }
+    W_c0vec = drop(t(c0vec) %*% W)
   }
-
-  Alp = cbind(Alp1, Alp2)
-
-  blp_temp = Kcmat + 1
-  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
-  blp = as.vector(blp_temp)
-
-
-  # print(dim(Alp))
-  # print(length(blp))
-
-  ############################################################################
-
-  # constraint directions
-  const_dir = rep(">=", qp_dim)
-  # const_dir[1] = "="
-  cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * (n_class - 1))]
-  c0vec = rep(0, n_class - 1)
-  for(j in 1:(n_class - 1)) {
-    c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
-  }
-
-  W_c0vec = drop(t(c0vec) %*% W)
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
   fit_class = levs[apply(fit, 1, which.max)]
@@ -894,8 +890,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
 
   # Return the output
   out$alpha = alpha_mat
-  out$beta = cmat
-  out$beta0 = c0vec
+  out$cmat = cmat
+  out$W_c0vec = c0vec
   out$fit = fit
   out$fit_class = fit_class
   out$n_l = n_l

@@ -785,39 +785,47 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # find b vector using LP
   Kcmat = JK %*% cmat
 
-  alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
-  alp_temp[y_index] = gamma
+  upper_mat = matrix(1 - gamma, nrow = nrow(alpha_mat), ncol = n_class)
+  upper_mat[y_index] = gamma
+  logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
+  if (all(colSums(logic) > 0)) {
+    c0mat = -Kcmat - 1
+    c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
+    c0vec = colMeans(c0mat)
+  } else {
+    alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
+    alp_temp[y_index] = gamma
 
-  alp = c(as.vector(alp_temp), rep(0, 2 * n_class))
+    alp = c(as.vector(alp_temp), rep(0, 2 * n_class))
 
-  Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class))
-  Alp2 = diag(qp_dim)
+    Alp1 = c(rep(0, qp_dim), rep(c(1, -1), n_class))
+    Alp2 = diag(qp_dim)
 
-  Alp3 = matrix(0, nrow = qp_dim, ncol = 2 * n_class)
+    Alp3 = matrix(0, nrow = qp_dim, ncol = 2 * n_class)
 
-  Alp3_temp = matrix(-1, nrow = n_l, ncol = n_class)
-  Alp3_temp[y_index] = 1
+    Alp3_temp = matrix(-1, nrow = n_l, ncol = n_class)
+    Alp3_temp[y_index] = 1
 
-  for (i in 1:n_class) {
-    Alp3[(n_l * (i - 1) + 1):(n_l * i), (2 * i - 1)] = Alp3_temp[, i]
-    Alp3[(n_l * (i - 1) + 1):(n_l * i), (2 * i)] = -Alp3_temp[, i]
-  }
+    for (i in 1:n_class) {
+      Alp3[(n_l * (i - 1) + 1):(n_l * i), (2 * i - 1)] = Alp3_temp[, i]
+      Alp3[(n_l * (i - 1) + 1):(n_l * i), (2 * i)] = -Alp3_temp[, i]
+    }
 
-  Alp = rbind(Alp1, cbind(Alp2, Alp3))
+    Alp = rbind(Alp1, cbind(Alp2, Alp3))
 
-  blp_temp = Kcmat + 1
-  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
-  blp = c(0, as.vector(blp_temp))
+    blp_temp = Kcmat + 1
+    blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
+    blp = c(0, as.vector(blp_temp))
 
-  ############################################################################
 
-  # constraint directions
-  const_dir = rep(">=", (qp_dim + 1))
-  const_dir[1] = "="
-  cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * n_class)]
-  c0vec = rep(0, n_class)
-  for(j in 1:n_class) {
-    c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+    # constraint directions
+    const_dir = rep(">=", (qp_dim + 1))
+    const_dir[1] = "="
+    cposneg = lp("min", objective.in = alp, const.mat = Alp, const.dir = const_dir,const.rhs = blp)$solution[(qp_dim + 1):(qp_dim + 2 * n_class)]
+    c0vec = rep(0, n_class)
+    for(j in 1:n_class) {
+      c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
+    }
   }
 
   # compute the fitted values
