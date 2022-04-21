@@ -119,14 +119,14 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   # find b vector using LP
   Kcmat = (JK %*% cmat) %*% W
 
-  # upper_mat = matrix(1 - gamma, nrow = nrow(alpha_mat), ncol = n_class)
-  # upper_mat[y_index] = gamma
-  # logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
-  # if (all(colSums(logic) > 0)) {
-  #   W_c0mat = -Kcmat - 1
-  #   W_c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
-  #   W_c0vec = colMeans(W_c0mat)
-  # } else {
+  upper_mat = matrix(1 - gamma, nrow = nrow(alpha_mat), ncol = n_class)
+  upper_mat[y_index] = gamma
+  logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
+  if (all(colSums(logic) > 0)) {
+    W_c0mat = -Kcmat - 1
+    W_c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
+    W_c0vec = colMeans(W_c0mat)
+  } else {
     alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
     alp_temp[y_index] = gamma
 
@@ -164,7 +164,7 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
       c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
     }
     W_c0vec = drop(t(c0vec) %*% W)
-  # }
+  }
 
   # compute the fitted values
   fit = (matrix(W_c0vec, nrow = n_l, ncol = n_class, byrow = T) + Kcmat)
@@ -172,8 +172,6 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   if (attr(levs, "type") == "factor") {fit_class = factor(fit_class, levels = levs)}
   if (attr(levs, "type") == "numeric") {fit_class = as.numeric(fit_class)}
   if (attr(levs, "type") == "integer") {fit_class = as.integer(fit_class)}
-
-  # table(y, fit_class)
 
   # Return the output
   out$alpha = alpha_mat

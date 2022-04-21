@@ -148,14 +148,14 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # find b vector using LP
   Kcmat = JK %*% cmat
 
-  # upper_mat = matrix(1 - gamma, nrow = nrow(alpha_mat), ncol = n_class)
-  # upper_mat[y_index] = gamma
-  # logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
-  # if (all(colSums(logic) > 0)) {
-  #   c0mat = -Kcmat - 1
-  #   c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
-  #   c0vec = colMeans(c0mat)
-  # } else {
+  upper_mat = matrix(1 - gamma, nrow = nrow(alpha_mat), ncol = n_class)
+  upper_mat[y_index] = gamma
+  logic = (alpha_mat > 0) & (alpha_mat < upper_mat)
+  if (all(colSums(logic) > 0)) {
+    c0mat = -Kcmat - 1
+    c0mat[y_index] = (n_class - 1) - Kcmat[y_index]
+    c0vec = colMeans(c0mat)
+  } else {
     alp_temp = matrix(1 - gamma, nrow = n_l, ncol = n_class)
     alp_temp[y_index] = gamma
 
@@ -200,7 +200,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     for(j in 1:n_class) {
       c0vec[j] = cposneg[(2 * j - 1)] - cposneg[(2 * j)]
     }
-  # }
+  }
 
   # compute the fitted values
   fit = (matrix(rep(c0vec, n_l), ncol = n_class, byrow = T) + Kcmat)
