@@ -39,24 +39,24 @@ generateMultiorange2 = function(n, p = 2, seed = 1, with_noise = TRUE, noise_p =
   while (k <= n) {
     x = rnorm(p, sd = 2)
     sx = sum(x^2)
-    if (sx <= 0.5) {
+    if (sx <= 0.8) {
       y[k] = 1
       X[k, ] = x
       k = k + 1
     }
-    else if (2 < sx & sx <= 3) {
+    else if (2.5 < sx & sx <= 4) {
       y[k] = 2
       X[k, ] = x
       k = k + 1
     }
-    else if (6 < sx & sx <= 8) {
+    else if (7 < sx & sx <= 9.5) {
       y[k] = 3
       X[k, ] = x
       k = k + 1
     }
   }
   if (with_noise) {
-    noise_dat = matrix(rnorm(n * noise_p, sd = 1.5), n, noise_p)
+    noise_dat = matrix(rnorm(n * noise_p, sd = 2), n, noise_p)
     X = cbind(X, noise_dat)
   }
   return(list(x = X, y = y))
