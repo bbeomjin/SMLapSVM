@@ -1,5 +1,6 @@
 rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                            eig_tol_D = .Machine$double.eps,
+                            eig_tol_I = 1e-13,
+                            eig_tol_D = 0,
                             inv_tol = 1e-25, epsilon_D = 1e-8)
 {
   out = list()
@@ -30,7 +31,7 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
   # K = fixit(K, eig_tol_D)
   # inv_LK = inverse(diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K), epsilon = inv_tol)
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
-  LK = fixit(LK, epsilon = 1e-13)
+  LK = fixit(LK, epsilon = eig_tol_I)
   # max_LK = max(abs(LK))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n), t(J))
 
@@ -242,7 +243,7 @@ predict.rmlapsvm_compact = function(object, newK = NULL)
 
 rmlapsvm = function(x = NULL, y = NULL, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam, scale = FALSE,
                     adjacency_k = 6, normalized = TRUE, weight = NULL, weightType = "Binary", epsilon = 1e-6,
-                    eig_tol_D = .Machine$double.eps, inv_tol = 1e-25, epsilon_D = 1e-8)
+                    eig_tol_I = 1e-13, eig_tol_D = 0, inv_tol = 1e-25, epsilon_D = 1e-8)
 {
   out = list()
   n_l = NROW(x)

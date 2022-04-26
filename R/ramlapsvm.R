@@ -1,5 +1,6 @@
 ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                             eig_tol_D = .Machine$double.eps,
+                             eig_tol_I = 1e-13,
+                             eig_tol_D = 0,
                              inv_tol = 1e-25, epsilon_D = 1e-8)
 {
 
@@ -38,6 +39,7 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   JK = J %*% K
 
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
+  LK = fixit(LK, epsilon = eig_tol_I)
   # max_LK = max(abs(LK))
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
@@ -211,7 +213,7 @@ predict.ramlapsvm_compact = function(object, newK = NULL) {
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
-                  eig_tol_D = .Machine$double.eps, inv_tol = 1e-25, epsilon_D = 1e-8)
+                  eig_tol_I = 1e-13, eig_tol_D = 0, inv_tol = 1e-25, epsilon_D = 1e-8)
 {
   out = list()
   n_l = NROW(x)
