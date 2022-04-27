@@ -39,7 +39,7 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   JK = J %*% K
 
   LK = diag(n_l * lambda, n) + n_l * lambda_I / n^2 * (L %*% K)
-  LK = fixit(LK, epsilon = eig_tol_I)
+  # LK = fixit(LK, epsilon = eig_tol_I)
   # max_LK = max(abs(LK))
   # inv_LK = chol2inv(chol(LK + diag(max_LK * epsilon_I, n)))
   # inv_LK = solve(LK + diag(max_LK * epsilon_I, n))
