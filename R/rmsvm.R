@@ -99,7 +99,7 @@ rmsvm_compact = function(K, y, gamma = 0.5, lambda, epsilon = 1e-6, eig_tol_D = 
   Alp = rbind(Alp1, cbind(Alp2, Alp3))
 
   blp_temp = Kcmat + 1
-  blp_temp[y_index] = (k - 1) - Kcmat[y_index]
+  blp_temp[y_index] = (n_class - 1) - Kcmat[y_index]
   blp = c(0, as.vector(blp_temp))
 
   # constraint directions
