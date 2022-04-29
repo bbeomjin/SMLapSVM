@@ -1,3 +1,9 @@
+sigest = function(x, q)
+{
+  a = quantile(as.numeric(dist(x, method = "euclidean")), q)
+  return(1 / (2 * a^2))
+}
+
 kernelMatrix = function(x, y, kernel = "gaussian", kparam = 1.0) {
 
   x = as.matrix(x)
