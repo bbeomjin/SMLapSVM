@@ -104,6 +104,31 @@ predict.smlapsvm = function(object, newx = NULL)
 }
 
 
+mlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, type = c("rm", "ram"),
+                   lambda, lambda_I, kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = 1,
+                   adjacency_k = 6, normalized = FALSE, weightType = c("Binary", "Heatmap"),
+                   scale = FALSE, ...)
+{
+  out = list()
+  call = match.call()
+  type = match.arg(type)
+  kernel = match.arg(kernel)
+  weightType = match.arg(weightType)
+  
+  f = switch(type,
+             rm = rmlapsvm,
+             ram = ramlapsvm)
+  
+  mlapsvm_fit = f(x = x, y = y, ux = ux, gamma = gamma, 
+                  lambda = lambda, lambda_I = lambda_I,
+                  kernel = kernel, kparam = kparam,
+                  weightType = weightType, normalized = normalized, adjacency_k = adjacency_k
+                  scale = scale, ...)
+  
+  return(mlapsvm_fit)
+}
+
+
 
 smsvm = function(x = NULL, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, type = c("rm", "ram"),
                  lambda_seq = 2^{seq(-10, 10, length.out = 100)},
