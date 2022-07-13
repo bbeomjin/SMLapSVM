@@ -12,3 +12,16 @@ Furthermore, ```SMLapSVM``` also provides functions to fit the structured RMLapS
 > install_github("bbeomjin/SMLapSVM")
 ```
 
+## 2. USAGE NOTES
+
+(1) Description of R functions in ```SMLapSVM```
+
+- Descriptions of arguments in the functions in ```SMLapSVM``` can be obtained by help() or ? in R prompt, and documentation of ```SMLapSVM```.   
+
+(2) List of R functions in ```SMLapSVM``` package
+
+- ```mlapsvm``` : A function for fitting the RMLapSVM and RAMLapSVM.
+
+- ```smlapsvm``` : A function for learning the SRMLapSVM and SRAMLapSVM.
+
+- ```cv.mlapsvm``` : 
