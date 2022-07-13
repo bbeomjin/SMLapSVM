@@ -1,2 +1,4 @@
 # SMLapSVM
- test
+Multicategory Laplacian support vector machines
+
+
