@@ -24,4 +24,4 @@ Furthermore, ```SMLapSVM``` also provides functions to fit the structured RMLapS
 
 - ```smlapsvm``` : A function for learning the SRMLapSVM and SRAMLapSVM.
 
-- ```cv.mlapsvm``` : 
+- ```cv.mlapsvm``` : A function used to tune hyperparameters of the RMLapSVM and RAMLapSVM.
