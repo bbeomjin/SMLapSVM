@@ -7,5 +7,8 @@ Furthermore, ```SMLapSVM``` also provides functions to fit the structured RMLapS
 ## 1. INSTALLATION
 
 (1) From GitHub
-
+```{r}
+> library(devtools)
+> install_github("bbeomjin/SMLapSVM")
+```
 
