@@ -1,4 +1,3 @@
-# for test
 sigest = function(x, q)
 {
   a = quantile(as.numeric(dist(x, method = "euclidean")), q)
