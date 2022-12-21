@@ -122,7 +122,7 @@ mlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, type = c("rm", "ram"),
   mlapsvm_fit = f(x = x, y = y, ux = ux, gamma = gamma, 
                   lambda = lambda, lambda_I = lambda_I,
                   kernel = kernel, kparam = kparam,
-                  weightType = weightType, normalized = normalized, adjacency_k = adjacency_k
+                  weightType = weightType, normalized = normalized, adjacency_k = adjacency_k,
                   scale = scale, ...)
   
   return(mlapsvm_fit)
@@ -149,7 +149,7 @@ cv.mlapsvm = function(x, y, ux = NULL, gamma = 0.5, type = c("rm", "ram"),
                   valid_x = valid_x, valid_y = valid_y, nfolds = nfolds,
                   lambda_seq = lambda_seq, lambda_I_seq = lambda_I_seq,
                   kernel = kernel, kparam = kparam,
-                  weightType = weightType, normalized = normalized, adjacency_k = adjacency_k
+                  weightType = weightType, normalized = normalized, adjacency_k = adjacency_k,
                   scale = scale, optModel = optModel, nCores = nCores, ...)
   
   return(cv_mlapsvm_fit)
