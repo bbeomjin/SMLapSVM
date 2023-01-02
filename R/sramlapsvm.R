@@ -510,8 +510,8 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
 
 find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, W_c0vec, gamma, lambda, lambda_I, lambda_theta = 1,
                                  eig_tol_D = 0,
-                                 eig_tol_I = 1e-13,
-                                 epsilon_D = 1e-6,
+                                 eig_tol_I = 1e-12,
+                                 epsilon_D = 1e-8,
                                  epsilon_I = 0,
                                  inv_tol = 1e-25)
 {
@@ -633,7 +633,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, W_c0vec, gamma, lambd
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
                               eig_tol_D = 0,
                               eig_tol_I = 1e-12,
-                              epsilon_D = 1e-6,
+                              epsilon_D = 1e-8,
                               epsilon_I = 0,
                               inv_tol = 1e-25)
 {
@@ -705,9 +705,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # K_KLK = lambda_K + lambda_KLK
   K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  # K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
+  K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
-  diag(K_KLK) = diag(K_KLK) + nrow(K_KLK) * epsilon_I
+  # diag(K_KLK) = diag(K_KLK) + nrow(K_KLK) * epsilon_I
 
   JK = J %*% K
 
