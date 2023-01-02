@@ -1,5 +1,4 @@
 ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
-                             eig_tol_I = 1e-13,
                              eig_tol_D = 0,
                              inv_tol = 1e-25, epsilon_D = 1e-8)
 {
@@ -50,7 +49,8 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = inv_tol / 100) / max_LK
   # inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), t(J), tol = inv_tol)
   # inv_LK = solve(LK, t(J), tol = inv_tol)
-  inv_LK = solve(LK, tol = inv_tol) %*% t(J)
+  # inv_LK = solve(LK, tol = inv_tol) %*% t(J)
+  inv_LK = qr.solve(LK, tol = inv_tol) %*% t(J)
   # inv_LK = solve(LK, t(J))
   # inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = inv_tol)
   # inv_LK = inv_LK %*% t(J)
@@ -213,7 +213,7 @@ predict.ramlapsvm_compact = function(object, newK = NULL) {
 
 ramlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, lambda, lambda_I, kernel, kparam,
                   weight = NULL, weightType = "Binary", scale = FALSE, normalized = TRUE, adjacency_k = 6, epsilon = 1e-6,
-                  eig_tol_I = 1e-13, eig_tol_D = 0, inv_tol = 1e-25, epsilon_D = 1e-8)
+                  eig_tol_D = 0, epsilon_D = 1e-8, inv_tol = 1e-25)
 {
   out = list()
   n_l = NROW(x)
