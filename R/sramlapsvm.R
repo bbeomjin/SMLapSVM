@@ -77,7 +77,7 @@ predict.sramlapsvm = function(object, newx = NULL, newK = NULL)
 cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5,
                             lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                             theta = NULL, fold_theta = NULL,
-                            kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = c(1),
+                            kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = 1,
                             scale = FALSE, adjacency_k = 6, normalized = TRUE, weightType = "Binary",
                             criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
@@ -695,7 +695,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # K_KLK = lambda_K + lambda_KLK
   K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
+  # K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
   # diag(K_KLK) = diag(K_KLK) + epsilon_I
 
@@ -707,8 +707,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = tcrossprod(inv_K_KLK, JK)
   # inv_K_KLK = inv_K_KLK %*% t(JK)
-  # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
-  inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
+  inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  # inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
   # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
 
   # Q = JK %*% inv_K_KLK %*% t(JK)
