@@ -708,8 +708,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_K_KLK = tcrossprod(inv_K_KLK, JK)
   # inv_K_KLK = inv_K_KLK %*% t(JK)
   # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
-  inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
-  # inv_K_KLK = qr.solve(K_KLK, K %*% t(J), tol = eig_tol_I)
+  # inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
+  inv_K_KLK = qr.solve(K_KLK, tol = inv_tol) %*% t(JK)
 
   # Q = JK %*% inv_K_KLK %*% t(JK)
   Q = JK %*% inv_K_KLK
