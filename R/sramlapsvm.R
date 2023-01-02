@@ -331,7 +331,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     fold_err = mclapply(1:length(lambda_theta_seq),
                         function(j) {
                           error = try({
-                            if (lambda_theta_seq[i] == 0) {
+                            if (lambda_theta_seq[j] == 0) {
                               theta = rep(1, anova_K$numK)
                             } else {
                               theta = find_theta.sramlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
@@ -424,7 +424,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
       fold_err = mclapply(1:length(lambda_theta_seq),
                           function(j) {
                             error = try({
-                              if (lambda_theta_seq[i] == 0) {
+                              if (lambda_theta_seq[j] == 0) {
                                 theta = rep(1, subanova_K$numK)
                               } else {
                                 theta = find_theta.sramlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, W_c0vec = W_c0vec,
@@ -474,7 +474,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     theta_seq_list = mclapply(1:length(lambda_theta_seq),
                               function(j) {
                                 error = try({
-                                  if (lambda_theta_seq[i] == 0) {
+                                  if (lambda_theta_seq[j] == 0) {
                                     theta = rep(1, anova_K$numK)
                                   } else {
                                     theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, W_c0vec = opt_model$W_c0vec,
