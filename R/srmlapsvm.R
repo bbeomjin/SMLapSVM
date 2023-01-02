@@ -585,11 +585,12 @@ find_theta.srmlapsvm = function(y, gamma, anova_kernel, L, cmat, c0vec, lambda, 
     A_mat = cbind(A_mat, temp_A)
   }
 
-  max_D = max(abs(Dmat))
+  # max_D = max(abs(Dmat))
   Dmat = c(Dmat, c(rep(0, n_l * n_class)))
   Dmat = diag(Dmat)
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
-  diag(Dmat) = diag(Dmat) + max_D * epsilon_D
+  # diag(Dmat) = diag(Dmat) + max_D * epsilon_D
+  diag(Dmat) = diag(Dmat) + nrow(Dmat) * epsilon_D
   # diag(Dmat) = diag(Dmat) + epsilon_D
 
   # Dmat = fixit(Dmat, epsilon = eig_tol_D, is_diag = TRUE)
@@ -705,10 +706,10 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # K_KLK = lambda_K + lambda_KLK
   K_KLK = n_l * lambda * K + n_l * lambda_I / n^2 * KLK
   # K_KLK = (K_KLK + t(K_KLK)) / 2
-  K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
+  # K_KLK = fixit(K_KLK, epsilon = eig_tol_I)
   # K_KLK = fixit(K_KLK)
-  diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
-  # diag(K_KLK) = diag(K_KLK) + epsilon_I
+  # diag(K_KLK) = diag(K_KLK) + max(abs(diag(K_KLK))) * epsilon_I
+  diag(K_KLK) = diag(K_KLK) + nrow(K_KLK) * epsilon_I
 
   JK = J %*% K
 
@@ -720,8 +721,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_K_KLK = inv_K_KLK %*% t(JK)
   
   # inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
-  # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
-  inv_K_KLK = qr.solve(K_KLK, tol = inv_tol) %*% t(JK)
+  inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  # inv_K_KLK = qr.solve(K_KLK, tol = inv_tol) %*% t(JK)
   # inv_K_KLK = qr.solve(K_KLK, t(JK), tol = inv_tol)
   
   # Q = JK %*% inv_K_KLK %*% t(JK)
@@ -738,12 +739,12 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
   # D = (D + t(D)) / 2
-  D = fixit(D, epsilon = eig_tol_D)
+  # D = fixit(D, epsilon = eig_tol_D)
   # D = fixit2(D)
-  max_D = max(abs(diag(D)))
+  # max_D = max(abs(diag(D)))
   # D = D / max_D
-  diag(D) = diag(D) + max_D * epsilon_D
-  # diag(D) = diag(D) + epsilon_D
+  # diag(D) = diag(D) + max_D * epsilon_D
+  diag(D) = diag(D) + nrow(D) * epsilon_D
 
   # D = nearPD(D, eig.tol = rel_eig_tol)$mat
   # diag(D) = diag(D) + epsilon_D
