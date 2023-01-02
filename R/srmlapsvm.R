@@ -348,10 +348,14 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
     fold_err = mclapply(1:length(lambda_theta_seq),
                         function(j) {
                           error = try({
-                            theta = find_theta.srmlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
+                            if (lambda_theta_seq[j] == 0) {
+                              theta = rep(1, anova_K$numK)
+                            } else {
+                              theta = find_theta.srmlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
                                                          cmat = init_model$cmat, c0vec = init_model$c0vec,
                                                          lambda = lambda, lambda_I = lambda_I,
                                                          lambda_theta = lambda_theta_seq[j], ...)
+                            }
                             if (isCombined) {
                               # subK = combine_kernel(anova_K, theta)
                               init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
@@ -436,9 +440,12 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
       fold_err = mclapply(1:length(lambda_theta_seq),
                           function(j) {
                             error = try({
-                              theta = find_theta.srmlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, c0vec = c0vec,
+                              if (lambda_theta_seq[j] == 0) {
+                                theta = rep(1, subanova_K$numK)
+                              } else {
+                                theta = find_theta.srmlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, c0vec = c0vec,
                                                             gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
-
+                              }
                               if (isCombined) {
                                 init_model = srmlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
                                                                 lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
@@ -483,8 +490,12 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
     theta_seq_list = mclapply(1:length(lambda_theta_seq),
                               function(j) {
                                 error = try({
-                                  theta = find_theta.srmlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, c0vec = opt_model$c0vec,
+                                  if (lambda_theta_seq[j] == 0) {
+                                    theta = rep(1, anova_K$numK)
+                                  } else {
+                                    theta = find_theta.srmlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, c0vec = opt_model$c0vec,
                                                                gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
+                                  }
                                 })
                                 if (inherits(error, "try-error")) {
                                   theta = rep(0, anova_K$numK)
