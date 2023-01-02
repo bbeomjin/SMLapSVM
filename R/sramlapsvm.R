@@ -331,11 +331,14 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     fold_err = mclapply(1:length(lambda_theta_seq),
                         function(j) {
                           error = try({
-                            theta = find_theta.sramlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
-                                                          cmat = init_model$cmat, W_c0vec = init_model$W_c0vec,
-                                                          lambda = lambda, lambda_I = lambda_I,
-                                                          lambda_theta = lambda_theta_seq[j], ...)
-
+                            if (lambda_theta_seq[i] == 0) {
+                              theta = rep(1, anova_K$numK)
+                            } else {
+                              theta = find_theta.sramlapsvm(y = y, gamma = gamma, anova_kernel = anova_K, L = L,
+                                                            cmat = init_model$cmat, W_c0vec = init_model$W_c0vec,
+                                                            lambda = lambda, lambda_I = lambda_I,
+                                                            lambda_theta = lambda_theta_seq[j], ...)
+                            }
                             if (isCombined) {
                               # subK = combine_kernel(anova_K, theta)
                               init_model = sramlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
@@ -421,9 +424,12 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
       fold_err = mclapply(1:length(lambda_theta_seq),
                           function(j) {
                             error = try({
-                              theta = find_theta.sramlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, W_c0vec = W_c0vec,
+                              if (lambda_theta_seq[i] == 0) {
+                                theta = rep(1, subanova_K$numK)
+                              } else {
+                                theta = find_theta.sramlapsvm(y = y_train, anova_kernel = subanova_K, L = L_train, cmat = cmat, W_c0vec = W_c0vec,
                                                             gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
-
+                              }
                               if (isCombined) {
                                 init_model = sramlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
                                                                 lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
@@ -468,8 +474,12 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
     theta_seq_list = mclapply(1:length(lambda_theta_seq),
                               function(j) {
                                 error = try({
-                                  theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, W_c0vec = opt_model$W_c0vec,
+                                  if (lambda_theta_seq[i] == 0) {
+                                    theta = rep(1, anova_K$numK)
+                                  } else {
+                                    theta = find_theta.sramlapsvm(y = y, anova_kernel = anova_K, L = L, cmat = opt_model$cmat, W_c0vec = opt_model$W_c0vec,
                                                                 gamma = gamma, lambda = lambda, lambda_I = lambda_I, lambda_theta = lambda_theta_seq[j], ...)
+                                  }
                                 })
                                 if (inherits(error, "try-error")) {
                                   theta = rep(0, anova_K$numK)
@@ -622,7 +632,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, W_c0vec, gamma, lambd
 
 sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
                               eig_tol_D = 0,
-                              eig_tol_I = 1e-13,
+                              eig_tol_I = 1e-12,
                               epsilon_D = 1e-6,
                               epsilon_I = 0,
                               inv_tol = 1e-25)
@@ -708,8 +718,8 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # inv_K_KLK = tcrossprod(inv_K_KLK, JK)
   # inv_K_KLK = inv_K_KLK %*% t(JK)
   # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
-  # inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
-  inv_K_KLK = qr.solve(K_KLK, t(JK), tol = inv_tol)
+  inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
+  # inv_K_KLK = qr.solve(K_KLK, t(JK), tol = inv_tol)
 
   # Q = JK %*% inv_K_KLK %*% t(JK)
   Q = JK %*% inv_K_KLK
