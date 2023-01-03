@@ -1,6 +1,7 @@
 rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
                             eig_tol_D = 0,
-                            inv_tol = 1e-25, epsilon_D = 1e-8)
+                            inv_tol = 1e-25, epsilon_D = 1e-8,
+                            inv_type = "inv")
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -36,9 +37,12 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
 
   JK = J %*% K
 
-  # inv_LK = solve(LK, t(J), tol = inv_tol)
-  # inv_LK = solve(LK, tol = inv_tol) %*% t(J)
-  inv_LK = qr.solve(LK, tol = inv_tol) %*% t(J)
+  if (inv_type == "inv") {
+    inv_LK = solve(LK, tol = inv_tol) %*% t(J)
+  } else {
+    inv_LK = solve(LK, t(J), tol = inv_tol)
+  }
+  # inv_LK = qr.solve(LK, tol = inv_tol) %*% t(J)
   # inv_LK = solve(LK, t(J))
   # inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = inv_tol)
   # inv_LK = inv_LK %*% t(J)
@@ -64,9 +68,9 @@ rmlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e
     Amat[j, ] = rep(1, n_l) %*% Hmatj[[j]]
   }
   D = fixit(D, epsilon = eig_tol_D)
-  max_D = max(abs(diag(D)))
+  # max_D = max(abs(diag(D)))
   # D = D / max_D
-  diag(D) = diag(D) + max_D * epsilon_D
+  diag(D) = diag(D) + nrow(D) * epsilon_D
 
   # diag(D) = diag(D) + epsilon_D
 

@@ -639,7 +639,8 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
                              eig_tol_I = 1e-12,
                              epsilon_D = 1e-8,
                              epsilon_I = 0,
-                             inv_tol = 1e-25)
+                             inv_tol = 1e-25,
+                             inv_type = "inv")
 {
   out = list()
   # The labeled sample size, unlabeled sample size, the number of classes and dimension of QP problem
@@ -720,8 +721,11 @@ srmlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_I
   # inv_K_KLK = tcrossprod(inv_K_KLK, JK)
   # inv_K_KLK = inv_K_KLK %*% t(JK)
   
-  inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
-  # inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  if (inv_type == "inv") {
+    inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
+  } else {
+    inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
+  }
   # inv_K_KLK = qr.solve(K_KLK, tol = inv_tol) %*% t(JK)
   # inv_K_KLK = qr.solve(K_KLK, t(JK), tol = inv_tol)
   

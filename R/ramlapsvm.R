@@ -1,6 +1,7 @@
 ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1e-6,
                              eig_tol_D = 0,
-                             inv_tol = 1e-25, epsilon_D = 1e-8)
+                             inv_tol = 1e-25, epsilon_D = 1e-8,
+                             inv_type = "inv")
 {
 
   out = list()
@@ -48,9 +49,12 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), t(J) / max_LK)
   # inv_LK = solve(LK / max_LK + diag(epsilon_I, n), tol = inv_tol / 100) / max_LK
   # inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), t(J), tol = inv_tol)
-  # inv_LK = solve(LK, t(J), tol = inv_tol)
-  # inv_LK = solve(LK, tol = inv_tol) %*% t(J)
-  inv_LK = qr.solve(LK, tol = inv_tol) %*% t(J)
+  if (inv_type == "inv") {
+    inv_LK = solve(LK, tol = inv_tol) %*% t(J)
+  } else {
+    inv_LK = solve(LK, t(J), tol = inv_tol)
+  }
+  # inv_LK = qr.solve(LK, tol = inv_tol) %*% t(J)
   # inv_LK = solve(LK, t(J))
   # inv_LK = solve(LK + diag(max(abs(diag(LK))) * epsilon_I, n), tol = inv_tol)
   # inv_LK = inv_LK %*% t(J)
@@ -70,9 +74,9 @@ ramlapsvm_compact = function(K, L, y, gamma = 0.5, lambda, lambda_I, epsilon = 1
     Amat[, j] = -Lmatj[[j]]
   }
   D = fixit(D, epsilon = eig_tol_D)
-  max_D = max(abs(D))
+  # max_D = max(abs(D))
   # D = D / max_D
-  diag(D) = diag(D) + max_D * epsilon_D
+  diag(D) = diag(D) + nrow(D) * epsilon_D
 
   g_temp = matrix(-1, n_l, n_class)
   g_temp[y_index] = 1 - n_class
