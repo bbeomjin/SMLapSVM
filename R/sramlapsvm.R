@@ -513,7 +513,8 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, W_c0vec, gamma, lambd
                                  eig_tol_I = 1e-12,
                                  epsilon_D = 1e-8,
                                  epsilon_I = 0,
-                                 inv_tol = 1e-25)
+                                 inv_tol = 1e-25,
+                                 inv_type = "inv")
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
