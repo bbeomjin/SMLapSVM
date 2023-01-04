@@ -20,7 +20,7 @@ kernelMatrix = function(x, y, kernel = "gaussian", kparam = 1.0) {
 
   if (kernel == "poly") {
     K = (x %*% t(y) + 1.0)^kparam
-  } else if(kernel == "gaussian" | kernel == "gaussian2") {
+  } else if(kernel == "gaussian" | kernel == "gaussian-2way") {
     normx = rowSums(x^2)
     normy = rowSums(y^2)
     temp = x %*% t(y)
@@ -279,7 +279,7 @@ make_anovaKernel = function(x, y, kernel, kparam)
         kernelCoord[[index]] = paste("x", i, " x", j, sep = "")
       }
     }
-  } else if (kernel == "gaussian2") {
+  } else if (kernel == "gaussian-2way") {
     numK = dimx + dimx * (dimx - 1) / 2
     anova_kernel = vector(mode = "list", numK)
     kernelCoord = vector(mode = "list", numK)

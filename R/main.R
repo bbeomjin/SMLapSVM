@@ -2,7 +2,7 @@ smlapsvm = function(x = NULL, y, gamma = 0.5, ux = NULL, valid_x = NULL, valid_y
                     lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                     lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
                     adjacency_k = 6, normalized = FALSE, weightType = "Binary",
-                    kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = c(1),
+                    kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t", "gaussian-2way"), kparam = c(1),
                     scale = FALSE, criterion = c("0-1", "loss"), isCombined = TRUE, optModel = FALSE, nCores = 1, verbose = 0, ...)
 {
   out = list()

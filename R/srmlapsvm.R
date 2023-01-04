@@ -2,7 +2,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                     lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                     lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
                     adjacency_k = 6, normalized = TRUE, weightType = "Binary",
-                    kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = c(1),
+                    kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t", "gaussian-2way"), kparam = c(1),
                     scale = FALSE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
 {
   out = list()
@@ -106,7 +106,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
                  lambda_seq = 2^{seq(-10, 10, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                  theta = NULL, fold_theta = NULL,
                  adjacency_k = 6, normalized = TRUE, weightType = "Binary",
-                 kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t"), kparam = c(1),
+                 kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t", "gaussian-2way"), kparam = c(1),
                  scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
@@ -125,13 +125,20 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
   # kparam = sort(kparam, decreasing = FALSE)
 
 
-  # 추후, 커널에 맞게 theta의 길이 조절
   if (is.null(theta)) {
-    theta = rep(1, p)
+    if (grepl("2way", kernel)) {
+      theta = rep(1, p + p * (p - 1) / 2)
+    } else {
+      theta = rep(1, p)
+    }
   }
 
   if (is.null(fold_theta)) {
-    fold_theta = rep(list(rep(1, p)), nfolds)
+    if (grepl("2way", kernel)) {
+      fold_theta = rep(list(rep(1, p + p * (p - 1) / 2)), nfolds)
+    } else {
+      fold_theta = rep(list(rep(1, p)), nfolds)
+    }
   }
 
   # Combination of hyper-parameters
