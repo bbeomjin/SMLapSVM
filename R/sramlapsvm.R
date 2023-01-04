@@ -513,8 +513,7 @@ find_theta.sramlapsvm = function(y, anova_kernel, L, cmat, W_c0vec, gamma, lambd
                                  eig_tol_I = 1e-12,
                                  epsilon_D = 1e-8,
                                  epsilon_I = 0,
-                                 inv_tol = 1e-25,
-                                 inv_type = "inv")
+                                 inv_tol = 1e-25)
 {
   if (lambda_theta <= 0) {
     theta = rep(1, anova_kernel$numK)
@@ -636,8 +635,7 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
                               eig_tol_I = 1e-12,
                               epsilon_D = 1e-8,
                               epsilon_I = 0,
-                              inv_tol = 1e-25,
-                              inv_type = "inv")
+                              inv_tol = 1e-25)
 {
 
   out = list()
@@ -719,11 +717,9 @@ sramlapsvm_compact = function(anova_K, L, theta, y, gamma = 0.5, lambda, lambda_
   # inv_K_KLK = (inv_K_KLK + t(inv_K_KLK)) / 2
   # inv_K_KLK = tcrossprod(inv_K_KLK, JK)
   # inv_K_KLK = inv_K_KLK %*% t(JK)
-  if (inv_type == "inv") {
-    inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
-  } else {
-    inv_K_KLK = solve(K_KLK, t(JK), tol = inv_tol)
-  }
+  
+  inv_K_KLK = solve(K_KLK, tol = inv_tol) %*% t(JK)
+  
   # inv_K_KLK = qr.solve(K_KLK, tol = inv_tol) %*% t(JK)
   # inv_K_KLK = qr.solve(K_KLK, t(JK), tol = inv_tol)
   
