@@ -304,7 +304,7 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
                         lambda_seq = 2^{seq(-10, 15, length.out = 100)}, lambda_I_seq = 2^{seq(-20, 15, length.out = 20)},
                         kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
                         scale = FALSE, adjacency_k = 6, weightType = "Heatmap", normalized = TRUE,
-                        criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+                        criterion = c("0-1", "loss", "balanced"), optModel = FALSE, nCores = 1, ...)
 {
   out = list()
   call = match.call()
@@ -345,17 +345,13 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
                                                  kernel = kernel, kparam = kparam, scale = scale,
                                                  adjacency_k = adjacency_k, weightType = weightType,
                                                  normalized = normalized, ...)
-                          })
+                          }, silent = TRUE)
 
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.ramlapsvm(msvm_fit, newx = valid_x)
-
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val$class) / length(valid_y)
-                              err = 1 - acc
-                            } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-                            }
+                            # acc = sum(valid_y == pred_val$class) / length(valid_y)
+                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            err = 1 - acc
                           } else {
                             msvm_fit = NULL
                             err = Inf
@@ -404,16 +400,13 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
                                                    kernel = kernel, kparam = kparam, scale = scale,
                                                    adjacency_k = adjacency_k, weightType = weightType,
                                                    normalized = normalized, ...)
-                            })
+                            }, silent = TRUE)
 
                             if (!inherits(error, "try-error")) {
                               pred_val = predict.ramlapsvm(msvm_fit, newx = x_valid)
-                              if (criterion == "0-1") {
-                                acc = sum(y_valid == pred_val$class) / length(y_valid)
-                                err = 1 - acc
-                              } else {
-                                # err = ramsvm_hinge(y_valid, pred_val$inner_prod, k = k, gamma = gamma)
-                              }
+                              # acc = sum(y_valid == pred_val$class) / length(y_valid)
+                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              err = 1 - acc
                             } else {
                               msvm_fit = NULL
                               err = Inf

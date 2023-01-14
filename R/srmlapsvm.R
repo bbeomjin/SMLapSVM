@@ -3,7 +3,7 @@ srmlapsvm = function(x = NULL, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                     lambda_theta_seq = 2^{seq(-10, 10, length.out = 100)},
                     adjacency_k = 6, normalized = TRUE, weightType = "Binary",
                     kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t", "gaussian-2way"), kparam = c(1),
-                    scale = FALSE, criterion = c("0-1", "loss"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
+                    scale = FALSE, criterion = c("0-1", "loss", "balanced"), isCombined = TRUE, nCores = 1, verbose = 0, ...)
 {
   out = list()
 
@@ -107,7 +107,7 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
                  theta = NULL, fold_theta = NULL,
                  adjacency_k = 6, normalized = TRUE, weightType = "Binary",
                  kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "spline-t", "gaussian-2way"), kparam = c(1),
-                 scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+                 scale = FALSE, criterion = c("0-1", "loss", "balanced"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
   kernel = match.arg(kernel)
@@ -179,16 +179,13 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
                           error = try({
                             msvm_fit = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
                                                          lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
-                          })
+                          }, silent = TRUE)
 
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.rmlapsvm_compact(msvm_fit, newK = valid_K)
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val$class) / length(valid_y)
-                              err = 1 - acc
-                            } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-                            }
+                            # acc = sum(valid_y == pred_val$class) / length(valid_y)
+                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            err = 1 - acc
                           } else {
                             msvm_fit = NULL
                             err = Inf
@@ -244,17 +241,13 @@ cstep.srmlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y
                             error = try({
                               msvm_fit = srmlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta_train, y = y_train, gamma = gamma,
                                                             lambda = params$lambda[j], lambda_I = params$lambda_I[j], ...)
-                            })
+                            }, silent = TRUE)
 
                             if (!inherits(error, "try-error")) {
                               pred_val = predict.rmlapsvm_compact(msvm_fit, newK = subK_valid)
-
-                              if (criterion == "0-1") {
-                                acc = sum(y_valid == pred_val$class) / length(y_valid)
-                                err = 1 - acc
-                              } else {
-
-                              }
+                              # acc = sum(y_valid == pred_val$class) / length(y_valid)
+                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              err = 1 - acc
                             } else {
                               msvm_fit = NULL
                               err = Inf
@@ -368,18 +361,15 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                               init_model = srmlapsvm_compact(anova_K = anova_K, L = L, theta = theta, y = y, gamma = gamma,
                                                              lambda = lambda, lambda_I = lambda_I, ...)
                             }
-                          })
+                          }, silent = TRUE)
 
                           if (!inherits(error, "try-error")) {
                             valid_subK = combine_kernel(valid_anova_K, theta)
                             pred_val = predict.rmlapsvm_compact(init_model, newK = valid_subK)
 
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val$class) / length(valid_y)
-                              err = 1 - acc
-                            } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-                            }
+                            # acc = sum(valid_y == pred_val$class) / length(valid_y)
+                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            err = 1 - acc
                           } else {
                             err = Inf
                             theta = rep(0, anova_K$numK)
@@ -457,7 +447,7 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                                 init_model = srmlapsvm_compact(anova_K = subanova_K, L = L_train, theta = theta, y = y_train,
                                                                 lambda = lambda, lambda_I = lambda_I, gamma = gamma, ...)
                               }
-                            })
+                            }, silent = TRUE)
 
                             # error = try({
                             #   theta = theta_seq_list[[j]]
@@ -471,12 +461,8 @@ thetastep.srmlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length
                               subK_valid = combine_kernel(subanova_K_valid, theta)
                               pred_val = predict.rmlapsvm_compact(init_model, newK = subK_valid)
 
-                              if (criterion == "0-1") {
-                                acc = sum(y_valid == pred_val$class) / length(y_valid)
-                                err = 1 - acc
-                              } else {
-
-                              }
+                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              err = 1 - acc
                             } else {
                               err = Inf
                               theta = rep(0, subanova_K$numK)

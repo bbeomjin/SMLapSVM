@@ -213,7 +213,7 @@ predict.rmsvm = function(object, newx = NULL, newK = NULL)
 
 cv.rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
                       kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                      scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+                      scale = FALSE, criterion = c("0-1", "loss", "balanced"), optModel = FALSE, nCores = 1, ...)
 {
   out = list()
   call = match.call()
@@ -249,23 +249,19 @@ cv.rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 
     fold_err = mclapply(1:nrow(params),
                         function(j) {
                           error = try({
-                            msvm_fit = rmsvm(x = x, y = y, gamma = gamma, lambda = params$lambda[j], kernel = kernel, kparam = params$kparam[j], scale = scale, ...)
-                          })
+                            msvm_fit = rmsvm(x = x, y = y, gamma = gamma, lambda = params$lambda[j],
+                                             kernel = kernel, kparam = params$kparam[j], scale = scale, ...)
+                          }, silent = TRUE)
 
                           if (!inherits(error, "try-error")) {
-                            pred_val = predict.rmsvm(msvm_fit, newx = valid_x)$class
-
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val) / length(valid_y)
-                              err = 1 - acc
-                            } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-                            }
+                            pred_val = predict.rmsvm(msvm_fit, newx = valid_x)
+                            # acc = sum(valid_y == pred_val) / length(valid_y)
+                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            err = 1 - acc
                           } else {
                             msvm_fit = NULL
                             err = Inf
                           }
-
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     valid_err = round(sapply(fold_err, "[[", "error"), 8)
@@ -273,6 +269,48 @@ cv.rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 
     opt_ind = max(which(valid_err == min(valid_err)))
     opt_param = params[opt_ind, ]
     opt_valid_err = min(valid_err)
+  } else {
+    fold_list = data_split(y, nfolds)
+    valid_err = matrix(NA, nrow = nfolds, ncol = nrow(params), dimnames = list(paste0("Fold", 1:nfolds)))
+    
+    for (i in 1:nfolds) {
+      cat(nfolds, "-fold CV : ", i / nfolds * 100, "%", "\r", sep = "")
+      # fold = fold_list[[i]]
+      fold = which(fold_list == i)
+      y_fold = y[-fold]
+      x_fold = x[-fold, , drop = FALSE]
+      y_valid = y[fold]
+      x_valid = x[fold, , drop = FALSE]
+      
+      #  Parallel computation on the combination of hyper-parameters
+      fold_err = mclapply(1:nrow(params),
+                          function(j) {
+                            error = try({
+                              msvm_fit = rmsvm(x = x_fold, y = y_fold, gamma = gamma, lambda = params$lambda[j],
+                                                kernel = kernel, kparam = params$kparam[j], scale = scale, ...)
+                            }, silent = TRUE)
+                            
+                            if (!inherits(error, "try-error")) {
+                              pred_val = predict.rmsvm(msvm_fit, newx = x_valid)
+                              # acc = sum(y_valid == pred_val$class) / length(y_valid)
+                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              err = 1 - acc
+                            } else {
+                              msvm_fit = NULL
+                              err = Inf
+                            }
+                            return(list(error = err, fit_model = msvm_fit))
+                            # return(err)
+                          }, mc.cores = nCores)
+      valid_err[i, ] = sapply(fold_err, "[[", "error")
+      # valid_err[i, ] = unlist(fold_err)
+      # model_list[[i]] = lapply(fold_err, "[[", "fit_model")
+    }
+    mean_valid_err = round(colMeans(valid_err), 8)
+    opt_ind = max(which(mean_valid_err == min(mean_valid_err)))
+    # opt_ind = min(which(valid_err == min(valid_err)))
+    opt_param = params[opt_ind, ]
+    opt_valid_err = min(mean_valid_err)
   }
 
   out$opt_param = c(lambda = opt_param$lambda, kparam = opt_param$kparam)
@@ -286,7 +324,8 @@ cv.rmsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 
   out$kernel = kernel
   out$scale = scale
   if (optModel) {
-    opt_model = rmsvm(x = x, y = y, gamma = gamma, lambda = opt_param$lambda, kernel = kernel, kparam = opt_param$kparam, scale = scale, ...)
+    opt_model = rmsvm(x = x, y = y, gamma = gamma, lambda = opt_param$lambda, 
+                      kernel = kernel, kparam = opt_param$kparam, scale = scale, ...)
     out$opt_model = opt_model
   }
   out$call = call

@@ -210,7 +210,7 @@ predict.ramsvm = function(object, newx = NULL, newK = NULL, ...) {
 
 cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5, lambda_seq = 2^{seq(-10, 10, length.out = 100)},
                       kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                      scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+                      scale = FALSE, criterion = c("0-1", "loss", "balanced"), optModel = FALSE, nCores = 1, ...)
 {
   out = list()
   call = match.call()
@@ -246,22 +246,17 @@ cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds =
                         function(j) {
                           error = try({
                             msvm_fit = ramsvm(x = x, y = y, gamma = gamma, lambda = params$lambda[j], kernel = kernel, kparam = params$kparam[j], scale = scale, ...)
-                          })
+                          }, silent = TRUE)
 
                           if (!inherits(error, "try-error")) {
-                            pred_val = predict.ramsvm(msvm_fit, newx = valid_x)$class
-
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val) / length(valid_y)
-                              err = 1 - acc
-                            } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-                            }
+                            pred_val = predict.ramsvm(msvm_fit, newx = valid_x)
+                            # acc = sum(valid_y == pred_val) / length(valid_y)
+                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            err = 1 - acc
                           } else {
                             msvm_fit = NULL
                             err = Inf
                           }
-
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     valid_err = round(sapply(fold_err, "[[", "error"), 8)
@@ -285,21 +280,25 @@ cv.ramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds =
       #  Parallel computation on the combination of hyper-parameters
       fold_err = mclapply(1:nrow(params),
                           function(j) {
-                            msvm_fit = ramsvm(x = x_fold, y = y_fold, gamma = gamma, lambda = params$lambda[j],
-                                              kernel = kernel, kparam = params$kparam[j], ...)
-                            pred_val = predict.ramsvm(msvm_fit, newx = x_valid)
-
-                            if (criterion == "0-1") {
-                              acc = sum(y_valid == pred_val$class) / length(y_valid)
+                            error = try({
+                              msvm_fit = ramsvm(x = x_fold, y = y_fold, gamma = gamma, lambda = params$lambda[j],
+                                                kernel = kernel, kparam = params$kparam[j], ...)
+                            }, silent = TRUE)
+                            
+                            if (!inherits(error, "try-error")) {
+                              pred_val = predict.ramsvm(msvm_fit, newx = x_valid)
+                              # acc = sum(y_valid == pred_val$class) / length(y_valid)
+                              acc = prediction_err(y_valid, pred_val$class, type = type)
                               err = 1 - acc
                             } else {
-                              err = ramsvm_hinge(y_valid, pred_val$pred_value, k = k, gamma = gamma)
+                              msvm_fit = NULL
+                              err = Inf
                             }
-                            # return(list(error = err, fit_model = msvm_fit))
-                            return(err)
+                            return(list(error = err, fit_model = msvm_fit))
+                            # return(err)
                           }, mc.cores = nCores)
-      # valid_err_mat[i, ] = sapply(fold_err, "[[", "error")
-      valid_err[i, ] = unlist(fold_err)
+      valid_err[i, ] = sapply(fold_err, "[[", "error")
+      # valid_err[i, ] = unlist(fold_err)
       # model_list[[i]] = lapply(fold_err, "[[", "fit_model")
     }
     mean_valid_err = round(colMeans(valid_err), 8)

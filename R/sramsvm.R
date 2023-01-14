@@ -79,7 +79,7 @@
 cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfolds = 5,
                         lambda_seq = 2^{seq(-10, 10, length.out = 100)}, theta = NULL, fold_theta = NULL,
                         kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian"), kparam = c(1),
-                        scale = FALSE, criterion = c("0-1", "loss"), optModel = FALSE, nCores = 1, ...)
+                        scale = FALSE, criterion = c("0-1", "loss", "balanced"), optModel = FALSE, nCores = 1, ...)
 {
   call = match.call()
   kernel = match.arg(kernel)
@@ -130,16 +130,13 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
                         function(j) {
                           error = try({
                             msvm_fit = ramsvm_compact(K = K, y = y, gamma = gamma, lambda = lambda_seq[j], ...)
-                          })
+                          }, silent = TRUE)
 
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.ramsvm_compact(msvm_fit, newK = valid_K)
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val$class) / length(valid_y)
-                              err = 1 - acc
-                            } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-                            }
+                            # acc = sum(valid_y == pred_val$class) / length(valid_y)
+                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            err = 1 - acc
                           } else {
                             msvm_fit = NULL
                             err = Inf
@@ -177,17 +174,13 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
                           function(j) {
                             error = try({
                               msvm_fit = ramsvm_compact(K = subK, y = y_train, gamma = gamma, lambda = lambda_seq[j], ...)
-                            })
+                            }, silent = TRUE)
 
                             if (!inherits(error, "try-error")) {
                               pred_val = predict.ramsvm_compact(msvm_fit, subK_valid)
-                              if (criterion == "0-1") {
-                                acc = sum(y_valid == pred_val$class) / length(y_valid)
-                                err = 1 - acc
-                              } else {
-                                # 수정 필요 y_valid가 factor나 character일 경우
-                                err = ramsvm_hinge(y_valid, pred_val$pred_value, k = k, gamma = gamma)
-                              }
+                              # acc = sum(y_valid == pred_val$class) / length(y_valid)
+                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              err = 1 - acc
                             } else {
                               msvm_fit = NULL
                               err = Inf
@@ -275,18 +268,14 @@ thetastep.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
                               subK = combine_kernel(anova_K, theta)
                               init_model = ramsvm_compact(K = subK, y = y, gamma = gamma, lambda = lambda, ...)
                             }
-                          })
+                          }, silent = TRUE)
 
                           if (!inherits(error, "try-error")) {
                             valid_subK = combine_kernel(valid_anova_K, theta)
-                            pred_val = predict.ramsvm_compact(init_model, newK = valid_subK)$class
-
-                            if (criterion == "0-1") {
-                              acc = sum(valid_y == pred_val) / length(valid_y)
-                              err = 1 - acc
-                            } else {
-                              # err = ramsvm_hinge(valid_y, pred_val$inner_prod, k = k, gamma = gamma)
-                            }
+                            pred_val = predict.ramsvm_compact(init_model, newK = valid_subK)
+                            # acc = sum(valid_y == pred_val) / length(valid_y)
+                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            err = 1 - acc
                           } else {
                             err = Inf
                             theta = rep(0, anova_K$numK)
@@ -335,27 +324,14 @@ thetastep.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
                                 subK = combine_kernel(subanova_K, theta)
                                 init_model = ramsvm_compact(K = subK, y = y_train, gamma = gamma, lambda = lambda, ...)
                               }
-                            })
-
-                            # error = try({
-                            #   theta = theta_seq_list[[j]]
-                            #   if (isCombined) {
-                            #     subK = combine_kernel(subanova_K, theta)
-                            #     init_model = ramsvm_compact(K = subK, y = y_train, gamma = gamma, lambda = lambda, ...)
-                            #   }
-                            # })
+                            }, silent = TRUE)
 
                             if (!inherits(error, "try-error")) {
                               subK_valid = combine_kernel(subanova_K_valid, theta)
                               pred_val = predict.ramsvm_compact(init_model, newK = subK_valid)
-
-                              if (criterion == "0-1") {
-                                acc = sum(y_valid == pred_val$class) / length(y_valid)
-                                err = 1 - acc
-                              } else {
-                                # 수정 필요 y_valid가 factor나 character일 경우
-                                err = ramsvm_hinge(y_valid, pred_val$pred_value, k = k, gamma = gamma)
-                              }
+                              # acc = sum(y_valid == pred_val$class) / length(y_valid)
+                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              err = 1 - acc
                             } else {
                               err = Inf
                               theta = rep(0, anova_K$numK)
