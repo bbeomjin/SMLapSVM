@@ -36,7 +36,6 @@ sramlapsvm = function(x = NULL, y, ux = NULL, valid_x = NULL, valid_y = NULL, nf
   out$opt_model = opt_cstep_fit$opt_model
   out$opt_valid_err = opt_cstep_fit$opt_valid_err
   out$valid_err = opt_cstep_fit$valid_err
-  out$type = type
   out$call = call
   class(out) = "sramlapsvm"
   return(out)
@@ -166,7 +165,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.ramlapsvm_compact(msvm_fit, newK = valid_K)
                             # acc = sum(valid_y == pred_val$class) / length(valid_y)
-                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            acc = prediction_err(valid_y, pred_val$class, type = criterion)
                             err = 1 - acc
                           } else {
                             msvm_fit = NULL
@@ -228,7 +227,7 @@ cstep.sramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_
                             if (!inherits(error, "try-error")) {
                               pred_val = predict.ramlapsvm_compact(msvm_fit, newK = subK_valid)
                               # acc = sum(y_valid == pred_val$class) / length(y_valid)
-                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              acc = prediction_err(y_valid, pred_val$class, type = criterion)
                               err = 1 - acc
                             } else {
                               msvm_fit = NULL
@@ -350,7 +349,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                             valid_subK = combine_kernel(valid_anova_K, theta)
                             pred_val = predict.ramlapsvm_compact(init_model, newK = valid_subK)
                             # acc = sum(valid_y == pred_val$class) / length(valid_y)
-                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            acc = prediction_err(valid_y, pred_val$class, type = criterion)
                             err = 1 - acc
                           } else {
                             err = Inf
@@ -435,7 +434,7 @@ thetastep.sramlapsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, lengt
                               subK_valid = combine_kernel(subanova_K_valid, theta)
                               pred_val = predict.ramlapsvm_compact(init_model, newK = subK_valid)
                               # acc = sum(y_valid == pred_val$class) / length(y_valid)
-                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              acc = prediction_err(y_valid, pred_val$class, type = criterion)
                               err = 1 - acc
                             } else {
                               err = Inf

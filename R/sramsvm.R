@@ -135,7 +135,7 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.ramsvm_compact(msvm_fit, newK = valid_K)
                             # acc = sum(valid_y == pred_val$class) / length(valid_y)
-                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            acc = prediction_err(valid_y, pred_val$class, type = criterion)
                             err = 1 - acc
                           } else {
                             msvm_fit = NULL
@@ -179,7 +179,7 @@ cstep.sramsvm = function(x, y, gamma = 0.5, valid_x = NULL, valid_y = NULL, nfol
                             if (!inherits(error, "try-error")) {
                               pred_val = predict.ramsvm_compact(msvm_fit, subK_valid)
                               # acc = sum(y_valid == pred_val$class) / length(y_valid)
-                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              acc = prediction_err(y_valid, pred_val$class, type = criterion)
                               err = 1 - acc
                             } else {
                               msvm_fit = NULL
@@ -274,7 +274,7 @@ thetastep.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
                             valid_subK = combine_kernel(valid_anova_K, theta)
                             pred_val = predict.ramsvm_compact(init_model, newK = valid_subK)
                             # acc = sum(valid_y == pred_val) / length(valid_y)
-                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            acc = prediction_err(valid_y, pred_val$class, type = criterion)
                             err = 1 - acc
                           } else {
                             err = Inf
@@ -330,7 +330,7 @@ thetastep.sramsvm = function(object, lambda_theta_seq = 2^{seq(-10, 10, length.o
                               subK_valid = combine_kernel(subanova_K_valid, theta)
                               pred_val = predict.ramsvm_compact(init_model, newK = subK_valid)
                               # acc = sum(y_valid == pred_val$class) / length(y_valid)
-                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              acc = prediction_err(y_valid, pred_val$class, type = criterion)
                               err = 1 - acc
                             } else {
                               err = Inf

@@ -350,7 +350,7 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
                           if (!inherits(error, "try-error")) {
                             pred_val = predict.ramlapsvm(msvm_fit, newx = valid_x)
                             # acc = sum(valid_y == pred_val$class) / length(valid_y)
-                            acc = prediction_err(valid_y, pred_val$class, type = type)
+                            acc = prediction_err(valid_y, pred_val$class, type = criterion)
                             err = 1 - acc
                           } else {
                             msvm_fit = NULL
@@ -405,7 +405,7 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
                             if (!inherits(error, "try-error")) {
                               pred_val = predict.ramlapsvm(msvm_fit, newx = x_valid)
                               # acc = sum(y_valid == pred_val$class) / length(y_valid)
-                              acc = prediction_err(y_valid, pred_val$class, type = type)
+                              acc = prediction_err(y_valid, pred_val$class, type = criterion)
                               err = 1 - acc
                             } else {
                               msvm_fit = NULL
