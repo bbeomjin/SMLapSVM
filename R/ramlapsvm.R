@@ -356,7 +356,6 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
                             msvm_fit = NULL
                             err = Inf
                           }
-
                           return(list(error = err, fit_model = msvm_fit))
                         }, mc.cores = nCores)
     # valid_err = round(sapply(fold_err, "[[", "error"), 8)

@@ -507,7 +507,9 @@ prediction_err = function(y, pred, type = "0-1")
     y = factor(y, levels = unique(c(y, pred)))
     pred = factor(pred, levels = levels(y))
     t = table(y, pred)
-    acc = mean(diag(t) / rowSums(t))
+    temp = diag(t) / rowSums(t)
+    temp[is.nan(temp)] = 0
+    acc = mean(temp)
   } else {
     # not yet
   }
