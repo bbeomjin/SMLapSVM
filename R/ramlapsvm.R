@@ -325,7 +325,7 @@ cv.ramlapsvm = function(x, y, ux = NULL, gamma = 0.5, valid_x = NULL, valid_y = 
   kparam = as.numeric(kparam)
 
   lambda_seq = sort(lambda_seq, decreasing = FALSE)
-  lambda_I_seq = sort(lambda_I_seq, decreasing = FALSE)
+  lambda_I_seq = sort(lambda_I_seq, decreasing = TRUE)
   # kparam = sort(kparam, decreasing = TRUE)
 
   # Combination of hyper-parameters
